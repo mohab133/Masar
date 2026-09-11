@@ -1,0 +1,12 @@
+{
+  "appId": "com.masar.studentapp",
+  "appName": "مسار - Masar",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

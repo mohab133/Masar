@@ -1,0 +1,6 @@
+{
+  "name": "Masar",
+  "description": "تطبيق مسار الجامعي الأكاديمي لطلاب الدفعة لمتابعة الإعلانات والجدول والمواد والمواعيد المهمة",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
