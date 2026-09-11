@@ -15,6 +15,7 @@ import { ScheduleView } from './components/ScheduleView';
 import { CoursesView } from './components/CoursesView';
 import { DatesView } from './components/DatesView';
 import { FeedbackModal } from './components/FeedbackModal';
+import { OfflineIndicator } from './components/OfflineIndicator';
 
 const TAB_ORDER: TabType[] = ['home', 'schedule', 'courses', 'dates'];
 
@@ -118,6 +119,9 @@ export default function App() {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
+        {/* Connection state notifier */}
+        <OfflineIndicator />
+
         {/* Main Application Header */}
         <Header onOpenFeedback={() => setIsFeedbackOpen(true)} />
 

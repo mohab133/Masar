@@ -19,7 +19,23 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
     e.preventDefault();
     if (!details.trim()) return;
 
-    // Simulate saving feedback locally
+    // Save feedback locally in storage
+    const newFeedback = {
+      id: `fb-${Date.now()}`,
+      type,
+      courseOrSection: courseOrSection.trim(),
+      details: details.trim(),
+      submittedAt: new Date().toISOString(),
+      isOffline: !navigator.onLine,
+    };
+
+    try {
+      const existing = JSON.parse(localStorage.getItem('masar_feedback_entries') || '[]');
+      localStorage.setItem('masar_feedback_entries', JSON.stringify([...existing, newFeedback]));
+    } catch (err) {
+      console.warn('LocalStorage save error:', err);
+    }
+
     setIsSubmitted(true);
     setTimeout(() => {
       setIsSubmitted(false);
