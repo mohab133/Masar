@@ -7,7 +7,6 @@ import {
   ExternalLink,
   FileText,
   Info,
-  Clock,
   MapPin,
   Globe,
   FileCheck,
@@ -17,6 +16,7 @@ import { Announcement, AcademicEvent } from '../types';
 import { getCourseNameAr } from '../data/sampleData';
 import { AllAnnouncementsModal } from './AllAnnouncementsModal';
 import { MenoufBylawModal } from './MenoufBylawModal';
+import { triggerHaptic } from '../utils/haptics';
 
 interface HomeViewProps {
   announcements: Announcement[];
@@ -46,11 +46,13 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 
   // Announcement navigation
   const prevAnnouncement = useCallback(() => {
+    triggerHaptic('selection');
     setAnnDirection(-1);
     setCurrentAnnIndex((prev) => (prev > 0 ? prev - 1 : activeAnnouncements.length - 1));
   }, [activeAnnouncements.length]);
 
   const nextAnnouncement = useCallback(() => {
+    triggerHaptic('selection');
     setAnnDirection(1);
     setCurrentAnnIndex((prev) => (prev < activeAnnouncements.length - 1 ? prev + 1 : 0));
   }, [activeAnnouncements.length]);
@@ -78,11 +80,13 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 
   // Upcoming Dates navigation
   const prevDate = useCallback(() => {
+    triggerHaptic('selection');
     setDateDirection(-1);
     setCurrentDateIndex((prev) => (prev > 0 ? prev - 1 : nearestDates.length - 1));
   }, [nearestDates.length]);
 
   const nextDate = useCallback(() => {
+    triggerHaptic('selection');
     setDateDirection(1);
     setCurrentDateIndex((prev) => (prev < nearestDates.length - 1 ? prev + 1 : 0));
   }, [nearestDates.length]);
@@ -96,10 +100,8 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
     e.stopPropagation();
     if (dateTouchStartX.current === null) return;
     const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchEndX - dateTouchStartX.current; // Positive = Dragged Right, Negative = Dragged Left
+    const diff = touchEndX - dateTouchStartX.current;
 
-    // Swiping right (diff > 35): moves to next item
-    // Swiping left (diff < -35): moves to previous item
     if (diff > 35) {
       nextDate();
     } else if (diff < -35) {
@@ -121,7 +123,10 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
             {activeAnnouncements.length > 1 && (
               <button
                 type="button"
-                onClick={() => setIsAnnModalOpen(true)}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setIsAnnModalOpen(true);
+                }}
                 className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors"
               >
                 عرض الكل ({activeAnnouncements.length})
@@ -133,7 +138,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
             id="announcement-carousel-card"
             onTouchStart={handleAnnTouchStart}
             onTouchEnd={handleAnnTouchEnd}
-            className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs transition-all relative overflow-hidden"
+            className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs transition-colors relative overflow-hidden"
           >
             <AnimatePresence mode="wait" custom={annDirection}>
               <motion.div
@@ -169,14 +174,17 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
               </motion.div>
             </AnimatePresence>
 
-            {/* Interactive Pagination Dots (بدون أسهم أو نصوص عدادات - نقاط تفاعلية مريحة) */}
+            {/* Interactive Pagination Dots */}
             {activeAnnouncements.length > 1 && (
               <div className="flex items-center justify-center gap-2 pt-3 mt-3.5 border-t border-slate-100">
                 {activeAnnouncements.map((_, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => setCurrentAnnIndex(idx)}
+                    onClick={() => {
+                      triggerHaptic('selection');
+                      setCurrentAnnIndex(idx);
+                    }}
                     className="p-1.5 -m-1.5 focus:outline-hidden"
                     aria-label={`تنبيه ${idx + 1}`}
                   >
@@ -203,7 +211,10 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
             <button
               type="button"
               id="view-all-dates-button"
-              onClick={onNavigateToDates}
+              onClick={() => {
+                triggerHaptic('selection');
+                onNavigateToDates();
+              }}
               className="text-sm font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 transition-colors"
             >
               <span>عرض كل المواعيد</span>
@@ -215,7 +226,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
             id="dates-carousel-card"
             onTouchStart={handleDateTouchStart}
             onTouchEnd={handleDateTouchEnd}
-            className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs transition-all relative overflow-hidden"
+            className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs transition-colors relative overflow-hidden"
           >
             <AnimatePresence mode="wait" custom={dateDirection}>
               <motion.div
@@ -313,14 +324,17 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
               </motion.div>
             </AnimatePresence>
 
-            {/* Interactive Pagination Dots (بدون أسهم أو نصوص عدادات - نقاط تفاعلية مريحة) */}
+            {/* Interactive Pagination Dots */}
             {nearestDates.length > 1 && (
               <div className="flex items-center justify-center gap-2 pt-3 mt-3.5 border-t border-slate-100">
                 {nearestDates.map((_, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => setCurrentDateIndex(idx)}
+                    onClick={() => {
+                      triggerHaptic('selection');
+                      setCurrentDateIndex(idx);
+                    }}
                     className="p-1.5 -m-1.5 focus:outline-hidden"
                     aria-label={`موعد ${idx + 1}`}
                   >
@@ -349,9 +363,10 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
           {/* منصة ابن الهيثم */}
           <a
             id="link-ibn-alhaytham"
-            href="https://hes.mans.edu.eg/"
+            href="https://hes.menofia.edu.eg/"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => triggerHaptic('light')}
             className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 rounded-2xl hover:border-blue-300 hover:shadow-xs transition-all"
           >
             <div className="flex items-center gap-3 min-w-0">
@@ -372,12 +387,13 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
             </div>
           </a>
 
-          {/* منصة الكتب الإلكترونية */}
+          {/* البوابة الرسمية للكلية */}
           <a
-            id="link-ebooks-platform"
-            href="https://books.mans.edu.eg/"
+            id="link-fee-portal"
+            href="https://fee.menofia.edu.eg/"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => triggerHaptic('light')}
             className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 rounded-2xl hover:border-indigo-300 hover:shadow-xs transition-all"
           >
             <div className="flex items-center gap-3 min-w-0">
@@ -386,10 +402,10 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
               </div>
               <div className="min-w-0">
                 <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
-                  منصة الكتب الجامعية
+                  بوابة كلية الهندسة الإلكترونية
                 </h4>
                 <p className="text-xs text-slate-500 truncate mt-0.5">
-                  الكتاب الجامعي والمقررات الرقمية
+                  الموقع الرسمي والجداول المعتمدة
                 </p>
               </div>
             </div>
@@ -398,33 +414,36 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
             </div>
           </a>
 
-          {/* لائحة منوف PDF */}
+          {/* دليل لائحة منوف */}
           <button
             type="button"
             id="btn-menouf-bylaw-pdf"
-            onClick={() => setIsBylawModalOpen(true)}
-            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 rounded-2xl hover:border-red-300 hover:shadow-xs transition-all text-right w-full sm:col-span-2 cursor-pointer"
+            onClick={() => {
+              triggerHaptic('light');
+              setIsBylawModalOpen(true);
+            }}
+            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 rounded-2xl hover:border-blue-300 hover:shadow-xs transition-all text-right w-full sm:col-span-2 cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0 group-hover:scale-105 transition-transform">
                 <FileText size={22} />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-red-700 transition-colors">
-                    لائحة هندسة منوف (PDF)
+                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                    دليل لائحة هندسة منوف
                   </h4>
-                  <span className="text-[10px] font-bold bg-red-100 text-red-700 px-1.5 py-0.2 rounded">
-                    PDF
+                  <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded">
+                    الساعات المعتمدة
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 truncate mt-0.5">
-                  اللائحة الداخلية ونظام الساعات المعتمدة والتخرج
+                  اللائحة الداخلية ونظام الساعات المعتمدة والتقديرات وقواعد التخرج
                 </p>
               </div>
             </div>
-            <div className="px-3 py-1.5 rounded-xl bg-red-50 text-red-700 text-xs font-bold border border-red-100 group-hover:bg-red-600 group-hover:text-white transition-all shrink-0 mr-2 shadow-2xs">
-              عرض وتحميل
+            <div className="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 text-xs font-bold border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-all shrink-0 mr-2 shadow-2xs">
+              عرض الدليل
             </div>
           </button>
         </div>
@@ -447,4 +466,3 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 });
 
 HomeView.displayName = 'HomeView';
-

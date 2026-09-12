@@ -14,6 +14,7 @@ import { ScheduleView } from './components/ScheduleView';
 import { CoursesView } from './components/CoursesView';
 import { DatesView } from './components/DatesView';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { triggerHaptic } from './utils/haptics';
 
 const TAB_ORDER: TabType[] = ['home', 'schedule', 'courses', 'dates'];
 
@@ -62,6 +63,7 @@ export default function App() {
   }, []);
 
   const handleNavigateToDates = useCallback(() => {
+    triggerHaptic('selection');
     handleTabChange('dates', 1);
   }, [handleTabChange]);
 
@@ -103,10 +105,12 @@ export default function App() {
       // Swiping left (deltaX < 0): moves left / prev tab
       if (deltaX > 0) {
         if (currentIndex < TAB_ORDER.length - 1) {
+          triggerHaptic('selection');
           handleTabChange(TAB_ORDER[currentIndex + 1], 1);
         }
       } else {
         if (currentIndex > 0) {
+          triggerHaptic('selection');
           handleTabChange(TAB_ORDER[currentIndex - 1], -1);
         }
       }

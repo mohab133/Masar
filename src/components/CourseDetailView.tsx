@@ -11,9 +11,9 @@ import {
   Eye,
   Check
 } from 'lucide-react';
-import { motion } from 'motion/react';
 import { Course, CourseFile, FileCategory } from '../types';
 import { FileViewerModal } from './FileViewerModal';
+import { triggerHaptic } from '../utils/haptics';
 
 interface CourseDetailViewProps {
   course: Course;
@@ -75,10 +75,21 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
     return files.filter((file) => normalizeCategory(file.category) === activeTab);
   }, [files, activeTab]);
 
+  const handleSelectTab = useCallback((tabId: CategoryTab) => {
+    triggerHaptic('selection');
+    setActiveTab(tabId);
+  }, []);
+
   const handleDownload = useCallback((e: React.MouseEvent, file: CourseFile) => {
     e.stopPropagation();
+    triggerHaptic('success');
     setDownloadingId(file.id);
     setTimeout(() => setDownloadingId(null), 2000);
+  }, []);
+
+  const handleOpenFile = useCallback((file: CourseFile) => {
+    triggerHaptic('light');
+    setActiveFile(file);
   }, []);
 
   const handleCloseViewer = useCallback(() => {
@@ -122,7 +133,7 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
         data-no-swipe="true"
         onTouchStart={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
-        className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1"
+        className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1 select-none"
       >
         {CATEGORIES.map((cat) => {
           const isSelected = activeTab === cat.id;
@@ -133,7 +144,7 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
             <button
               key={cat.id}
               type="button"
-              onClick={() => setActiveTab(cat.id)}
+              onClick={() => handleSelectTab(cat.id)}
               className={`relative px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 flex items-center gap-1.5 ${
                 isSelected
                   ? 'bg-blue-600 text-white shadow-xs'
@@ -156,13 +167,13 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
         })}
       </div>
 
-      {/* Simple Files List under the selected category */}
+      {/* Files List under the selected category */}
       <div className="space-y-2.5">
         {currentCategoryFiles.length > 0 ? (
           currentCategoryFiles.map((file) => (
             <div
               key={file.id}
-              onClick={() => setActiveFile(file)}
+              onClick={() => handleOpenFile(file)}
               className="bg-white border border-slate-200/90 hover:border-blue-300 rounded-2xl p-4 flex items-center justify-between gap-3 cursor-pointer transition-all shadow-2xs group"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -203,8 +214,8 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
 
                 <button
                   type="button"
-                  onClick={() => setActiveFile(file)}
-                  className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all inline-flex items-center gap-1 shadow-2xs"
+                  onClick={() => handleOpenFile(file)}
+                  className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white transition-all inline-flex items-center gap-1 shadow-2xs"
                 >
                   <Eye size={15} />
                   <span>عرض</span>
@@ -213,7 +224,7 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
             </div>
           ))
         ) : (
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-8 text-center text-sm text-slate-500 space-y-1.5 font-medium">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-8 text-center text-sm text-slate-500 space-y-1.5 font-medium transition-colors">
             <p className="font-bold text-slate-800 text-base">لا توجد ملفات في هذا القسم حالياً</p>
             <p className="text-xs sm:text-sm text-slate-400">سيتم إضافة الملفات فور نشرها من الكلية</p>
           </div>
@@ -231,4 +242,3 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
 });
 
 CourseDetailView.displayName = 'CourseDetailView';
-

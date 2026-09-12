@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ScheduleEvent, ScheduleType, OfficialScheduleDocument } from '../types';
 import { OFFICIAL_SCHEDULE_DOCS } from '../data/sampleData';
 import { OfficialScheduleModal } from './OfficialScheduleModal';
+import { triggerHaptic } from '../utils/haptics';
 
 interface ScheduleViewProps {
   scheduleEvents: ScheduleEvent[];
@@ -25,19 +26,20 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<OfficialScheduleDocument | null>(null);
 
-  // Student's chosen section (persisted in localStorage, e.g. section 3)
+  // Student's chosen section (persisted in localStorage)
   const [selectedSection, setSelectedSection] = useState<string>(() => {
     try {
-      return localStorage.getItem('masar_user_section') || 'all';
+      return localStorage.getItem('fee_user_section') || 'all';
     } catch {
       return 'all';
     }
   });
 
   const handleSectionChange = useCallback((sec: string) => {
+    triggerHaptic('selection');
     setSelectedSection(sec);
     try {
-      localStorage.setItem('masar_user_section', sec);
+      localStorage.setItem('fee_user_section', sec);
     } catch {
       // ignore
     }
@@ -55,6 +57,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
   }, [scheduleEvents, scheduleType, selectedDay, selectedSection]);
 
   const handleOpenDoc = useCallback((doc: OfficialScheduleDocument) => {
+    triggerHaptic('light');
     setSelectedDoc(doc);
     setIsDocModalOpen(true);
   }, []);
@@ -64,13 +67,25 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
     setSelectedDoc(null);
   }, []);
 
-  const handleSetLectureType = useCallback(() => setScheduleType('lecture'), []);
-  const handleSetSectionType = useCallback(() => setScheduleType('section'), []);
+  const handleSetLectureType = useCallback(() => {
+    triggerHaptic('selection');
+    setScheduleType('lecture');
+  }, []);
+
+  const handleSetSectionType = useCallback(() => {
+    triggerHaptic('selection');
+    setScheduleType('section');
+  }, []);
+
+  const handleSelectDay = useCallback((dayId: number) => {
+    triggerHaptic('selection');
+    setSelectedDay(dayId);
+  }, []);
 
   return (
     <div id="schedule-screen-view" className="space-y-4 pb-32 pt-1" dir="rtl">
       {/* Schedule Image Button */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-2xs">
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-2xs transition-colors">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
             <FileImage size={20} />
@@ -100,7 +115,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
         data-no-swipe="true"
         onTouchStart={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
-        className="p-1.5 bg-slate-200/80 rounded-2xl flex items-center relative select-none"
+        className="p-1.5 bg-slate-200/80 rounded-2xl flex items-center relative select-none transition-colors"
       >
         <button
           type="button"
@@ -143,7 +158,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
         </button>
       </div>
 
-      {/* Section Filter - Simple and streamlined */}
+      {/* Section Filter */}
       <AnimatePresence>
         {scheduleType === 'section' && (
           <motion.div
@@ -184,7 +199,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
         )}
       </AnimatePresence>
 
-      {/* Days Selector - Smooth interactive pills */}
+      {/* Days Selector */}
       <div
         data-no-swipe="true"
         onTouchStart={(e) => e.stopPropagation()}
@@ -198,7 +213,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
             <button
               key={day.id}
               type="button"
-              onClick={() => setSelectedDay(day.id)}
+              onClick={() => handleSelectDay(day.id)}
               className={`flex-1 py-2.5 px-1 rounded-xl text-center text-xs sm:text-sm transition-all relative ${
                 isSelected
                   ? 'text-white font-bold shadow-xs'
@@ -238,64 +253,55 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
                 className="bg-white border border-slate-200/90 rounded-2xl p-4 hover:border-blue-300 transition-colors shadow-2xs"
               >
                 {/* Card Header: Course & Section/Lecture Badge */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base font-bold text-slate-900">
-                      {item.course}
-                    </span>
-                    {item.instructor && (
-                      <span className="text-xs sm:text-sm text-slate-500 font-medium">
-                        • {item.instructor}
-                      </span>
-                    )}
-                  </div>
-
-                  <span
-                    className={`text-xs sm:text-sm font-bold px-2.5 py-1 rounded-lg border ${
-                      item.type === 'lecture'
-                        ? 'bg-blue-50 text-blue-700 border-blue-100'
-                        : 'bg-emerald-50 text-emerald-800 border-emerald-200/70'
-                    }`}
-                  >
-                    {item.typeLabelAr}
-                    {item.sectionNumber ? ` • سكشن ${item.sectionNumber}` : ''}
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100/80">
+                    {item.type === 'lecture' ? 'محاضرة عامة' : `سكشن ${item.sectionNumber || ''}`}
+                  </span>
+                  <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+                    {item.courseCode || item.course}
                   </span>
                 </div>
 
-                {/* Card Body: Time, Location */}
-                <div className="flex flex-wrap items-center gap-y-1.5 gap-x-4 text-xs sm:text-sm text-slate-600 mt-2 font-medium">
+                {/* Course Title */}
+                <h3 className="text-base font-bold text-slate-900 mb-1.5">
+                  {item.title}
+                </h3>
+
+                {/* Instructor */}
+                {item.instructor && (
+                  <p className="text-xs text-slate-600 mb-3">
+                    المحاضر: <strong className="text-slate-800">{item.instructor}</strong>
+                  </p>
+                )}
+
+                {/* Location and Time metadata pills */}
+                <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
                   <div className="flex items-center gap-1.5">
-                    <Clock size={15} className="text-slate-400" />
-                    <span>
-                      {item.startTime} - {item.endTime}
-                    </span>
+                    <MapPin size={14} className="text-slate-400 shrink-0" />
+                    <span className="font-semibold text-slate-800">{item.location}</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <MapPin size={15} className="text-slate-400" />
-                    <span className="font-bold text-slate-800">
-                      {item.location}
-                    </span>
+                  <div className="flex items-center gap-1.5 text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                    <Clock size={13} className="shrink-0" />
+                    <span>{item.time}</span>
                   </div>
                 </div>
-
-                {/* Important Notes / Tips */}
-                {item.notes && (
-                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-start gap-1.5 text-xs sm:text-sm text-amber-800 bg-amber-50/70 -mx-1 px-3 py-2 rounded-xl">
-                    <span className="font-semibold">{item.notes}</span>
-                  </div>
-                )}
               </motion.div>
             ))
           ) : (
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-8 text-center text-sm font-medium text-slate-500">
-              لا توجد {scheduleType === 'lecture' ? 'محاضرات' : 'سكاشن'} مسجلة لهذا اليوم
-              {selectedSection !== 'all' ? ` لسكشن ${selectedSection}` : ''}
+            <div className="py-14 text-center bg-white border border-slate-200/80 rounded-2xl p-6 transition-colors">
+              <Clock size={36} className="mx-auto text-slate-300 mb-2.5" />
+              <h4 className="text-sm font-bold text-slate-700 mb-1">
+                لا توجد {scheduleType === 'lecture' ? 'محاضرات' : 'سكاشن'} في هذا اليوم
+              </h4>
+              <p className="text-xs text-slate-500">
+                يمكنك التبديل بين الأيام أو استعراض صورة الجدول الأسبوعي المعتمد
+              </p>
             </div>
           )}
         </motion.div>
       </AnimatePresence>
 
-      {/* Official Schedule Sheet Modal */}
+      {/* Official Schedule Image Modal */}
       <OfficialScheduleModal
         isOpen={isDocModalOpen}
         onClose={handleCloseDoc}
@@ -306,5 +312,3 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
 });
 
 ScheduleView.displayName = 'ScheduleView';
-
-

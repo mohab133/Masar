@@ -7,14 +7,14 @@ import {
   FileSpreadsheet,
   Presentation,
   CheckCircle2,
-  FileText,
   FolderOpen,
   User,
   X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Course, CourseFile, FileCategory } from '../types';
+import { Course, CourseFile } from '../types';
 import { CourseDetailView } from './CourseDetailView';
+import { triggerHaptic } from '../utils/haptics';
 
 interface CoursesViewProps {
   courses: Course[];
@@ -54,10 +54,17 @@ export const CoursesView: React.FC<CoursesViewProps> = memo(({ courses }) => {
   }, [courses, searchQuery]);
 
   const handleClearSearch = useCallback(() => {
+    triggerHaptic('light');
     setSearchQuery('');
   }, []);
 
+  const handleSelectCourse = useCallback((course: Course) => {
+    triggerHaptic('selection');
+    setSelectedCourse(course);
+  }, []);
+
   const handleBackFromDetail = useCallback(() => {
+    triggerHaptic('light');
     setSelectedCourse(null);
   }, []);
 
@@ -131,7 +138,7 @@ export const CoursesView: React.FC<CoursesViewProps> = memo(({ courses }) => {
               transition={{ duration: 0.18, delay: Math.min(index * 0.03, 0.1) }}
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.99 }}
-              onClick={() => setSelectedCourse(course)}
+              onClick={() => handleSelectCourse(course)}
               className="bg-white border border-slate-200/90 hover:border-blue-300 rounded-2xl p-4 sm:p-5 cursor-pointer transition-all shadow-2xs group space-y-3.5"
             >
               {/* Top Row: Course Code & Total Files */}
@@ -213,4 +220,3 @@ export const CoursesView: React.FC<CoursesViewProps> = memo(({ courses }) => {
 });
 
 CoursesView.displayName = 'CoursesView';
-

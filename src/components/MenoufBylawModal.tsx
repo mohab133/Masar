@@ -4,7 +4,6 @@ import {
   Download,
   FileText,
   CheckCircle2,
-  ExternalLink,
   GraduationCap,
   Award,
   BookOpen,
@@ -12,7 +11,10 @@ import {
   Calendar,
   Layers,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
+import { BottomSheet } from './BottomSheet';
+import { triggerHaptic } from '../utils/haptics';
 
 interface MenoufBylawModalProps {
   isOpen: boolean;
@@ -21,11 +23,21 @@ interface MenoufBylawModalProps {
 
 export const MenoufBylawModal: React.FC<MenoufBylawModalProps> = memo(({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<'summary' | 'grades' | 'departments' | 'rules'>('summary');
+  const [isDownloading, setIsDownloading] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState(false);
 
-  const handleDownloadPdf = useCallback(() => {
-    // Generate official printable PDF/Document blob
-    const content = `
+  const handleTabSelect = (tab: 'summary' | 'grades' | 'departments' | 'rules') => {
+    triggerHaptic('selection');
+    setActiveTab(tab);
+  };
+
+  const handleDownloadSummary = useCallback(() => {
+    triggerHaptic('light');
+    setIsDownloading(true);
+
+    setTimeout(() => {
+      // Generate official summary document blob
+      const content = `
 ===================================================================
 جامعة المنوفية - كلية الهندسة الإلكترونية بمنوف (FEE Menouf)
 دليل اللائحة الداخلية لمرحلة البكالوريوس - نظام الساعات المعتمدة
@@ -66,308 +78,295 @@ export const MenoufBylawModal: React.FC<MenoufBylawModalProps> = memo(({ isOpen,
 ===================================================================
 `;
 
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'FEE_Menouf_Bylaw_Credit_Hours.txt';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'FEE_Menouf_Bylaw_Summary.txt';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
-    setIsDownloaded(true);
-    setTimeout(() => setIsDownloaded(false), 3500);
+      setIsDownloading(false);
+      setIsDownloaded(true);
+      triggerHaptic('success');
+      setTimeout(() => setIsDownloaded(false), 3000);
+    }, 600);
   }, []);
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      id="menouf-bylaw-modal-overlay"
-      className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 animate-in fade-in duration-200"
-      dir="rtl"
-    >
-      <div
-        id="menouf-bylaw-modal-container"
-        className="bg-white rounded-3xl w-full max-w-lg max-h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200"
-      >
-        {/* Header */}
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-              <FileText size={22} />
+    <BottomSheet isOpen={isOpen} onClose={onClose} id="menouf-bylaw-sheet" maxWidthClass="max-w-lg">
+      {/* Header */}
+      <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <GraduationCap size={22} />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-slate-900 leading-tight">
+              دليل لائحة كلية الهندسة الإلكترونية
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              نظام الساعات المعتمدة وقواعد النجاح والتخرج
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+          aria-label="إغلاق النافذة"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      {/* Tabs Pill Navigation */}
+      <div className="px-4 pt-3 pb-2 bg-white border-b border-slate-100 flex gap-1.5 overflow-x-auto select-none">
+        <button
+          type="button"
+          onClick={() => handleTabSelect('summary')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === 'summary'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          <BookOpen size={14} />
+          <span>ملخص عام</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabSelect('grades')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === 'grades'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          <Award size={14} />
+          <span>التقديرات والـ GPA</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabSelect('departments')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === 'departments'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          <Layers size={14} />
+          <span>الأقسام العلمية</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabSelect('rules')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === 'rules'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          <Scale size={14} />
+          <span>قواعد الإنذار والعبء</span>
+        </button>
+      </div>
+
+      {/* Tab Content Area */}
+      <div className="p-4 sm:p-5 overflow-y-auto space-y-4 max-h-[60vh] text-slate-700 text-sm leading-relaxed">
+        {activeTab === 'summary' && (
+          <div className="space-y-3">
+            <div className="bg-blue-50/80 border border-blue-100 rounded-2xl p-4">
+              <h4 className="font-bold text-blue-900 text-sm mb-2 flex items-center gap-1.5">
+                <GraduationCap size={18} className="text-blue-600" />
+                <span>متطلبات نيل درجة البكالوريوس (165 ساعة)</span>
+              </h4>
+              <ul className="list-disc list-inside space-y-1.5 text-xs text-blue-950 leading-normal">
+                <li>إتمام 165 ساعة معتمدة بنجاح بمعدل تراكمي عام لا يقل عن 2.00 (C).</li>
+                <li>اجتياز المقررات الإجبارية والاختيارية ومتطلبات الجامعة والكلية.</li>
+                <li>إتمام فترتي التدريب الصيفي الميداني بنجاح واجتياز المناقشة.</li>
+                <li>إنجاز مشروع التخرج ومناقشته والحصول على تقدير C على الأقل.</li>
+              </ul>
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h3 className="text-base font-bold text-slate-900">لائحة هندسة منوف (PDF)</h3>
-                <span className="text-[10px] font-bold bg-red-100 text-red-700 px-1.5 py-0.5 rounded">
-                  PDF
-                </span>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-[11px] text-slate-500 font-medium block">الفصول الدراسية</span>
+                <span className="text-xs font-bold text-slate-800 mt-0.5 block">فصلين رئيسيين + صيفي</span>
               </div>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">
-                كلية الهندسة الإلكترونية بمنوف • جامعة المنوفية
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-[11px] text-slate-500 font-medium block">لغة الدراسة</span>
+                <span className="text-xs font-bold text-slate-800 mt-0.5 block">اللغة الإنجليزية</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'grades' && (
+          <div className="space-y-3">
+            <div className="overflow-hidden border border-slate-200 rounded-xl">
+              <table className="w-full text-xs text-right">
+                <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th className="p-2.5">الرمز</th>
+                    <th className="p-2.5">النسبة المئوية</th>
+                    <th className="p-2.5">النقاط (4.00)</th>
+                    <th className="p-2.5">التقدير</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-600">
+                  <tr className="bg-emerald-50/40">
+                    <td className="p-2.5 font-bold text-emerald-700">A+</td>
+                    <td className="p-2.5">≥ 97%</td>
+                    <td className="p-2.5 font-bold">4.00</td>
+                    <td className="p-2.5 font-bold">ممتاز مرتفع</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 font-bold text-emerald-600">A</td>
+                    <td className="p-2.5">93% - &lt;97%</td>
+                    <td className="p-2.5 font-bold">4.00</td>
+                    <td className="p-2.5">ممتاز</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 font-bold text-emerald-600">A-</td>
+                    <td className="p-2.5">89% - &lt;93%</td>
+                    <td className="p-2.5 font-bold">3.70</td>
+                    <td className="p-2.5">ممتاز</td>
+                  </tr>
+                  <tr className="bg-blue-50/40">
+                    <td className="p-2.5 font-bold text-blue-700">B+</td>
+                    <td className="p-2.5">84% - &lt;89%</td>
+                    <td className="p-2.5 font-bold">3.30</td>
+                    <td className="p-2.5 font-bold">جيد جداً مرتفع</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 font-bold text-blue-600">B</td>
+                    <td className="p-2.5">80% - &lt;84%</td>
+                    <td className="p-2.5 font-bold">3.00</td>
+                    <td className="p-2.5">جيد جداً</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 font-bold text-blue-600">B-</td>
+                    <td className="p-2.5">76% - &lt;80%</td>
+                    <td className="p-2.5 font-bold">2.70</td>
+                    <td className="p-2.5">جيد جداً</td>
+                  </tr>
+                  <tr className="bg-amber-50/40">
+                    <td className="p-2.5 font-bold text-amber-700">C+</td>
+                    <td className="p-2.5">73% - &lt;76%</td>
+                    <td className="p-2.5 font-bold">2.30</td>
+                    <td className="p-2.5">جيد مرتفع</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 font-bold text-amber-600">C</td>
+                    <td className="p-2.5">70% - &lt;73%</td>
+                    <td className="p-2.5 font-bold">2.00</td>
+                    <td className="p-2.5 font-bold">جيد (الحد الأدنى للتخرج)</td>
+                  </tr>
+                  <tr className="bg-rose-50/40">
+                    <td className="p-2.5 font-bold text-rose-600">F</td>
+                    <td className="p-2.5">&lt; 60%</td>
+                    <td className="p-2.5 font-bold">0.00</td>
+                    <td className="p-2.5 font-bold text-rose-600">راسب</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'departments' && (
+          <div className="space-y-2.5">
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/80">
+              <h5 className="font-bold text-xs text-slate-900 mb-1">
+                1. قسم هندسة وعلوم الحاسب (CSE)
+              </h5>
+              <p className="text-xs text-slate-600">
+                يشمل تخصصات الذكاء الاصطناعي، الأمن السيبراني، هندسة البرمجيات، النظم المدمجة، وشبكات الحاسب.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/80">
+              <h5 className="font-bold text-xs text-slate-900 mb-1">
+                2. قسم هندسة الإلكترونيات والاتصالات الكهربية (ECE)
+              </h5>
+              <p className="text-xs text-slate-600">
+                يشمل نظم الاتصالات الخلوية والأقمار الصناعية، الدوائر المتكاملة (VLSI)، والموجات الدقيقة والهوائيات.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/80">
+              <h5 className="font-bold text-xs text-slate-900 mb-1">
+                3. قسم هندسة التحكم والآلات الإلكترونية الصناعية (IEC)
+              </h5>
+              <p className="text-xs text-slate-600">
+                يشمل الروبوتات والأنظمة الذكية، الأتمتة الصناعية (PLC & SCADA)، والتحكم في إلكترونيات القوى.
               </p>
             </div>
           </div>
+        )}
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
-            aria-label="إغلاق"
-          >
-            <X size={20} />
-          </button>
-        </div>
+        {activeTab === 'rules' && (
+          <div className="space-y-3">
+            <div className="p-3.5 rounded-xl border border-rose-200 bg-rose-50/60 text-xs text-rose-950">
+              <div className="flex items-center gap-1.5 font-bold mb-1.5 text-rose-700">
+                <AlertCircle size={16} />
+                <span>الإنذار الأكاديمي والتحذير</span>
+              </div>
+              <p className="leading-relaxed">
+                يوجه الإنذار الأكاديمي للطالب إذا كان معدله التراكمي (CGPA) أقل من 2.00 في أي فصل دراسي رئيسي، ويُسمح له بتسجيل 12 ساعة فقط لتحسين معدله.
+              </p>
+            </div>
 
-        {/* Action Bar */}
-        <div className="px-4 py-2.5 bg-red-50/60 border-b border-red-100 flex items-center justify-between text-xs">
-          <span className="text-red-900 font-bold flex items-center gap-1.5">
-            <Scale size={15} className="text-red-600" />
-            نظام الساعات المعتمدة واللوائح الرسمية
-          </span>
-
-          <div className="flex items-center gap-1.5">
-            <a
-              href="http://fee.menofia.edu.eg/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-1.5 bg-white text-slate-700 hover:text-red-700 rounded-lg border border-slate-200 text-xs font-semibold inline-flex items-center gap-1"
-              title="موقع الكلية الرسمي"
-            >
-              <ExternalLink size={13} />
-              <span>الكلية</span>
-            </a>
-
-            <button
-              type="button"
-              onClick={handleDownloadPdf}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-2xs ${
-                isDownloaded
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-red-600 text-white hover:bg-red-700 active:scale-95'
-              }`}
-            >
-              {isDownloaded ? (
-                <>
-                  <CheckCircle2 size={13} />
-                  <span>تم التنزيل</span>
-                </>
-              ) : (
-                <>
-                  <Download size={13} />
-                  <span>تحميل الدليل</span>
-                </>
-              )}
-            </button>
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs">
+              <h5 className="font-bold text-slate-900 mb-1">العبء الدراسي للفصل</h5>
+              <ul className="list-disc list-inside space-y-1 text-slate-600">
+                <li>الحد الأدنى للتسجيل: 12 ساعة معتمدة.</li>
+                <li>الحد الأقصى: 19 ساعة معتمدة (21 ساعة للمتفوقين GPA &gt; 3.00 أو الخريجين).</li>
+                <li>الفصل الصيفي: 7 ساعات كحد أقصى (9 ساعات للخريجين).</li>
+              </ul>
+            </div>
           </div>
-        </div>
-
-        {/* Nav Tabs */}
-        <div className="flex items-center border-b border-slate-200 bg-slate-50/80 px-3 pt-2 text-xs font-bold gap-1 overflow-x-auto">
-          <button
-            type="button"
-            onClick={() => setActiveTab('summary')}
-            className={`pb-2 px-3 border-b-2 transition-all shrink-0 ${
-              activeTab === 'summary'
-                ? 'border-red-600 text-red-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            نظرة عامة والتخرج
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('grades')}
-            className={`pb-2 px-3 border-b-2 transition-all shrink-0 ${
-              activeTab === 'grades'
-                ? 'border-red-600 text-red-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            التقديرات والـ GPA
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('departments')}
-            className={`pb-2 px-3 border-b-2 transition-all shrink-0 ${
-              activeTab === 'departments'
-                ? 'border-red-600 text-red-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            الأقسام العلمية
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('rules')}
-            className={`pb-2 px-3 border-b-2 transition-all shrink-0 ${
-              activeTab === 'rules'
-                ? 'border-red-600 text-red-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            الإنذار والتسجيل
-          </button>
-        </div>
-
-        {/* Tab Content Body */}
-        <div className="p-4 overflow-y-auto max-h-[60vh] space-y-3.5 text-xs text-slate-700 leading-relaxed">
-          {activeTab === 'summary' && (
-            <div className="space-y-3">
-              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80">
-                <div className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-1">
-                  <GraduationCap size={18} className="text-red-600" />
-                  <span>متطلبات نيل درجة البكالوريوس</span>
-                </div>
-                <p className="text-slate-600 text-xs">
-                  تمنح جامعة المنوفية بناءً على طلب مجلس كلية الهندسة الإلكترونية بمنوف درجة البكالوريوس في الهندسة الإلكترونية في التخصص المعني عند استيفاء الآتي:
-                </p>
-                <ul className="mt-2 space-y-1.5 text-slate-700">
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-red-500 font-bold">•</span>
-                    <span>اجتياز إجمالي <strong>165 ساعة معتمدة</strong> بنجاح.</span>
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-red-500 font-bold">•</span>
-                    <span>الحصول على معدل تراكمي عام (CGPA) لا يقل عن <strong>2.00 (تقدير C)</strong>.</span>
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-red-500 font-bold">•</span>
-                    <span>اجتياز فترات التدريب الميداني الصيفي (تدريب 1 وتدريب 2).</span>
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-red-500 font-bold">•</span>
-                    <span>إنجاز مشروع التخرج بنجاح وفق شروط القسم العلمي.</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="p-3.5 bg-red-50/50 rounded-2xl border border-red-100">
-                <div className="flex items-center gap-2 text-sm font-bold text-red-900 mb-1">
-                  <Calendar size={18} className="text-red-600" />
-                  <span>الفصول والسنوات الدراسية</span>
-                </div>
-                <p className="text-xs text-slate-600">
-                  العام الجامعي يتكون من فصلين دراسيين رئيسيين (خريف وربيع) مدة كل منهما 15 أسبوعاً دراسياً، ويجوز فتح فصل صيفي مكثف (8 أسابيع) بموافقة الكلية.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'grades' && (
-            <div className="space-y-3">
-              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
-                <div className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-2">
-                  <Award size={18} className="text-amber-600" />
-                  <span>جدول حساب التقديرات ونقاط الـ GPA</span>
-                </div>
-                <div className="border border-slate-200 rounded-xl overflow-hidden text-xs">
-                  <table className="w-full text-right">
-                    <thead className="bg-slate-100 text-slate-700 font-bold">
-                      <tr>
-                        <th className="p-2 border-b">الدرجة المئوية</th>
-                        <th className="p-2 border-b">الرمز</th>
-                        <th className="p-2 border-b">النقاط (4.00)</th>
-                        <th className="p-2 border-b">التقدير</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      <tr><td className="p-2">97% فأكثر</td><td className="p-2 font-bold text-emerald-700">A+</td><td className="p-2 font-bold">4.00</td><td className="p-2">ممتاز مرتفع</td></tr>
-                      <tr><td className="p-2">93% إلى أقل من 97%</td><td className="p-2 font-bold text-emerald-700">A</td><td className="p-2 font-bold">4.00</td><td className="p-2">ممتاز</td></tr>
-                      <tr><td className="p-2">89% إلى أقل من 93%</td><td className="p-2 font-bold text-emerald-700">A-</td><td className="p-2 font-bold">3.70</td><td className="p-2">ممتاز منخفض</td></tr>
-                      <tr><td className="p-2">84% إلى أقل من 89%</td><td className="p-2 font-bold text-slate-800">B+</td><td className="p-2 font-bold">3.30</td><td className="p-2">جيد جداً مرتفع</td></tr>
-                      <tr><td className="p-2">80% إلى أقل من 84%</td><td className="p-2 font-bold text-slate-800">B</td><td className="p-2 font-bold">3.00</td><td className="p-2">جيد جداً</td></tr>
-                      <tr><td className="p-2">73% إلى أقل من 76%</td><td className="p-2 font-bold text-amber-700">C+</td><td className="p-2 font-bold">2.30</td><td className="p-2">جيد مرتفع</td></tr>
-                      <tr><td className="p-2">70% إلى أقل من 73%</td><td className="p-2 font-bold text-amber-700">C</td><td className="p-2 font-bold">2.00</td><td className="p-2">جيد (حد التخرج)</td></tr>
-                      <tr><td className="p-2">60% إلى أقل من 64%</td><td className="p-2 font-bold text-slate-700">D</td><td className="p-2 font-bold">1.00</td><td className="p-2">مقبول</td></tr>
-                      <tr><td className="p-2">أقل من 60%</td><td className="p-2 font-bold text-rose-700">F</td><td className="p-2 font-bold">0.00</td><td className="p-2 text-rose-600 font-bold">راسب</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'departments' && (
-            <div className="space-y-2.5">
-              <div className="p-3 bg-white border border-slate-200 rounded-xl shadow-2xs">
-                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
-                  <Layers size={16} className="text-slate-700" />
-                  <span>هندسة وعلوم الحاسب (CSE)</span>
-                </div>
-                <p className="text-xs text-slate-600 mt-1">
-                  البرمجيات، الذكاء الاصطناعي، شبكات الحاسب، أنظمة التشغيل، الأمن السيبراني، والحوسبة السحابية.
-                </p>
-              </div>
-
-              <div className="p-3 bg-white border border-slate-200 rounded-xl shadow-2xs">
-                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
-                  <Layers size={16} className="text-slate-700" />
-                  <span>هندسة الإلكترونيات والاتصالات الكهربية (ECE)</span>
-                </div>
-                <p className="text-xs text-slate-600 mt-1">
-                  أنظمة الاتصالات الرقمية، معالجة الإشارات، الدوائر الإلكترونية المتكاملة، الهوائيات والموجات الدقيقة.
-                </p>
-              </div>
-
-              <div className="p-3 bg-white border border-slate-200 rounded-xl shadow-2xs">
-                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
-                  <Layers size={16} className="text-emerald-600" />
-                  <span>هندسة التحكم والآلات الإلكترونية الصناعية (IEC)</span>
-                </div>
-                <p className="text-xs text-slate-600 mt-1">
-                  أنظمة التحكم الآلي، الروبوتات، الأتمتة الصناعية، أنظمة القيادة الكهربائية والإلكترونيات القوى.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'rules' && (
-            <div className="space-y-3">
-              <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200/80">
-                <div className="flex items-center gap-2 text-sm font-bold text-amber-900 mb-1">
-                  <AlertCircle size={18} className="text-amber-600" />
-                  <span>الإنذار الأكاديمي والعبء الدراسي</span>
-                </div>
-                <p className="text-xs text-slate-700 leading-relaxed">
-                  • <strong>الإنذار الأكاديمي:</strong> يوجه للطالب إذا كان معدله التراكمي أقل من <strong>2.00</strong>، ويترتب عليه تقليص عدد الساعات المسجلة في الفصل التالي (12 ساعة كحد أقصى) للتركيز على تحسين المعدل.
-                </p>
-                <p className="text-xs text-slate-700 leading-relaxed mt-2">
-                  • <strong>ساعات الفصل الدراسي:</strong> الطالب غير المنذر يسجل من 12 إلى 19 ساعة معتمدة. الطالب المنذر بحد أقصى 12-14 ساعة معتمدة.
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-1">
-                  <BookOpen size={18} className="text-slate-700" />
-                  <span>الحذف والإضافة والانسحاب</span>
-                </div>
-                <p className="text-xs text-slate-600">
-                  يجوز للطالب تعديل تسجيله (إضافة أو حذف مقررات) خلال أول أسبوعين من بداية الفصل الدراسي الرئيسي دون أن يسجل ذلك في سجله الأكاديمي.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-          <span>لائحة الساعات المعتمدة الرسمية</span>
-          <button
-            type="button"
-            onClick={handleDownloadPdf}
-            className="text-red-700 font-bold hover:underline inline-flex items-center gap-1"
-          >
-            <Download size={13} />
-            <span>تنزيل نسخة نصية / PDF</span>
-          </button>
-        </div>
+        )}
       </div>
-    </div>
+
+      {/* Footer / Actions */}
+      <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <span className="text-[11px] text-slate-500 text-center sm:text-right">
+          المصدر: اللائحة الأكاديمية الرسمية المعتمدة لكلية الهندسة الإلكترونية بمنوف
+        </span>
+
+        <button
+          type="button"
+          onClick={handleDownloadSummary}
+          disabled={isDownloading}
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all shadow-md shadow-blue-600/20 whitespace-nowrap"
+        >
+          {isDownloading ? (
+            <>
+              <Loader2 size={15} className="animate-spin" />
+              <span>جاري تحضير الملخص...</span>
+            </>
+          ) : isDownloaded ? (
+            <>
+              <CheckCircle2 size={15} className="text-emerald-300" />
+              <span>تم حفظ الملخص بنجاح</span>
+            </>
+          ) : (
+            <>
+              <Download size={15} />
+              <span>تنزيل ملخص اللائحة (TXT)</span>
+            </>
+          )}
+        </button>
+      </div>
+    </BottomSheet>
   );
 });
 
 MenoufBylawModal.displayName = 'MenoufBylawModal';
-

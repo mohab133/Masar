@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AcademicEvent, OfficialScheduleDocument } from '../types';
 import { OFFICIAL_SCHEDULE_DOCS, getCourseNameAr } from '../data/sampleData';
 import { OfficialScheduleModal } from './OfficialScheduleModal';
+import { triggerHaptic } from '../utils/haptics';
 
 interface DatesViewProps {
   events: AcademicEvent[];
@@ -38,6 +39,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events }) => {
   );
 
   const handleOpenDoc = useCallback((doc: OfficialScheduleDocument) => {
+    triggerHaptic('light');
     setSelectedDoc(doc);
     setIsDocModalOpen(true);
   }, []);
@@ -48,6 +50,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events }) => {
   }, []);
 
   const toggleExpand = useCallback((id: string) => {
+    triggerHaptic('selection');
     setExpandedId((prev) => (prev === id ? null : id));
   }, []);
 
@@ -67,9 +70,20 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events }) => {
     });
   }, [sortedEvents, filter]);
 
-  const handleSetAssignmentsFilter = useCallback(() => setFilter('assignments'), []);
-  const handleSetQuizzesFilter = useCallback(() => setFilter('quizzes'), []);
-  const handleSetExamSchedulesFilter = useCallback(() => setFilter('exam_schedules'), []);
+  const handleSetAssignmentsFilter = useCallback(() => {
+    triggerHaptic('selection');
+    setFilter('assignments');
+  }, []);
+
+  const handleSetQuizzesFilter = useCallback(() => {
+    triggerHaptic('selection');
+    setFilter('quizzes');
+  }, []);
+
+  const handleSetExamSchedulesFilter = useCallback(() => {
+    triggerHaptic('selection');
+    setFilter('exam_schedules');
+  }, []);
 
   return (
     <div id="dates-screen-view" className="space-y-4 pb-32 pt-1" dir="rtl">
@@ -78,11 +92,11 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events }) => {
         data-no-swipe="true"
         onTouchStart={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
-        className="flex items-center gap-1.5 p-1.5 bg-slate-200/80 rounded-2xl relative select-none"
+        className="flex items-center gap-1.5 p-1.5 bg-slate-200/80 rounded-2xl relative select-none transition-colors"
       >
         <button
           type="button"
-          onClick={() => setFilter('assignments')}
+          onClick={handleSetAssignmentsFilter}
           className={`flex-1 py-2 text-sm font-bold rounded-xl transition-all relative ${
             filter === 'assignments'
               ? 'text-blue-700 font-black'
@@ -101,7 +115,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events }) => {
 
         <button
           type="button"
-          onClick={() => setFilter('quizzes')}
+          onClick={handleSetQuizzesFilter}
           className={`flex-1 py-2 text-sm font-bold rounded-xl transition-all relative ${
             filter === 'quizzes'
               ? 'text-blue-700 font-black'
@@ -120,7 +134,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events }) => {
 
         <button
           type="button"
-          onClick={() => setFilter('exam_schedules')}
+          onClick={handleSetExamSchedulesFilter}
           className={`flex-1 py-2 text-sm font-bold rounded-xl transition-all relative ${
             filter === 'exam_schedules'
               ? 'text-blue-700 font-black'
@@ -248,10 +262,10 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events }) => {
                               </div>
                               <ul className="space-y-1.5 pr-2 pt-0.5">
                                 {item.instructions.map((instruction, idx) => (
-                                  <li key={idx} className="flex items-start gap-2 text-slate-700 leading-relaxed">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-1.5" />
-                                    <span>{instruction}</span>
-                                  </li>
+                                   <li key={idx} className="flex items-start gap-2 text-slate-700 leading-relaxed">
+                                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-1.5" />
+                                     <span>{instruction}</span>
+                                   </li>
                                 ))}
                               </ul>
                             </div>
@@ -264,6 +278,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events }) => {
                                 href={item.submissionUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={() => triggerHaptic('light')}
                                 className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-xs"
                               >
                                 <span>{item.submissionUrlTitle || 'رابط استمارة التسليم'}</span>
@@ -352,4 +367,3 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events }) => {
 });
 
 DatesView.displayName = 'DatesView';
-

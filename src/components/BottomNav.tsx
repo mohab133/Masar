@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Home, CalendarDays, BookOpen, Clock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { TabType } from '../types';
+import { triggerHaptic } from '../utils/haptics';
 
 interface BottomNavProps {
   activeTab: TabType;
@@ -15,6 +16,13 @@ export const BottomNav: React.FC<BottomNavProps> = memo(({ activeTab, onChangeTa
     { id: 'courses', label: 'المواد', icon: BookOpen },
     { id: 'dates', label: 'المواعيد', icon: Clock },
   ];
+
+  const handleTabClick = (tabId: TabType) => {
+    if (tabId !== activeTab) {
+      triggerHaptic('selection');
+      onChangeTab(tabId);
+    }
+  };
 
   return (
     <nav
@@ -32,7 +40,7 @@ export const BottomNav: React.FC<BottomNavProps> = memo(({ activeTab, onChangeTa
               key={tab.id}
               id={`tab-button-${tab.id}`}
               type="button"
-              onClick={() => onChangeTab(tab.id)}
+              onClick={() => handleTabClick(tab.id)}
               className="flex-1 flex flex-col items-center justify-center py-1.5 group relative select-none"
             >
               <div className="relative flex items-center justify-center px-4 py-1">
@@ -71,4 +79,3 @@ export const BottomNav: React.FC<BottomNavProps> = memo(({ activeTab, onChangeTa
 });
 
 BottomNav.displayName = 'BottomNav';
-
