@@ -14,14 +14,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFeedback }) => {
       className="sticky top-0 z-30 bg-slate-50/95 backdrop-blur-md px-4.5 py-3 border-b border-slate-200/60"
     >
       <div className="max-w-md mx-auto flex items-center justify-between">
-        {/* Brand identity: Logo & Name with calm colors */}
+        {/* Brand identity: Logo & Name enlarged per request */}
         <div className="flex items-center gap-3">
-          <MasarLogo size={40} />
-          <div className="flex flex-col -space-y-1">
-            <span className="text-xl font-black text-slate-900 tracking-normal">
+          <MasarLogo size={48} />
+          <div className="flex flex-col -space-y-0.5">
+            <span className="text-2xl font-black text-slate-900 tracking-tight">
               مَسَارْ
             </span>
-            <span className="text-[10px] font-semibold text-slate-400 tracking-wide">
+            <span className="text-xs font-bold text-slate-400 tracking-wide">
               دليلك الأكاديمي
             </span>
           </div>

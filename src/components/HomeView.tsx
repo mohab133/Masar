@@ -1,8 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, ArrowLeft, Calendar, BookOpen } from 'lucide-react';
+import {
+  ChevronRight,
+  ChevronLeft,
+  ArrowLeft,
+  Calendar,
+  BookOpen,
+  GraduationCap,
+  ExternalLink,
+  Clock,
+  MapPin,
+  FileText,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Announcement, AcademicEvent } from '../types';
 import { AllAnnouncementsModal } from './AllAnnouncementsModal';
+import { MenoufBylawModal } from './MenoufBylawModal';
 
 interface HomeViewProps {
   announcements: Announcement[];
@@ -15,13 +27,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
   upcomingDates,
   onNavigateToDates,
 }) => {
+  // Announcements Carousel State
   const [currentAnnIndex, setCurrentAnnIndex] = useState(0);
   const [isAnnModalOpen, setIsAnnModalOpen] = useState(false);
-  const touchStartX = useRef<number | null>(null);
+  const [isBylawModalOpen, setIsBylawModalOpen] = useState(false);
+  const annTouchStartX = useRef<number | null>(null);
+
+  // Upcoming Dates Carousel State (same presentation format as announcements)
+  const [currentDateIndex, setCurrentDateIndex] = useState(0);
+  const dateTouchStartX = useRef<number | null>(null);
 
   const activeAnnouncements = (announcements || []).filter((a) => a.status === 'active');
-  const nearestDates = (upcomingDates || []).slice(0, 4);
+  const nearestDates = (upcomingDates || []).slice(0, 6);
 
+  // Announcement navigation
   const prevAnnouncement = () => {
     setCurrentAnnIndex((prev) => (prev > 0 ? prev - 1 : activeAnnouncements.length - 1));
   };
@@ -30,47 +49,77 @@ export const HomeView: React.FC<HomeViewProps> = ({
     setCurrentAnnIndex((prev) => (prev < activeAnnouncements.length - 1 ? prev + 1 : 0));
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleAnnTouchStart = (e: React.TouchEvent) => {
     e.stopPropagation();
-    touchStartX.current = e.touches[0].clientX;
+    annTouchStartX.current = e.touches[0].clientX;
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleAnnTouchEnd = (e: React.TouchEvent) => {
     e.stopPropagation();
-    if (touchStartX.current === null) return;
+    if (annTouchStartX.current === null) return;
     const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX.current - touchEndX;
+    const diff = annTouchStartX.current - touchEndX;
 
     if (diff > 35) {
       nextAnnouncement();
     } else if (diff < -35) {
       prevAnnouncement();
     }
-    touchStartX.current = null;
+    annTouchStartX.current = null;
+  };
+
+  // Upcoming Dates navigation
+  const prevDate = () => {
+    setCurrentDateIndex((prev) => (prev > 0 ? prev - 1 : nearestDates.length - 1));
+  };
+
+  const nextDate = () => {
+    setCurrentDateIndex((prev) => (prev < nearestDates.length - 1 ? prev + 1 : 0));
+  };
+
+  const handleDateTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    dateTouchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleDateTouchEnd = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    if (dateTouchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = dateTouchStartX.current - touchEndX;
+
+    if (diff > 35) {
+      nextDate();
+    } else if (diff < -35) {
+      prevDate();
+    }
+    dateTouchStartX.current = null;
   };
 
   const activeAnnouncement = activeAnnouncements[currentAnnIndex];
+  const activeDate = nearestDates[currentDateIndex];
 
+  // Auto-play announcement carousel gently
   useEffect(() => {
     if (activeAnnouncements.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentAnnIndex((prev) => (prev < activeAnnouncements.length - 1 ? prev + 1 : 0));
-    }, 8000);
+    }, 9000);
     return () => clearInterval(interval);
   }, [activeAnnouncements.length]);
 
   return (
-    <div id="home-screen-view" className="space-y-4 pb-24 pt-1" dir="rtl">
+    <div id="home-screen-view" className="space-y-5 pb-24 pt-1" dir="rtl">
       {/* SECTION 1: IMPORTANT ANNOUNCEMENTS (تنبيهات هامة) */}
       {activeAnnouncements.length > 0 && (
         <section id="home-announcements-section" aria-label="التنبيهات">
           <div className="flex items-center justify-between mb-2 px-1">
-            <span className="text-xs font-bold text-slate-500">تنبيهات</span>
+            <span className="text-sm font-bold text-slate-700">تنبيهات هامة</span>
             {activeAnnouncements.length > 1 && (
               <button
                 type="button"
                 onClick={() => setIsAnnModalOpen(true)}
-                className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
               >
                 عرض الكل ({activeAnnouncements.length})
               </button>
@@ -79,9 +128,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
           <div
             id="announcement-carousel-card"
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs transition-all relative overflow-hidden"
+            onTouchStart={handleAnnTouchStart}
+            onTouchEnd={handleAnnTouchEnd}
+            className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs transition-all relative overflow-hidden"
           >
             <AnimatePresence mode="wait">
               <motion.div
@@ -91,55 +140,57 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 exit={{ opacity: 0, x: -12 }}
                 transition={{ duration: 0.18 }}
               >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100">
                     {activeAnnouncement.courseRef || activeAnnouncement.categoryNameAr}
                   </span>
-                  <span className="text-[11px] text-slate-400">{activeAnnouncement.timeAgo}</span>
+                  <span className="text-xs text-slate-500 font-medium">
+                    {activeAnnouncement.timeAgo}
+                  </span>
                 </div>
 
-                <h3 className="text-sm font-bold text-slate-900 mb-1 leading-snug">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1.5 leading-snug">
                   {activeAnnouncement.title}
                 </h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
+                <p className="text-sm text-slate-600 leading-relaxed">
                   {activeAnnouncement.content}
                 </p>
               </motion.div>
             </AnimatePresence>
 
-            {/* Dots if more than 1 announcement */}
+            {/* Dots and controls */}
             {activeAnnouncements.length > 1 && (
-              <div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-slate-100">
-                <div className="flex items-center gap-1">
+              <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100">
+                <div className="flex items-center gap-1.5">
                   {activeAnnouncements.map((_, idx) => (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => setCurrentAnnIndex(idx)}
                       className={`h-1.5 rounded-full transition-all ${
-                        idx === currentAnnIndex ? 'w-4 bg-blue-600' : 'w-1.5 bg-slate-200'
+                        idx === currentAnnIndex ? 'w-5 bg-blue-600' : 'w-1.5 bg-slate-200'
                       }`}
                       aria-label={`تنبيه ${idx + 1}`}
                     />
                   ))}
                 </div>
 
-                <div className="flex items-center gap-0.5">
+                <div className="flex items-center gap-1">
                   <button
                     type="button"
                     onClick={prevAnnouncement}
-                    className="p-1 text-slate-400 hover:text-slate-700"
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors"
                     aria-label="السابق"
                   >
-                    <ChevronRight size={16} />
+                    <ChevronRight size={18} />
                   </button>
                   <button
                     type="button"
                     onClick={nextAnnouncement}
-                    className="p-1 text-slate-400 hover:text-slate-700"
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors"
                     aria-label="التالي"
                   >
-                    <ChevronLeft size={16} />
+                    <ChevronLeft size={18} />
                   </button>
                 </div>
               </div>
@@ -148,74 +199,240 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </section>
       )}
 
-      {/* SECTION 2: UPCOMING DEADLINES / DATES (أقرب المواعيد والتسليمات) */}
-      <section id="home-upcoming-dates-section" aria-label="أقرب المواعيد">
-        <div className="flex items-center justify-between mb-2 px-1">
-          <span className="text-xs font-bold text-slate-500">أقرب التسليمات والمواعيد</span>
-          <button
-            type="button"
-            id="view-all-dates-button"
-            onClick={onNavigateToDates}
-            className="text-xs font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 transition-colors"
+      {/* SECTION 2: UPCOMING DEADLINES / DATES (أقرب المواعيد والتسليمات - بنفس شكل التنبيهات) */}
+      {nearestDates.length > 0 && activeDate && (
+        <section id="home-upcoming-dates-section" aria-label="أقرب التسليمات والمواعيد">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-sm font-bold text-slate-700">أقرب التسليمات والمواعيد</span>
+            <button
+              type="button"
+              id="view-all-dates-button"
+              onClick={onNavigateToDates}
+              className="text-sm font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 transition-colors"
+            >
+              <span>عرض كل المواعيد</span>
+              <ArrowLeft size={14} />
+            </button>
+          </div>
+
+          <div
+            id="dates-carousel-card"
+            onTouchStart={handleDateTouchStart}
+            onTouchEnd={handleDateTouchEnd}
+            className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs transition-all relative overflow-hidden"
           >
-            <span>عرض الكل</span>
-            <ArrowLeft size={13} />
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          {nearestDates.map((item) => {
-            const isVeryUrgent = item.daysUntil <= 3;
-            const isExam = item.type === 'quiz' || item.type === 'midterm' || item.type === 'final';
-
-            return (
-              <div
-                key={item.id}
-                className="bg-white border border-slate-200/80 rounded-xl p-3.5 flex items-center justify-between gap-3 hover:border-blue-200 transition-colors shadow-2xs"
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeDate.id}
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.18 }}
               >
-                <div className="min-w-0 flex-1">
+                {/* Top bar with course badge and remaining time badge */}
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-900 truncate">
-                      {item.course}
+                    <span className="text-xs font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/60">
+                      {activeDate.course}
                     </span>
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.2 rounded-md ${
-                        isExam
-                          ? 'bg-amber-50 text-amber-800 border border-amber-200/60'
-                          : 'bg-blue-50 text-blue-700 border border-blue-200/60'
+                      className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
+                        activeDate.type === 'quiz' || activeDate.type === 'midterm' || activeDate.type === 'final'
+                          ? 'bg-amber-50 text-amber-800 border-amber-200/80'
+                          : 'bg-blue-50 text-blue-700 border-blue-200/80'
                       }`}
                     >
-                      {item.typeLabelAr}
+                      {activeDate.typeLabelAr}
                     </span>
                   </div>
-                  <div className="text-xs font-medium text-slate-700 mt-0.5 truncate">
-                    {item.eventName}
-                  </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">
-                    {item.displayDateAr} {item.time ? `• ${item.time}` : ''}
-                  </div>
+
+                  <span
+                    className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
+                      activeDate.daysUntil <= 3
+                        ? 'bg-rose-50 text-rose-700 border-rose-200/70'
+                        : 'bg-emerald-50 text-emerald-800 border-emerald-200/70'
+                    }`}
+                  >
+                    {activeDate.remainingTimeAr}
+                  </span>
                 </div>
 
-                <span
-                  className={`shrink-0 text-xs px-2.5 py-1 rounded-lg border font-bold ${
-                    isVeryUrgent
-                      ? 'bg-rose-50 text-rose-700 border-rose-200/70'
-                      : 'bg-slate-50 text-slate-700 border-slate-200'
-                  }`}
-                >
-                  {item.remainingTimeAr}
-                </span>
+                {/* Event Name */}
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1.5 leading-snug">
+                  {activeDate.eventName}
+                </h3>
+
+                {/* Event Date & Details */}
+                <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+                  <div className="inline-flex items-center gap-1.5 font-medium">
+                    <Calendar size={15} className="text-slate-400 shrink-0" />
+                    <span>{activeDate.displayDateAr}</span>
+                  </div>
+                  {activeDate.time && (
+                    <div className="inline-flex items-center gap-1.5 font-medium">
+                      <Clock size={15} className="text-slate-400 shrink-0" />
+                      <span>{activeDate.time}</span>
+                    </div>
+                  )}
+                  {activeDate.location && (
+                    <div className="inline-flex items-center gap-1.5 font-medium">
+                      <MapPin size={15} className="text-slate-400 shrink-0" />
+                      <span>{activeDate.location}</span>
+                    </div>
+                  )}
+                </div>
+
+                {activeDate.notes && (
+                  <p className="text-xs sm:text-sm text-slate-500 mt-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    {activeDate.notes}
+                  </p>
+                )}
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Dots and controls for dates */}
+            {nearestDates.length > 1 && (
+              <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100">
+                <div className="flex items-center gap-1.5">
+                  {nearestDates.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setCurrentDateIndex(idx)}
+                      className={`h-1.5 rounded-full transition-all ${
+                        idx === currentDateIndex ? 'w-5 bg-blue-600' : 'w-1.5 bg-slate-200'
+                      }`}
+                      aria-label={`موعد ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={prevDate}
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+                    aria-label="السابق"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={nextDate}
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+                    aria-label="التالي"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                </div>
               </div>
-            );
-          })}
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* SECTION 3: UNIVERSITY PLATFORMS & OFFICIAL BYLAW */}
+      <section id="home-platforms-section" aria-label="المنصات الجامعية واللوائح">
+        <div className="flex items-center justify-between mb-2.5 px-1">
+          <span className="text-sm font-bold text-slate-700">المنصات الجامعية واللوائح الرسمية</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {/* منصة ابن الهيثم */}
+          <a
+            id="link-ibn-alhaytham"
+            href="https://hes.mans.edu.eg/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 rounded-2xl hover:border-blue-300 hover:shadow-xs transition-all"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700 shrink-0 group-hover:scale-105 transition-transform">
+                <GraduationCap size={22} />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                  منصة ابن الهيثم
+                </h4>
+                <p className="text-xs text-slate-500 truncate mt-0.5">
+                  شؤون الطلاب والنتائج والتسجيل
+                </p>
+              </div>
+            </div>
+            <div className="p-1 text-slate-400 group-hover:text-blue-600 transition-colors shrink-0 mr-2">
+              <ExternalLink size={16} />
+            </div>
+          </a>
+
+          {/* منصة الكتب الإلكترونية */}
+          <a
+            id="link-ebooks-platform"
+            href="https://books.mans.edu.eg/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 rounded-2xl hover:border-indigo-300 hover:shadow-xs transition-all"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 shrink-0 group-hover:scale-105 transition-transform">
+                <BookOpen size={22} />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
+                  منصة الكتب الجامعية
+                </h4>
+                <p className="text-xs text-slate-500 truncate mt-0.5">
+                  الكتاب الجامعي والمقررات الرقمية
+                </p>
+              </div>
+            </div>
+            <div className="p-1 text-slate-400 group-hover:text-indigo-600 transition-colors shrink-0 mr-2">
+              <ExternalLink size={16} />
+            </div>
+          </a>
+
+          {/* لائحة منوف PDF */}
+          <button
+            type="button"
+            id="btn-menouf-bylaw-pdf"
+            onClick={() => setIsBylawModalOpen(true)}
+            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 rounded-2xl hover:border-red-300 hover:shadow-xs transition-all text-right w-full sm:col-span-2 cursor-pointer"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 shrink-0 group-hover:scale-105 transition-transform">
+                <FileText size={22} />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-red-700 transition-colors">
+                    لائحة هندسة منوف (PDF)
+                  </h4>
+                  <span className="text-[10px] font-bold bg-red-100 text-red-700 px-1.5 py-0.2 rounded">
+                    PDF
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 truncate mt-0.5">
+                  اللائحة الداخلية ونظام الساعات المعتمدة والتخرج
+                </p>
+              </div>
+            </div>
+            <div className="px-3 py-1.5 rounded-xl bg-red-50 text-red-700 text-xs font-bold border border-red-100 group-hover:bg-red-600 group-hover:text-white transition-all shrink-0 mr-2 shadow-2xs">
+              عرض وتحميل
+            </div>
+          </button>
         </div>
       </section>
 
-      {/* Announcements Modal */}
+      {/* Announcements Full Modal */}
       <AllAnnouncementsModal
         isOpen={isAnnModalOpen}
         onClose={() => setIsAnnModalOpen(false)}
         announcements={activeAnnouncements}
+      />
+
+      {/* Menouf Bylaw Modal */}
+      <MenoufBylawModal
+        isOpen={isBylawModalOpen}
+        onClose={() => setIsBylawModalOpen(false)}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, BookOpen, ExternalLink } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Course } from '../types';
 import { CourseDetailView } from './CourseDetailView';
@@ -39,44 +39,16 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ courses }) => {
   }
 
   return (
-    <div id="courses-screen-view" className="space-y-4 pb-24 pt-1" dir="rtl">
+    <div id="courses-screen-view" className="space-y-3.5 pb-24 pt-1" dir="rtl">
       {/* Screen Title */}
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-xs font-bold text-slate-500 tracking-wide">
+        <h2 className="text-sm font-bold text-slate-700 tracking-wide">
           المواد الدراسية
         </h2>
-        <span className="text-xs text-slate-500 font-medium">
+        <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-lg">
           {courses.length} مواد مسجلة
         </span>
       </div>
-
-      {/* Quick Access to Books Platform */}
-      <motion.a
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.98 }}
-        href="https://mybook.mans.edu.eg"
-        target="_blank"
-        rel="noopener noreferrer"
-        id="courses-books-platform-banner"
-        className="w-full flex items-center justify-between p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-2xl hover:bg-blue-50 transition-colors group shadow-2xs"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-            <BookOpen size={18} />
-          </div>
-          <div className="text-right">
-            <span className="text-sm font-bold text-slate-900 block group-hover:text-blue-700 transition-colors">
-              منصة الكتب الإلكترونية
-            </span>
-            <span className="text-xs text-slate-500 block mt-0.5">
-              تصفح وتحميل الكتب والمقررات الجامعية الرسمية
-            </span>
-          </div>
-        </div>
-        <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-blue-600 border border-blue-100 shadow-2xs shrink-0 group-hover:translate-x-[-2px] transition-transform">
-          <ExternalLink size={13} />
-        </div>
-      </motion.a>
 
       {/* Courses List */}
       <div className="space-y-3">
