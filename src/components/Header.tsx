@@ -1,47 +1,28 @@
 import React from 'react';
-import { MessageSquarePlus } from 'lucide-react';
-import { motion } from 'motion/react';
-import { MasarLogo } from './MasarLogo';
+import { FEELogo } from './FEELogo';
 
-interface HeaderProps {
-  onOpenFeedback: () => void;
-}
-
-export const Header: React.FC<HeaderProps> = ({ onOpenFeedback }) => {
+export const Header: React.FC = () => {
   return (
     <header
       id="app-main-header"
-      className="sticky top-0 z-30 bg-slate-50/95 backdrop-blur-md px-4.5 py-3 border-b border-slate-200/60"
+      className="sticky top-0 z-30 bg-white/95 backdrop-blur-md px-4 py-2.5 border-b border-slate-100 text-slate-900 shadow-2xs"
     >
       <div className="max-w-md mx-auto flex items-center justify-between">
-        {/* Brand identity: Logo & Name enlarged per request */}
-        <div className="flex items-center gap-3">
-          <MasarLogo size={48} />
-          <div className="flex flex-col -space-y-0.5">
-            <span className="text-2xl font-black text-slate-900 tracking-tight">
-              مَسَارْ
+        {/* Brand identity: Electronic Engineering IC Logo & College Title */}
+        <div className="flex items-center gap-2.5">
+          <FEELogo size={36} />
+          <div className="flex flex-col">
+            <span className="text-[15px] font-black text-slate-900 tracking-tight leading-tight">
+              هندسة منوف
             </span>
-            <span className="text-xs font-bold text-slate-400 tracking-wide">
-              دليلك الأكاديمي
+            <span className="text-[11px] font-medium text-slate-500 leading-tight">
+              كلية الهندسة الإلكترونية
             </span>
           </div>
         </div>
-
-        {/* Feedback action button */}
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.94 }}
-          id="header-feedback-button"
-          type="button"
-          onClick={onOpenFeedback}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-blue-700 bg-blue-50/90 hover:bg-blue-100 active:bg-blue-100 border border-blue-200/80 transition-all shadow-2xs"
-          aria-label="إرسال ملاحظة"
-        >
-          <MessageSquarePlus size={14} className="text-blue-600" />
-          <span>ملاحظة</span>
-        </motion.button>
       </div>
     </header>
   );
 };
+
 

@@ -90,27 +90,25 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course, onBa
       className="space-y-4 pb-28 pt-1"
       dir="rtl"
     >
-      {/* Clean Course Header without duplication */}
-      <div className="flex items-center gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs">
-        <button
-          type="button"
-          onClick={onBack}
-          className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 hover:text-blue-700 hover:bg-blue-50 flex items-center justify-center transition-colors shrink-0"
-          aria-label="العودة للمواد"
-        >
-          <ArrowRight size={20} />
-        </button>
-
-        <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-bold text-slate-900 truncate">
-            {course.nameAr || course.nameEn} ({course.code})
-          </h2>
-          <p className="text-xs text-slate-500 truncate mt-0.5">
-            {course.instructor}
-          </p>
+      {/* Sleek Minimal Top Navigation Bar */}
+      <div className="flex items-center justify-between px-0.5 py-1">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-9 h-9 rounded-xl bg-white border border-slate-200/90 text-slate-700 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50/50 flex items-center justify-center shadow-2xs transition-all shrink-0"
+            aria-label="العودة للمواد"
+          >
+            <ArrowRight size={18} />
+          </button>
+          <div className="min-w-0">
+            <h2 className="text-base font-bold text-slate-900 truncate">
+              {course.nameAr || course.nameEn}
+            </h2>
+          </div>
         </div>
 
-        <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 shrink-0">
+        <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-100/80 shrink-0">
           {files.length} ملف
         </span>
       </div>
@@ -132,19 +130,19 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course, onBa
               key={cat.id}
               type="button"
               onClick={() => setActiveTab(cat.id)}
-              className={`relative px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+              className={`relative px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 flex items-center gap-1.5 ${
                 isSelected
                   ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50'
               }`}
             >
-              <Icon size={14} className={isSelected ? 'text-white' : 'text-slate-400'} />
+              <Icon size={16} className={isSelected ? 'text-white' : 'text-slate-400'} />
               <span>{cat.label}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                className={`text-[11px] px-1.5 py-0.2 rounded-full font-bold ${
                   isSelected
-                    ? 'bg-white/20 text-white font-black'
-                    : 'bg-slate-100 text-slate-500'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-100 text-slate-600'
                 }`}
               >
                 {count}
@@ -161,18 +159,18 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course, onBa
             <div
               key={file.id}
               onClick={() => setActiveFile(file)}
-              className="bg-white border border-slate-200/80 hover:border-blue-300 rounded-2xl p-3.5 flex items-center justify-between gap-3 cursor-pointer transition-all shadow-2xs group"
+              className="bg-white border border-slate-200/90 hover:border-blue-300 rounded-2xl p-4 flex items-center justify-between gap-3 cursor-pointer transition-all shadow-2xs group"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100/80 flex items-center justify-center shrink-0">
-                  <FileText size={18} />
+                <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 border border-blue-100/80 flex items-center justify-center shrink-0">
+                  <FileText size={20} />
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition-colors line-clamp-2 leading-relaxed">
+                  <h4 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors line-clamp-2 leading-relaxed">
                     {file.title}
                   </h4>
-                  <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-2">
+                  <div className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5 flex items-center gap-2">
                     <span>{file.size}</span>
                     {file.totalPages && <span>• {file.totalPages} صفحة</span>}
                   </div>
@@ -180,11 +178,11 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course, onBa
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={(e) => handleDownload(e, file)}
-                  className={`p-2 rounded-xl text-xs font-bold border transition-all ${
+                  className={`p-2.5 rounded-xl text-xs sm:text-sm font-bold border transition-all ${
                     downloadingId === file.id
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                       : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
@@ -193,27 +191,27 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course, onBa
                   aria-label="تحميل الملف"
                 >
                   {downloadingId === file.id ? (
-                    <Check size={14} className="text-emerald-600" />
+                    <Check size={16} className="text-emerald-600" />
                   ) : (
-                    <Download size={14} />
+                    <Download size={16} />
                   )}
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setActiveFile(file)}
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/70 transition-all inline-flex items-center gap-1 shadow-2xs"
+                  className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all inline-flex items-center gap-1 shadow-2xs"
                 >
-                  <Eye size={13} />
+                  <Eye size={15} />
                   <span>عرض</span>
                 </button>
               </div>
             </div>
           ))
         ) : (
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-8 text-center text-xs text-slate-500 space-y-1">
-            <p className="font-semibold text-slate-700">لا توجد ملفات في هذا القسم حالياً</p>
-            <p className="text-[11px] text-slate-400">سيتم إضافة الملفات فور نشرها من الكلية</p>
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-8 text-center text-sm text-slate-500 space-y-1.5 font-medium">
+            <p className="font-bold text-slate-800 text-base">لا توجد ملفات في هذا القسم حالياً</p>
+            <p className="text-xs sm:text-sm text-slate-400">سيتم إضافة الملفات فور نشرها من الكلية</p>
           </div>
         )}
       </div>

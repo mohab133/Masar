@@ -277,8 +277,8 @@ export const MenoufBylawModal: React.FC<MenoufBylawModalProps> = ({ isOpen, onCl
                       <tr><td className="p-2">97% فأكثر</td><td className="p-2 font-bold text-emerald-700">A+</td><td className="p-2 font-bold">4.00</td><td className="p-2">ممتاز مرتفع</td></tr>
                       <tr><td className="p-2">93% إلى أقل من 97%</td><td className="p-2 font-bold text-emerald-700">A</td><td className="p-2 font-bold">4.00</td><td className="p-2">ممتاز</td></tr>
                       <tr><td className="p-2">89% إلى أقل من 93%</td><td className="p-2 font-bold text-emerald-700">A-</td><td className="p-2 font-bold">3.70</td><td className="p-2">ممتاز منخفض</td></tr>
-                      <tr><td className="p-2">84% إلى أقل من 89%</td><td className="p-2 font-bold text-blue-700">B+</td><td className="p-2 font-bold">3.30</td><td className="p-2">جيد جداً مرتفع</td></tr>
-                      <tr><td className="p-2">80% إلى أقل من 84%</td><td className="p-2 font-bold text-blue-700">B</td><td className="p-2 font-bold">3.00</td><td className="p-2">جيد جداً</td></tr>
+                      <tr><td className="p-2">84% إلى أقل من 89%</td><td className="p-2 font-bold text-slate-800">B+</td><td className="p-2 font-bold">3.30</td><td className="p-2">جيد جداً مرتفع</td></tr>
+                      <tr><td className="p-2">80% إلى أقل من 84%</td><td className="p-2 font-bold text-slate-800">B</td><td className="p-2 font-bold">3.00</td><td className="p-2">جيد جداً</td></tr>
                       <tr><td className="p-2">73% إلى أقل من 76%</td><td className="p-2 font-bold text-amber-700">C+</td><td className="p-2 font-bold">2.30</td><td className="p-2">جيد مرتفع</td></tr>
                       <tr><td className="p-2">70% إلى أقل من 73%</td><td className="p-2 font-bold text-amber-700">C</td><td className="p-2 font-bold">2.00</td><td className="p-2">جيد (حد التخرج)</td></tr>
                       <tr><td className="p-2">60% إلى أقل من 64%</td><td className="p-2 font-bold text-slate-700">D</td><td className="p-2 font-bold">1.00</td><td className="p-2">مقبول</td></tr>
@@ -294,7 +294,7 @@ export const MenoufBylawModal: React.FC<MenoufBylawModalProps> = ({ isOpen, onCl
             <div className="space-y-2.5">
               <div className="p-3 bg-white border border-slate-200 rounded-xl shadow-2xs">
                 <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
-                  <Layers size={16} className="text-blue-600" />
+                  <Layers size={16} className="text-slate-700" />
                   <span>هندسة وعلوم الحاسب (CSE)</span>
                 </div>
                 <p className="text-xs text-slate-600 mt-1">
@@ -304,7 +304,7 @@ export const MenoufBylawModal: React.FC<MenoufBylawModalProps> = ({ isOpen, onCl
 
               <div className="p-3 bg-white border border-slate-200 rounded-xl shadow-2xs">
                 <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
-                  <Layers size={16} className="text-indigo-600" />
+                  <Layers size={16} className="text-slate-700" />
                   <span>هندسة الإلكترونيات والاتصالات الكهربية (ECE)</span>
                 </div>
                 <p className="text-xs text-slate-600 mt-1">
@@ -341,7 +341,7 @@ export const MenoufBylawModal: React.FC<MenoufBylawModalProps> = ({ isOpen, onCl
 
               <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
                 <div className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-1">
-                  <BookOpen size={18} className="text-blue-600" />
+                  <BookOpen size={18} className="text-slate-700" />
                   <span>الحذف والإضافة والانسحاب</span>
                 </div>
                 <p className="text-xs text-slate-600">

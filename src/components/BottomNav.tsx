@@ -41,7 +41,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onChangeTab }) 
                   <motion.div
                     layoutId="activeBottomTabPill"
                     className="absolute inset-0 bg-blue-50/90 rounded-full border border-blue-100"
-                    transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                    transition={{ type: 'spring', stiffness: 550, damping: 32 }}
                   />
                 )}
                 
@@ -49,7 +49,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onChangeTab }) 
                   <Icon
                     size={20}
                     className={`transition-colors duration-200 ${
-                      isActive ? 'text-blue-700 scale-105' : 'text-slate-400 group-hover:text-slate-600'
+                      isActive ? 'text-blue-600 scale-105' : 'text-slate-400 group-hover:text-slate-600'
                     }`}
                   />
                 </span>

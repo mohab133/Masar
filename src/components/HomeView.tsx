@@ -7,12 +7,11 @@ import {
   BookOpen,
   GraduationCap,
   ExternalLink,
-  Clock,
-  MapPin,
   FileText,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Announcement, AcademicEvent } from '../types';
+import { getCourseNameAr } from '../data/sampleData';
 import { AllAnnouncementsModal } from './AllAnnouncementsModal';
 import { MenoufBylawModal } from './MenoufBylawModal';
 
@@ -109,7 +108,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   }, [activeAnnouncements.length]);
 
   return (
-    <div id="home-screen-view" className="space-y-5 pb-24 pt-1" dir="rtl">
+    <div id="home-screen-view" className="space-y-4 pb-32 pt-1" dir="rtl">
       {/* SECTION 1: IMPORTANT ANNOUNCEMENTS (تنبيهات هامة) */}
       {activeAnnouncements.length > 0 && (
         <section id="home-announcements-section" aria-label="التنبيهات">
@@ -119,7 +118,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               <button
                 type="button"
                 onClick={() => setIsAnnModalOpen(true)}
-                className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors"
               >
                 عرض الكل ({activeAnnouncements.length})
               </button>
@@ -199,7 +198,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </section>
       )}
 
-      {/* SECTION 2: UPCOMING DEADLINES / DATES (أقرب المواعيد والتسليمات - بنفس شكل التنبيهات) */}
+      {/* SECTION 2: UPCOMING DEADLINES / DATES (أقرب المواعيد والتسليمات) */}
       {nearestDates.length > 0 && activeDate && (
         <section id="home-upcoming-dates-section" aria-label="أقرب التسليمات والمواعيد">
           <div className="flex items-center justify-between mb-2 px-1">
@@ -208,7 +207,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               type="button"
               id="view-all-dates-button"
               onClick={onNavigateToDates}
-              className="text-sm font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 transition-colors"
+              className="text-sm font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 transition-colors"
             >
               <span>عرض كل المواعيد</span>
               <ArrowLeft size={14} />
@@ -229,64 +228,33 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 exit={{ opacity: 0, x: -12 }}
                 transition={{ duration: 0.18 }}
               >
-                {/* Top bar with course badge and remaining time badge */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/60">
-                      {activeDate.course}
+                <div className="space-y-2.5">
+                  {/* Top row: Type badge & Course badge */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100/80">
+                      {activeDate.typeLabelAr || 'تسليم'}
                     </span>
-                    <span
-                      className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
-                        activeDate.type === 'quiz' || activeDate.type === 'midterm' || activeDate.type === 'final'
-                          ? 'bg-amber-50 text-amber-800 border-amber-200/80'
-                          : 'bg-blue-50 text-blue-700 border-blue-200/80'
-                      }`}
-                    >
-                      {activeDate.typeLabelAr}
+                    <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">
+                      {getCourseNameAr(activeDate.course)}
                     </span>
                   </div>
 
-                  <span
-                    className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
-                      activeDate.daysUntil <= 3
-                        ? 'bg-rose-50 text-rose-700 border-rose-200/70'
-                        : 'bg-emerald-50 text-emerald-800 border-emerald-200/70'
-                    }`}
-                  >
-                    {activeDate.remainingTimeAr}
-                  </span>
-                </div>
+                  {/* Main task / assignment title - full text on its own line */}
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug break-words">
+                    {activeDate.eventName}
+                  </h3>
 
-                {/* Event Name */}
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1.5 leading-snug">
-                  {activeDate.eventName}
-                </h3>
-
-                {/* Event Date & Details */}
-                <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-                  <div className="inline-flex items-center gap-1.5 font-medium">
-                    <Calendar size={15} className="text-slate-400 shrink-0" />
-                    <span>{activeDate.displayDateAr}</span>
+                  {/* Bottom row: Deadline & time */}
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs sm:text-sm">
+                    <div className="flex items-center gap-2 text-slate-700 font-medium">
+                      <Calendar size={16} className="text-blue-600 shrink-0" />
+                      <span>أخر موعد: <strong className="text-slate-900 font-extrabold">{activeDate.displayDateAr}</strong></span>
+                    </div>
+                    {activeDate.time && (
+                      <span className="text-xs text-slate-500 font-medium">({activeDate.time})</span>
+                    )}
                   </div>
-                  {activeDate.time && (
-                    <div className="inline-flex items-center gap-1.5 font-medium">
-                      <Clock size={15} className="text-slate-400 shrink-0" />
-                      <span>{activeDate.time}</span>
-                    </div>
-                  )}
-                  {activeDate.location && (
-                    <div className="inline-flex items-center gap-1.5 font-medium">
-                      <MapPin size={15} className="text-slate-400 shrink-0" />
-                      <span>{activeDate.location}</span>
-                    </div>
-                  )}
                 </div>
-
-                {activeDate.notes && (
-                  <p className="text-xs sm:text-sm text-slate-500 mt-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                    {activeDate.notes}
-                  </p>
-                )}
               </motion.div>
             </AnimatePresence>
 
@@ -347,7 +315,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 rounded-2xl hover:border-blue-300 hover:shadow-xs transition-all"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700 shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0 group-hover:scale-105 transition-transform">
                 <GraduationCap size={22} />
               </div>
               <div className="min-w-0">
@@ -373,7 +341,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 rounded-2xl hover:border-indigo-300 hover:shadow-xs transition-all"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-105 transition-transform">
                 <BookOpen size={22} />
               </div>
               <div className="min-w-0">

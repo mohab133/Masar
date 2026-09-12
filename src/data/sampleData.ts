@@ -719,3 +719,13 @@ export const SAMPLE_COURSES: Course[] = [
     ],
   },
 ];
+
+export const COURSE_NAME_MAP: Record<string, string> = {
+  Chemistry: 'الكيمياء الهندسية',
+  Physics: 'الفيزياء الهندسية',
+  Biology: 'علم الأحياء العام',
+};
+
+export const getCourseNameAr = (name: string): string => {
+  return COURSE_NAME_MAP[name] || name;
+};

@@ -1,6 +1,6 @@
 {
   "appId": "com.masar.studentapp",
-  "appName": "مسار - Masar",
+  "appName": "FEE - كلية الهندسة الإلكترونية",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {

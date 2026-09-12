@@ -5,7 +5,6 @@ import {
   SAMPLE_ANNOUNCEMENTS,
   UPCOMING_DATES,
   SCHEDULE_EVENTS,
-  LIVE_SECTIONS_SAMPLE,
   SAMPLE_COURSES,
 } from './data/sampleData';
 import { Header } from './components/Header';
@@ -14,31 +13,30 @@ import { HomeView } from './components/HomeView';
 import { ScheduleView } from './components/ScheduleView';
 import { CoursesView } from './components/CoursesView';
 import { DatesView } from './components/DatesView';
-import { FeedbackModal } from './components/FeedbackModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 
 const TAB_ORDER: TabType[] = ['home', 'schedule', 'courses', 'dates'];
 
-// Page slide animation matching RTL direction
+// Page slide animation with responsive spring physics matching RTL direction
 const pageVariants = {
   enter: (dir: number) => ({
-    x: dir > 0 ? -32 : 32,
+    x: dir > 0 ? -20 : 20,
     opacity: 0,
   }),
   center: {
     x: 0,
     opacity: 1,
     transition: {
-      x: { type: 'spring', stiffness: 400, damping: 35 },
-      opacity: { duration: 0.18, ease: 'easeOut' },
+      x: { type: 'spring', stiffness: 550, damping: 38, mass: 0.8 },
+      opacity: { duration: 0.14, ease: 'easeOut' },
     },
   },
   exit: (dir: number) => ({
-    x: dir > 0 ? 32 : -32,
+    x: dir > 0 ? 16 : -16,
     opacity: 0,
     transition: {
-      x: { type: 'spring', stiffness: 400, damping: 35 },
-      opacity: { duration: 0.14, ease: 'easeIn' },
+      x: { type: 'spring', stiffness: 550, damping: 38, mass: 0.8 },
+      opacity: { duration: 0.08, ease: 'easeIn' },
     },
   }),
 };
@@ -46,7 +44,6 @@ const pageVariants = {
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [direction, setDirection] = useState<number>(1);
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   // Touch gesture references for main page swipe
   const touchStartX = useRef<number | null>(null);
@@ -112,10 +109,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex justify-center text-slate-900 selection:bg-slate-200">
+    <div className="min-h-screen bg-slate-100 flex justify-center text-slate-900 selection:bg-blue-100">
       {/* Mobile Application Container */}
       <div
-        className="w-full max-w-md min-h-screen bg-slate-50 flex flex-col shadow-sm relative overflow-x-hidden"
+        className="w-full max-w-md min-h-screen bg-[#f8fafc] flex flex-col shadow-xl relative overflow-x-hidden border-x border-slate-200"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -123,7 +120,7 @@ export default function App() {
         <OfflineIndicator />
 
         {/* Main Application Header */}
-        <Header onOpenFeedback={() => setIsFeedbackOpen(true)} />
+        <Header />
 
         {/* Dynamic Screen Views with smooth directional slide animations */}
         <main className="flex-1 px-4.5 pt-3.5 relative">
@@ -148,7 +145,6 @@ export default function App() {
               {activeTab === 'schedule' && (
                 <ScheduleView
                   scheduleEvents={SCHEDULE_EVENTS}
-                  liveSections={LIVE_SECTIONS_SAMPLE}
                 />
               )}
 
@@ -165,12 +161,6 @@ export default function App() {
 
         {/* Bottom Navigation with animated active pill */}
         <BottomNav activeTab={activeTab} onChangeTab={handleTabChange} />
-
-        {/* Global Feedback Sheet / Modal */}
-        <FeedbackModal
-          isOpen={isFeedbackOpen}
-          onClose={() => setIsFeedbackOpen(false)}
-        />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 {
   "name": "Masar",
-  "description": "تطبيق مسار الجامعي الأكاديمي لطلاب الدفعة لمتابعة الإعلانات والجدول والمواد والمواعيد المهمة",
+  "description": "تطبيق FEE الأكاديمي لطلاب كلية الهندسة الإلكترونية بمنوف لمتابعة المحاضرات والسكاشن وجداول التسليمات الرسمية",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

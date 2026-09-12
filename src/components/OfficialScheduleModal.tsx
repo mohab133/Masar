@@ -88,7 +88,7 @@ export const OfficialScheduleModal: React.FC<OfficialScheduleModalProps> = ({
         {/* Modal Header */}
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-xs">
               <FileImage size={20} />
             </div>
             <div>
@@ -145,7 +145,7 @@ export const OfficialScheduleModal: React.FC<OfficialScheduleModalProps> = ({
             className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all shadow-xs ${
               isDownloaded
                 ? 'bg-emerald-600 text-white'
-                : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
+                : 'bg-slate-900 text-white hover:bg-black active:scale-95'
             }`}
           >
             {isDownloaded ? (
@@ -181,19 +181,19 @@ export const OfficialScheduleModal: React.FC<OfficialScheduleModalProps> = ({
 
               {/* Official University Header Bar */}
               <rect width="760" height="74" fill="#0f172a" rx="10 10 0 0" />
-              <rect x="0" y="72" width="760" height="3" fill="#2563eb" />
+              <rect x="0" y="72" width="760" height="3" fill="#10b981" />
 
               {/* University Title & Department (Right side) */}
               <text x="735" y="30" fill="#ffffff" fontSize="15" fontWeight="800" textAnchor="end">
-                جامعة المنصورة • كلية العلوم
+                جامعة المنوفية • كلية الهندسة الإلكترونية بمنوف (FEE)
               </text>
               <text x="735" y="52" fill="#94a3b8" fontSize="11" fontWeight="600" textAnchor="end">
-                شؤون التعليم والطلاب • الفرقة الأولى • {document.term} {document.academicYear}
+                شؤون التعليم والطلاب • الفرقة الثانية • {document.term} {document.academicYear}
               </text>
 
               {/* Left Official Badge */}
-              <rect x="25" y="20" width="185" height="34" rx="8" fill="#1e293b" stroke="#3b82f6" strokeWidth="1.2" />
-              <text x="117" y="42" fill="#60a5fa" fontSize="11.5" fontWeight="700" textAnchor="middle">
+              <rect x="25" y="20" width="185" height="34" rx="8" fill="#1e293b" stroke="#475569" strokeWidth="1.2" />
+              <text x="117" y="42" fill="#e2e8f0" fontSize="11.5" fontWeight="700" textAnchor="middle">
                 {document.typeLabelAr} المعتمد
               </text>
 

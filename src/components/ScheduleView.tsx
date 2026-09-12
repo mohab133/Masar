@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { Sparkles, MapPin, Clock, FileImage, Download, Filter } from 'lucide-react';
+import { MapPin, Clock, FileImage, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ScheduleEvent, ScheduleType, LiveSectionInfo, OfficialScheduleDocument } from '../types';
+import { ScheduleEvent, ScheduleType, OfficialScheduleDocument } from '../types';
 import { OFFICIAL_SCHEDULE_DOCS } from '../data/sampleData';
-import { LiveSectionsModal } from './LiveSectionsModal';
 import { OfficialScheduleModal } from './OfficialScheduleModal';
 
 interface ScheduleViewProps {
   scheduleEvents: ScheduleEvent[];
-  liveSections: LiveSectionInfo[];
 }
 
 const DAYS_OF_WEEK = [
@@ -21,11 +19,9 @@ const DAYS_OF_WEEK = [
 
 export const ScheduleView: React.FC<ScheduleViewProps> = ({
   scheduleEvents,
-  liveSections,
 }) => {
   const [scheduleType, setScheduleType] = useState<ScheduleType>('lecture');
   const [selectedDay, setSelectedDay] = useState<number>(0);
-  const [isLiveModalOpen, setIsLiveModalOpen] = useState(false);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<OfficialScheduleDocument | null>(null);
 
@@ -62,51 +58,45 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   };
 
   return (
-    <div id="schedule-screen-view" className="space-y-4 pb-24 pt-1" dir="rtl">
+    <div id="schedule-screen-view" className="space-y-4 pb-32 pt-1" dir="rtl">
       {/* Schedule Image Button */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-2xs">
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-2xs">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <FileImage size={18} />
+          <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+            <FileImage size={20} />
           </div>
-          <span className="text-xs font-bold text-slate-800">
-            صورة الجدول الأسبوعي
-          </span>
+          <div>
+            <span className="text-sm font-bold text-slate-900 block">
+              صورة الجدول الأسبوعي الرسمي
+            </span>
+            <span className="text-xs text-slate-500 font-medium block">
+              جدول المحاضرات والسكاشن المعتمد
+            </span>
+          </div>
         </div>
 
         <button
           type="button"
           onClick={() => handleOpenDoc(OFFICIAL_SCHEDULE_DOCS[0])}
-          className="px-3 py-1.5 bg-blue-50 text-blue-700 font-bold text-xs rounded-xl border border-blue-200/80 hover:bg-blue-100 transition-all shrink-0 inline-flex items-center gap-1.5"
+          className="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs sm:text-sm rounded-xl border border-blue-200/80 transition-all shrink-0 inline-flex items-center gap-1.5 shadow-2xs"
         >
-          <Download size={13} />
-          <span>عرض الصورة</span>
+          <Download size={14} />
+          <span>عرض الجدول</span>
         </button>
       </div>
 
-      {/* Live Sections */}
-      <button
-        type="button"
-        id="open-live-sections-button"
-        onClick={() => setIsLiveModalOpen(true)}
-        className="w-full flex items-center justify-between px-3.5 py-2.5 bg-emerald-50/70 border border-emerald-200/70 rounded-2xl text-xs hover:bg-emerald-50 transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-          <span className="font-bold text-emerald-900 text-xs">السكاشن الحالية والقادمة الآن</span>
-        </div>
-        <span className="text-xs font-bold text-emerald-700">
-          عرض ←
-        </span>
-      </button>
-
       {/* Segmented Control: المحاضرات | السكاشن */}
-      <div className="p-1 bg-slate-200/70 rounded-xl flex items-center relative">
+      <div
+        data-no-swipe="true"
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+        className="p-1.5 bg-slate-200/80 rounded-2xl flex items-center relative select-none"
+      >
         <button
           type="button"
           id="schedule-tab-lectures"
           onClick={() => setScheduleType('lecture')}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all relative z-10 ${
+          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all relative z-10 ${
             scheduleType === 'lecture'
               ? 'text-blue-700 font-black'
               : 'text-slate-600 hover:text-slate-900 font-bold'
@@ -115,8 +105,8 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
           {scheduleType === 'lecture' && (
             <motion.div
               layoutId="scheduleTypePill"
-              className="absolute inset-0 bg-white rounded-lg shadow-xs"
-              transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+              className="absolute inset-0 bg-white rounded-xl shadow-xs"
+              transition={{ type: 'spring', stiffness: 550, damping: 32 }}
             />
           )}
           <span className="relative z-10">المحاضرات</span>
@@ -126,7 +116,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
           type="button"
           id="schedule-tab-sections"
           onClick={() => setScheduleType('section')}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all relative z-10 ${
+          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all relative z-10 ${
             scheduleType === 'section'
               ? 'text-blue-700 font-black'
               : 'text-slate-600 hover:text-slate-900 font-bold'
@@ -135,75 +125,62 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
           {scheduleType === 'section' && (
             <motion.div
               layoutId="scheduleTypePill"
-              className="absolute inset-0 bg-white rounded-lg shadow-xs"
-              transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+              className="absolute inset-0 bg-white rounded-xl shadow-xs"
+              transition={{ type: 'spring', stiffness: 550, damping: 32 }}
             />
           )}
           <span className="relative z-10">السكاشن</span>
         </button>
       </div>
 
-      {/* Section Filter (يظهر فقط في تبويب السكاشن لاختيار سكشن الطالب مثل ٣) */}
+      {/* Section Filter - Simple and streamlined */}
       <AnimatePresence>
         {scheduleType === 'section' && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-white border border-slate-200/80 rounded-2xl p-3 space-y-2 overflow-hidden"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200/80"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <Filter size={14} className="text-blue-600" />
-                <span>اختر سكشنك لعرض مواعيده فقط:</span>
-              </span>
-              {selectedSection !== 'all' ? (
-                <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-200/70">
-                  يعرض سكشن {selectedSection} فقط
-                </span>
-              ) : (
-                <span className="text-[11px] text-slate-500 font-medium">
-                  يعرض كل السكاشن
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => handleSectionChange('all')}
-                className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all ${
-                  selectedSection === 'all'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                الكل
-              </button>
-              {[1, 2, 3, 4].map((secNum) => {
-                const isSelected = selectedSection === String(secNum);
-                return (
-                  <button
-                    key={secNum}
-                    type="button"
-                    onClick={() => handleSectionChange(String(secNum))}
-                    className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all ${
-                      isSelected
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    سكشن {secNum}
-                  </button>
-                );
-              })}
-            </div>
+            <button
+              type="button"
+              onClick={() => handleSectionChange('all')}
+              className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                selectedSection === 'all'
+                  ? 'bg-white text-blue-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              كل السكاشن
+            </button>
+            {[1, 2, 3, 4].map((secNum) => {
+              const isSelected = selectedSection === String(secNum);
+              return (
+                <button
+                  key={secNum}
+                  type="button"
+                  onClick={() => handleSectionChange(String(secNum))}
+                  className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                    isSelected
+                      ? 'bg-white text-blue-700 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  سكشن {secNum}
+                </button>
+              );
+            })}
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Days Selector - Smooth interactive pills */}
-      <div className="flex items-center gap-1.5">
+      <div
+        data-no-swipe="true"
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+        className="flex items-center gap-1.5 select-none"
+      >
         {DAYS_OF_WEEK.map((day) => {
           const isSelected = selectedDay === day.id;
 
@@ -212,17 +189,17 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
               key={day.id}
               type="button"
               onClick={() => setSelectedDay(day.id)}
-              className={`flex-1 py-2 px-1 rounded-xl text-center text-xs transition-all relative ${
+              className={`flex-1 py-2.5 px-1 rounded-xl text-center text-xs sm:text-sm transition-all relative ${
                 isSelected
                   ? 'text-white font-bold shadow-xs'
-                  : 'bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50 font-medium'
+                  : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 font-bold'
               }`}
             >
               {isSelected && (
                 <motion.div
                   layoutId="scheduleDayPill"
                   className="absolute inset-0 bg-blue-600 rounded-xl"
-                  transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                  transition={{ type: 'spring', stiffness: 550, damping: 32 }}
                 />
               )}
               <span className="relative z-10">{day.label}</span>
@@ -235,39 +212,39 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
       <AnimatePresence mode="wait">
         <motion.div
           key={`${scheduleType}-${selectedDay}-${selectedSection}`}
-          initial={{ opacity: 0, y: 6 }}
+          initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.18 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.12 }}
           className="space-y-3 pt-1"
         >
           {filteredEvents.length > 0 ? (
             filteredEvents.map((item, idx) => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: idx * 0.04 }}
-                className="bg-white border border-slate-200/70 rounded-xl p-4 hover:border-blue-200 transition-colors shadow-2xs"
+                transition={{ duration: 0.14, delay: Math.min(idx * 0.02, 0.1) }}
+                className="bg-white border border-slate-200/90 rounded-2xl p-4 hover:border-blue-300 transition-colors shadow-2xs"
               >
                 {/* Card Header: Course & Section/Lecture Badge */}
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-slate-900">
+                    <span className="text-base font-bold text-slate-900">
                       {item.course}
                     </span>
                     {item.instructor && (
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs sm:text-sm text-slate-500 font-medium">
                         • {item.instructor}
                       </span>
                     )}
                   </div>
 
                   <span
-                    className={`text-xs font-semibold px-2.5 py-0.5 rounded-md border ${
+                    className={`text-xs sm:text-sm font-bold px-2.5 py-1 rounded-lg border ${
                       item.type === 'lecture'
-                        ? 'bg-blue-50 text-blue-700 border-blue-200/60'
-                        : 'bg-emerald-50 text-emerald-800 border-emerald-200/60'
+                        ? 'bg-blue-50 text-blue-700 border-blue-100'
+                        : 'bg-emerald-50 text-emerald-800 border-emerald-200/70'
                     }`}
                   >
                     {item.typeLabelAr}
@@ -276,16 +253,16 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
                 </div>
 
                 {/* Card Body: Time, Location */}
-                <div className="flex flex-wrap items-center gap-y-1.5 gap-x-4 text-xs text-slate-600 mt-2">
+                <div className="flex flex-wrap items-center gap-y-1.5 gap-x-4 text-xs sm:text-sm text-slate-600 mt-2 font-medium">
                   <div className="flex items-center gap-1.5">
-                    <Clock size={14} className="text-slate-400" />
+                    <Clock size={15} className="text-slate-400" />
                     <span>
                       {item.startTime} - {item.endTime}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <MapPin size={14} className="text-slate-400" />
-                    <span className="font-semibold text-slate-800">
+                    <MapPin size={15} className="text-slate-400" />
+                    <span className="font-bold text-slate-800">
                       {item.location}
                     </span>
                   </div>
@@ -293,28 +270,20 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 
                 {/* Important Notes / Tips */}
                 {item.notes && (
-                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-start gap-1.5 text-xs text-amber-800 bg-amber-50/50 -mx-1 px-2.5 py-1.5 rounded-lg">
-                    <Sparkles size={13} className="shrink-0 mt-0.5 text-amber-600" />
-                    <span>{item.notes}</span>
+                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-start gap-1.5 text-xs sm:text-sm text-amber-800 bg-amber-50/70 -mx-1 px-3 py-2 rounded-xl">
+                    <span className="font-semibold">{item.notes}</span>
                   </div>
                 )}
               </motion.div>
             ))
           ) : (
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-8 text-center text-xs text-slate-500">
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-8 text-center text-sm font-medium text-slate-500">
               لا توجد {scheduleType === 'lecture' ? 'محاضرات' : 'سكاشن'} مسجلة لهذا اليوم
               {selectedSection !== 'all' ? ` لسكشن ${selectedSection}` : ''}
             </div>
           )}
         </motion.div>
       </AnimatePresence>
-
-      {/* Live Sections Modal */}
-      <LiveSectionsModal
-        isOpen={isLiveModalOpen}
-        onClose={() => setIsLiveModalOpen(false)}
-        liveSections={liveSections}
-      />
 
       {/* Official Schedule Sheet Modal */}
       <OfficialScheduleModal
@@ -328,3 +297,4 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
     </div>
   );
 };
+

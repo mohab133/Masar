@@ -25,7 +25,7 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-800 border border-slate-200 flex items-center justify-center">
               <Bell size={18} />
             </div>
             <div>
@@ -48,10 +48,10 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = ({
           {announcements.map((ann) => (
             <div
               key={ann.id}
-              className="p-4 rounded-xl border border-slate-200/80 bg-white hover:border-blue-200 transition-colors"
+              className="p-4 rounded-xl border border-slate-200/80 bg-white hover:border-slate-400 transition-colors"
             >
               <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
                   <Tag size={12} />
                   {ann.categoryNameAr}
                 </span>
@@ -64,7 +64,7 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = ({
               <p className="text-sm text-slate-700 leading-relaxed">{ann.content}</p>
               {ann.courseRef && (
                 <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="font-bold text-blue-700">{ann.courseRef}</span>
+                  <span className="font-bold text-slate-800">{ann.courseRef}</span>
                   <span className="text-slate-500">{ann.timeAgo}</span>
                 </div>
               )}
