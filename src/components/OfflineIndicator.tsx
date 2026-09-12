@@ -1,19 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { WifiOff, Wifi } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-export const OfflineIndicator: React.FC = () => {
+export const OfflineIndicator: React.FC = memo(() => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showReconnected, setShowReconnected] = useState(false);
 
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
     const handleOnline = () => {
       setIsOnline(true);
       setShowReconnected(true);
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setShowReconnected(false);
       }, 3000);
-      return () => clearTimeout(timer);
     };
 
     const handleOffline = () => {
@@ -25,6 +26,7 @@ export const OfflineIndicator: React.FC = () => {
     window.addEventListener('offline', handleOffline);
 
     return () => {
+      if (timer) clearTimeout(timer);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
@@ -65,4 +67,7 @@ export const OfflineIndicator: React.FC = () => {
       )}
     </AnimatePresence>
   );
-};
+});
+
+OfflineIndicator.displayName = 'OfflineIndicator';
+

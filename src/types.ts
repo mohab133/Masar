@@ -90,6 +90,11 @@ export interface AcademicEvent {
   remainingTimeAr: string; // e.g. "بعد 3 أيام"
   daysUntil: number;
   location?: string;
+  note?: string; // ملاحظة إضافية للتسليم أو التكليف
+  instructions?: string[]; // تعليمات وشروط التسليم خطوة بخطوة
+  submissionUrl?: string; // رابط التسليم (فورم / درايف / منصة)
+  submissionUrlTitle?: string; // عنوان زر الرابط (مثل: رابط فورم التسليم)
+  deliveryMethod?: 'online' | 'in_person' | 'email'; // طريقة التسليم (إلكتروني / ورقي مع المعيد)
 }
 
 export type FeedbackType = 'error' | 'suggestion' | 'note';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import {
   X,
   Download,
@@ -19,13 +19,11 @@ interface MenoufBylawModalProps {
   onClose: () => void;
 }
 
-export const MenoufBylawModal: React.FC<MenoufBylawModalProps> = ({ isOpen, onClose }) => {
+export const MenoufBylawModal: React.FC<MenoufBylawModalProps> = memo(({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<'summary' | 'grades' | 'departments' | 'rules'>('summary');
   const [isDownloaded, setIsDownloaded] = useState(false);
 
-  if (!isOpen) return null;
-
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = useCallback(() => {
     // Generate official printable PDF/Document blob
     const content = `
 ===================================================================
@@ -80,7 +78,9 @@ export const MenoufBylawModal: React.FC<MenoufBylawModalProps> = ({ isOpen, onCl
 
     setIsDownloaded(true);
     setTimeout(() => setIsDownloaded(false), 3500);
-  };
+  }, []);
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -367,4 +367,7 @@ export const MenoufBylawModal: React.FC<MenoufBylawModalProps> = ({ isOpen, onCl
       </div>
     </div>
   );
-};
+});
+
+MenoufBylawModal.displayName = 'MenoufBylawModal';
+

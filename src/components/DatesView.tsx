@@ -1,6 +1,17 @@
-import React, { useState } from 'react';
-import { Download, Calendar, MapPin } from 'lucide-react';
-import { motion } from 'motion/react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
+import {
+  Download,
+  Calendar,
+  MapPin,
+  ExternalLink,
+  Info,
+  FileText,
+  Globe,
+  FileCheck,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { AcademicEvent, OfficialScheduleDocument } from '../types';
 import { OFFICIAL_SCHEDULE_DOCS, getCourseNameAr } from '../data/sampleData';
 import { OfficialScheduleModal } from './OfficialScheduleModal';
@@ -11,31 +22,54 @@ interface DatesViewProps {
 
 type FilterCategory = 'assignments' | 'quizzes' | 'exam_schedules';
 
-export const DatesView: React.FC<DatesViewProps> = ({ events }) => {
-  // Default to 'assignments' (تسليمات) as 'all' was removed per request
+export const DatesView: React.FC<DatesViewProps> = memo(({ events }) => {
   const [filter, setFilter] = useState<FilterCategory>('assignments');
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<OfficialScheduleDocument | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const midtermDoc = OFFICIAL_SCHEDULE_DOCS.find((d) => d.type === 'midterm') || OFFICIAL_SCHEDULE_DOCS[1];
-  const finalDoc = OFFICIAL_SCHEDULE_DOCS.find((d) => d.type === 'final') || OFFICIAL_SCHEDULE_DOCS[2];
+  const midtermDoc = useMemo(
+    () => OFFICIAL_SCHEDULE_DOCS.find((d) => d.type === 'midterm') || OFFICIAL_SCHEDULE_DOCS[1],
+    []
+  );
+  const finalDoc = useMemo(
+    () => OFFICIAL_SCHEDULE_DOCS.find((d) => d.type === 'final') || OFFICIAL_SCHEDULE_DOCS[2],
+    []
+  );
 
-  const handleOpenDoc = (doc: OfficialScheduleDocument) => {
+  const handleOpenDoc = useCallback((doc: OfficialScheduleDocument) => {
     setSelectedDoc(doc);
     setIsDocModalOpen(true);
-  };
+  }, []);
 
-  const sortedEvents = [...(events || [])].sort((a, b) => a.daysUntil - b.daysUntil);
+  const handleCloseDoc = useCallback(() => {
+    setIsDocModalOpen(false);
+    setSelectedDoc(null);
+  }, []);
 
-  const filteredEvents = sortedEvents.filter((ev) => {
-    if (filter === 'assignments') {
-      return ['assignment', 'submission', 'project'].includes(ev.type);
-    }
-    if (filter === 'quizzes') {
-      return ['quiz', 'lab'].includes(ev.type);
-    }
-    return false;
-  });
+  const toggleExpand = useCallback((id: string) => {
+    setExpandedId((prev) => (prev === id ? null : id));
+  }, []);
+
+  const sortedEvents = useMemo(() => {
+    return [...(events || [])].sort((a, b) => a.daysUntil - b.daysUntil);
+  }, [events]);
+
+  const filteredEvents = useMemo(() => {
+    return sortedEvents.filter((ev) => {
+      if (filter === 'assignments') {
+        return ['assignment', 'submission', 'project'].includes(ev.type);
+      }
+      if (filter === 'quizzes') {
+        return ['quiz', 'lab'].includes(ev.type);
+      }
+      return false;
+    });
+  }, [sortedEvents, filter]);
+
+  const handleSetAssignmentsFilter = useCallback(() => setFilter('assignments'), []);
+  const handleSetQuizzesFilter = useCallback(() => setFilter('quizzes'), []);
+  const handleSetExamSchedulesFilter = useCallback(() => setFilter('exam_schedules'), []);
 
   return (
     <div id="dates-screen-view" className="space-y-4 pb-32 pt-1" dir="rtl">
@@ -108,44 +142,140 @@ export const DatesView: React.FC<DatesViewProps> = ({ events }) => {
       {filter !== 'exam_schedules' && (
         <div className="space-y-3">
           {filteredEvents.map((item) => {
+            const hasDetails = Boolean(item.note || (item.instructions && item.instructions.length > 0) || item.submissionUrl);
+            const isExpanded = expandedId === item.id;
+
             return (
               <div
                 key={item.id}
                 className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 hover:border-blue-300 transition-all shadow-2xs space-y-2.5"
               >
-                {/* Top row: Type badge & Course badge */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100/80">
-                    {item.typeLabelAr || 'تسليم'}
-                  </span>
+                {/* Top row: Type badge, delivery method & Course badge */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100/80">
+                      {item.typeLabelAr || 'تسليم'}
+                    </span>
+                    {item.deliveryMethod === 'online' && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                        <Globe size={11} />
+                        <span>تسليم إلكتروني</span>
+                      </span>
+                    )}
+                    {item.deliveryMethod === 'in_person' && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                        <FileCheck size={11} />
+                        <span>تسليم ورقي</span>
+                      </span>
+                    )}
+                  </div>
                   <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">
                     {getCourseNameAr(item.course)}
                   </span>
                 </div>
 
-                {/* Main Event / Assignment title on its own row, never truncated */}
+                {/* Main Event / Assignment title on its own row */}
                 <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug break-words">
                   {item.eventName}
                 </h3>
 
                 {/* Location row if present */}
                 {item.location && (
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
                     <MapPin size={13} className="text-slate-400 shrink-0" />
-                    <span>المكان: {item.location}</span>
+                    <span>المكان: <strong className="text-slate-800">{item.location}</strong></span>
                   </div>
                 )}
 
-                {/* Bottom row: Deadline & time */}
-                <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs sm:text-sm">
+                {/* Bottom row: Deadline & time + Remaining Countdown badge */}
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs sm:text-sm">
                   <div className="flex items-center gap-1.5 text-slate-700 font-medium">
                     <Calendar size={15} className="text-blue-600 shrink-0" />
                     <span>أخر موعد: <strong className="text-slate-900 font-extrabold">{item.displayDateAr}</strong></span>
                   </div>
-                  {item.time && (
-                    <span className="text-xs text-slate-500 font-medium">({item.time})</span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {item.time && (
+                      <span className="text-xs text-slate-500 font-medium">({item.time})</span>
+                    )}
+                    <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                      {item.remainingTimeAr}
+                    </span>
+                  </div>
                 </div>
+
+                {/* "اعرف المزيد / تفاصيل التسليم" Button when details exist */}
+                {hasDetails && (
+                  <div className="pt-1 border-t border-slate-100/80">
+                    <button
+                      type="button"
+                      onClick={() => toggleExpand(item.id)}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-blue-700 bg-blue-50/70 hover:bg-blue-100/80 border border-blue-200/60 transition-all"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Info size={13} className="text-blue-600" />
+                        <span>{isExpanded ? 'إخفاء تفاصيل التسليم والتعليمات' : 'اعرف المزيد وتفاصيل التسليم'}</span>
+                      </div>
+                      {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                    </button>
+
+                    {/* Expandable Details Accordion */}
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.18, ease: 'easeInOut' }}
+                          className="overflow-hidden space-y-2.5 pt-2.5"
+                        >
+                          {/* Note Callout */}
+                          {item.note && (
+                            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex items-start gap-2 text-xs text-slate-700 leading-relaxed">
+                              <Info size={14} className="text-blue-600 shrink-0 mt-0.5" />
+                              <div>
+                                <strong className="text-slate-900 ml-1">ملاحظة:</strong>
+                                <span>{item.note}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Instructions List */}
+                          {item.instructions && item.instructions.length > 0 && (
+                            <div className="bg-blue-50/40 border border-blue-100/80 rounded-xl p-3 text-xs space-y-1.5">
+                              <div className="font-bold text-blue-900 flex items-center gap-1.5">
+                                <FileText size={13} className="text-blue-700 shrink-0" />
+                                <span>تعليمات وشروط التسليم:</span>
+                              </div>
+                              <ul className="space-y-1.5 pr-2 pt-0.5">
+                                {item.instructions.map((instruction, idx) => (
+                                  <li key={idx} className="flex items-start gap-2 text-slate-700 leading-relaxed">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-1.5" />
+                                    <span>{instruction}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Direct Submission Link Button */}
+                          {item.submissionUrl && (
+                            <div className="pt-0.5">
+                              <a
+                                href={item.submissionUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-xs"
+                              >
+                                <span>{item.submissionUrlTitle || 'رابط استمارة التسليم'}</span>
+                                <ExternalLink size={14} />
+                              </a>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -214,12 +344,12 @@ export const DatesView: React.FC<DatesViewProps> = ({ events }) => {
       {/* Official Schedule Sheet Modal */}
       <OfficialScheduleModal
         isOpen={isDocModalOpen}
-        onClose={() => {
-          setIsDocModalOpen(false);
-          setSelectedDoc(null);
-        }}
+        onClose={handleCloseDoc}
         document={selectedDoc}
       />
     </div>
   );
-};
+});
+
+DatesView.displayName = 'DatesView';
+

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { X, Bell, Calendar, Tag } from 'lucide-react';
 import { Announcement } from '../types';
 
@@ -8,7 +8,7 @@ interface AllAnnouncementsModalProps {
   announcements: Announcement[];
 }
 
-export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = ({
+export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(({
   isOpen,
   onClose,
   announcements,
@@ -74,4 +74,7 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = ({
       </div>
     </div>
   );
-};
+});
+
+AllAnnouncementsModal.displayName = 'AllAnnouncementsModal';
+

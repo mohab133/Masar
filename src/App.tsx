@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { TabType } from './types';
 import {
@@ -17,7 +17,7 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 
 const TAB_ORDER: TabType[] = ['home', 'schedule', 'courses', 'dates'];
 
-// Page slide animation with responsive spring physics matching RTL direction
+// Ultra-fast, lightweight page transition (matching cards motion direction in RTL layout)
 const pageVariants = {
   enter: (dir: number) => ({
     x: dir > 0 ? -20 : 20,
@@ -27,16 +27,16 @@ const pageVariants = {
     x: 0,
     opacity: 1,
     transition: {
-      x: { type: 'spring', stiffness: 550, damping: 38, mass: 0.8 },
-      opacity: { duration: 0.14, ease: 'easeOut' },
+      duration: 0.12,
+      ease: 'easeOut',
     },
   },
   exit: (dir: number) => ({
-    x: dir > 0 ? 16 : -16,
+    x: dir > 0 ? 20 : -20,
     opacity: 0,
     transition: {
-      x: { type: 'spring', stiffness: 550, damping: 38, mass: 0.8 },
-      opacity: { duration: 0.08, ease: 'easeIn' },
+      duration: 0.08,
+      ease: 'easeIn',
     },
   }),
 };
@@ -50,14 +50,20 @@ export default function App() {
   const touchStartY = useRef<number | null>(null);
   const isSwiping = useRef<boolean>(false);
 
-  const handleTabChange = (newTab: TabType, explicitDir?: number) => {
-    if (newTab === activeTab) return;
-    const currentIndex = TAB_ORDER.indexOf(activeTab);
-    const newIndex = TAB_ORDER.indexOf(newTab);
-    const dir = explicitDir !== undefined ? explicitDir : (newIndex > currentIndex ? 1 : -1);
-    setDirection(dir);
-    setActiveTab(newTab);
-  };
+  const handleTabChange = useCallback((newTab: TabType, explicitDir?: number) => {
+    setActiveTab((prevTab) => {
+      if (newTab === prevTab) return prevTab;
+      const currentIndex = TAB_ORDER.indexOf(prevTab);
+      const newIndex = TAB_ORDER.indexOf(newTab);
+      const dir = explicitDir !== undefined ? explicitDir : (newIndex > currentIndex ? 1 : -1);
+      setDirection(dir);
+      return newTab;
+    });
+  }, []);
+
+  const handleNavigateToDates = useCallback(() => {
+    handleTabChange('dates', 1);
+  }, [handleTabChange]);
 
   // Touch handlers for mobile swipe between primary tabs ONLY
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -89,13 +95,12 @@ export default function App() {
     touchStartY.current = null;
     isSwiping.current = false;
 
-    // Strict horizontal swipe check: min 60px distance & predominantly horizontal
-    if (Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+    // Horizontal swipe check: min 45px threshold for responsive feel
+    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
       const currentIndex = TAB_ORDER.indexOf(activeTab);
 
-      // Inverted RTL Navigation:
-      // Swiping to the right (deltaX > 0) advances to the next tab in Arabic reading flow
-      // Swiping to the left (deltaX < 0) returns to the previous tab
+      // Swiping right (deltaX > 0): moves right / next tab
+      // Swiping left (deltaX < 0): moves left / prev tab
       if (deltaX > 0) {
         if (currentIndex < TAB_ORDER.length - 1) {
           handleTabChange(TAB_ORDER[currentIndex + 1], 1);
@@ -138,7 +143,7 @@ export default function App() {
                 <HomeView
                   announcements={SAMPLE_ANNOUNCEMENTS}
                   upcomingDates={UPCOMING_DATES}
-                  onNavigateToDates={() => handleTabChange('dates', 1)}
+                  onNavigateToDates={handleNavigateToDates}
                 />
               )}
 

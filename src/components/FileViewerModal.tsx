@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { X, FileText, Download, ExternalLink, Calendar, HardDrive, CheckCircle2 } from 'lucide-react';
 import { CourseFile } from '../types';
 
@@ -8,19 +8,19 @@ interface FileViewerModalProps {
   onClose: () => void;
 }
 
-export const FileViewerModal: React.FC<FileViewerModalProps> = ({
+export const FileViewerModal: React.FC<FileViewerModalProps> = memo(({
   file,
   courseName,
   onClose,
 }) => {
-  const [downloaded, setDownloaded] = React.useState(false);
+  const [downloaded, setDownloaded] = useState(false);
 
-  if (!file) return null;
-
-  const handleSimulateDownload = () => {
+  const handleSimulateDownload = useCallback(() => {
     setDownloaded(true);
     setTimeout(() => setDownloaded(false), 2500);
-  };
+  }, []);
+
+  if (!file) return null;
 
   return (
     <div
@@ -111,4 +111,7 @@ export const FileViewerModal: React.FC<FileViewerModalProps> = ({
       </div>
     </div>
   );
-};
+});
+
+FileViewerModal.displayName = 'FileViewerModal';
+

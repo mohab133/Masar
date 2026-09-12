@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo, memo } from 'react';
 import { MapPin, Clock, FileImage, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ScheduleEvent, ScheduleType, OfficialScheduleDocument } from '../types';
@@ -17,7 +17,7 @@ const DAYS_OF_WEEK = [
   { id: 4, label: 'الخميس' },
 ];
 
-export const ScheduleView: React.FC<ScheduleViewProps> = ({
+export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
   scheduleEvents,
 }) => {
   const [scheduleType, setScheduleType] = useState<ScheduleType>('lecture');
@@ -34,28 +34,38 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
     }
   });
 
-  const handleSectionChange = (sec: string) => {
+  const handleSectionChange = useCallback((sec: string) => {
     setSelectedSection(sec);
     try {
       localStorage.setItem('masar_user_section', sec);
     } catch {
       // ignore
     }
-  };
+  }, []);
 
   // Filter events by selected type, day, and section number
-  const filteredEvents = (scheduleEvents || []).filter((ev) => {
-    if (ev.type !== scheduleType || ev.dayOfWeek !== selectedDay) return false;
-    if (scheduleType === 'section' && selectedSection !== 'all') {
-      return ev.sectionNumber === Number(selectedSection);
-    }
-    return true;
-  });
+  const filteredEvents = useMemo(() => {
+    return (scheduleEvents || []).filter((ev) => {
+      if (ev.type !== scheduleType || ev.dayOfWeek !== selectedDay) return false;
+      if (scheduleType === 'section' && selectedSection !== 'all') {
+        return ev.sectionNumber === Number(selectedSection);
+      }
+      return true;
+    });
+  }, [scheduleEvents, scheduleType, selectedDay, selectedSection]);
 
-  const handleOpenDoc = (doc: OfficialScheduleDocument) => {
+  const handleOpenDoc = useCallback((doc: OfficialScheduleDocument) => {
     setSelectedDoc(doc);
     setIsDocModalOpen(true);
-  };
+  }, []);
+
+  const handleCloseDoc = useCallback(() => {
+    setIsDocModalOpen(false);
+    setSelectedDoc(null);
+  }, []);
+
+  const handleSetLectureType = useCallback(() => setScheduleType('lecture'), []);
+  const handleSetSectionType = useCallback(() => setScheduleType('section'), []);
 
   return (
     <div id="schedule-screen-view" className="space-y-4 pb-32 pt-1" dir="rtl">
@@ -95,7 +105,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
         <button
           type="button"
           id="schedule-tab-lectures"
-          onClick={() => setScheduleType('lecture')}
+          onClick={handleSetLectureType}
           className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all relative z-10 ${
             scheduleType === 'lecture'
               ? 'text-blue-700 font-black'
@@ -115,7 +125,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
         <button
           type="button"
           id="schedule-tab-sections"
-          onClick={() => setScheduleType('section')}
+          onClick={handleSetSectionType}
           className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all relative z-10 ${
             scheduleType === 'section'
               ? 'text-blue-700 font-black'
@@ -288,13 +298,13 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
       {/* Official Schedule Sheet Modal */}
       <OfficialScheduleModal
         isOpen={isDocModalOpen}
-        onClose={() => {
-          setIsDocModalOpen(false);
-          setSelectedDoc(null);
-        }}
+        onClose={handleCloseDoc}
         document={selectedDoc}
       />
     </div>
   );
-};
+});
+
+ScheduleView.displayName = 'ScheduleView';
+
 

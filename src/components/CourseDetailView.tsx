@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import {
   ArrowRight,
   FileText,
@@ -45,7 +45,7 @@ const normalizeCategory = (cat: FileCategory): CategoryTab => {
   return 'slides';
 };
 
-export const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course, onBack }) => {
+export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course, onBack }) => {
   const [activeTab, setActiveTab] = useState<CategoryTab>('slides');
   const [activeFile, setActiveFile] = useState<CourseFile | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -75,11 +75,15 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course, onBa
     return files.filter((file) => normalizeCategory(file.category) === activeTab);
   }, [files, activeTab]);
 
-  const handleDownload = (e: React.MouseEvent, file: CourseFile) => {
+  const handleDownload = useCallback((e: React.MouseEvent, file: CourseFile) => {
     e.stopPropagation();
     setDownloadingId(file.id);
     setTimeout(() => setDownloadingId(null), 2000);
-  };
+  }, []);
+
+  const handleCloseViewer = useCallback(() => {
+    setActiveFile(null);
+  }, []);
 
   return (
     <div
@@ -220,8 +224,11 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course, onBa
       <FileViewerModal
         file={activeFile}
         courseName={course.nameAr || course.nameEn}
-        onClose={() => setActiveFile(null)}
+        onClose={handleCloseViewer}
       />
     </div>
   );
-};
+});
+
+CourseDetailView.displayName = 'CourseDetailView';
+

@@ -1,13 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useCallback, memo } from 'react';
 import {
-  ChevronRight,
-  ChevronLeft,
   ArrowLeft,
   Calendar,
   BookOpen,
   GraduationCap,
   ExternalLink,
   FileText,
+  Info,
+  Clock,
+  MapPin,
+  Globe,
+  FileCheck,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Announcement, AcademicEvent } from '../types';
@@ -21,91 +24,92 @@ interface HomeViewProps {
   onNavigateToDates: () => void;
 }
 
-export const HomeView: React.FC<HomeViewProps> = ({
+export const HomeView: React.FC<HomeViewProps> = memo(({
   announcements,
   upcomingDates,
   onNavigateToDates,
 }) => {
   // Announcements Carousel State
   const [currentAnnIndex, setCurrentAnnIndex] = useState(0);
+  const [annDirection, setAnnDirection] = useState<number>(1);
   const [isAnnModalOpen, setIsAnnModalOpen] = useState(false);
   const [isBylawModalOpen, setIsBylawModalOpen] = useState(false);
   const annTouchStartX = useRef<number | null>(null);
 
-  // Upcoming Dates Carousel State (same presentation format as announcements)
+  // Upcoming Dates Carousel State
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
+  const [dateDirection, setDateDirection] = useState<number>(1);
   const dateTouchStartX = useRef<number | null>(null);
 
   const activeAnnouncements = (announcements || []).filter((a) => a.status === 'active');
   const nearestDates = (upcomingDates || []).slice(0, 6);
 
   // Announcement navigation
-  const prevAnnouncement = () => {
+  const prevAnnouncement = useCallback(() => {
+    setAnnDirection(-1);
     setCurrentAnnIndex((prev) => (prev > 0 ? prev - 1 : activeAnnouncements.length - 1));
-  };
+  }, [activeAnnouncements.length]);
 
-  const nextAnnouncement = () => {
+  const nextAnnouncement = useCallback(() => {
+    setAnnDirection(1);
     setCurrentAnnIndex((prev) => (prev < activeAnnouncements.length - 1 ? prev + 1 : 0));
-  };
+  }, [activeAnnouncements.length]);
 
-  const handleAnnTouchStart = (e: React.TouchEvent) => {
+  const handleAnnTouchStart = useCallback((e: React.TouchEvent) => {
     e.stopPropagation();
     annTouchStartX.current = e.touches[0].clientX;
-  };
+  }, []);
 
-  const handleAnnTouchEnd = (e: React.TouchEvent) => {
+  const handleAnnTouchEnd = useCallback((e: React.TouchEvent) => {
     e.stopPropagation();
     if (annTouchStartX.current === null) return;
     const touchEndX = e.changedTouches[0].clientX;
-    const diff = annTouchStartX.current - touchEndX;
+    const diff = touchEndX - annTouchStartX.current; // Positive = Dragged Right, Negative = Dragged Left
 
+    // Swiping right (diff > 35): moves to next item
+    // Swiping left (diff < -35): moves to previous item
     if (diff > 35) {
       nextAnnouncement();
     } else if (diff < -35) {
       prevAnnouncement();
     }
     annTouchStartX.current = null;
-  };
+  }, [nextAnnouncement, prevAnnouncement]);
 
   // Upcoming Dates navigation
-  const prevDate = () => {
+  const prevDate = useCallback(() => {
+    setDateDirection(-1);
     setCurrentDateIndex((prev) => (prev > 0 ? prev - 1 : nearestDates.length - 1));
-  };
+  }, [nearestDates.length]);
 
-  const nextDate = () => {
+  const nextDate = useCallback(() => {
+    setDateDirection(1);
     setCurrentDateIndex((prev) => (prev < nearestDates.length - 1 ? prev + 1 : 0));
-  };
+  }, [nearestDates.length]);
 
-  const handleDateTouchStart = (e: React.TouchEvent) => {
+  const handleDateTouchStart = useCallback((e: React.TouchEvent) => {
     e.stopPropagation();
     dateTouchStartX.current = e.touches[0].clientX;
-  };
+  }, []);
 
-  const handleDateTouchEnd = (e: React.TouchEvent) => {
+  const handleDateTouchEnd = useCallback((e: React.TouchEvent) => {
     e.stopPropagation();
     if (dateTouchStartX.current === null) return;
     const touchEndX = e.changedTouches[0].clientX;
-    const diff = dateTouchStartX.current - touchEndX;
+    const diff = touchEndX - dateTouchStartX.current; // Positive = Dragged Right, Negative = Dragged Left
 
+    // Swiping right (diff > 35): moves to next item
+    // Swiping left (diff < -35): moves to previous item
     if (diff > 35) {
       nextDate();
     } else if (diff < -35) {
       prevDate();
     }
     dateTouchStartX.current = null;
-  };
+  }, [nextDate, prevDate]);
 
   const activeAnnouncement = activeAnnouncements[currentAnnIndex];
   const activeDate = nearestDates[currentDateIndex];
-
-  // Auto-play announcement carousel gently
-  useEffect(() => {
-    if (activeAnnouncements.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentAnnIndex((prev) => (prev < activeAnnouncements.length - 1 ? prev + 1 : 0));
-    }, 9000);
-    return () => clearInterval(interval);
-  }, [activeAnnouncements.length]);
 
   return (
     <div id="home-screen-view" className="space-y-4 pb-32 pt-1" dir="rtl">
@@ -131,13 +135,21 @@ export const HomeView: React.FC<HomeViewProps> = ({
             onTouchEnd={handleAnnTouchEnd}
             className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs transition-all relative overflow-hidden"
           >
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait" custom={annDirection}>
               <motion.div
                 key={activeAnnouncement.id}
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -12 }}
-                transition={{ duration: 0.18 }}
+                custom={annDirection}
+                initial={{ opacity: 0, x: annDirection > 0 ? -20 : 20 }}
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                  transition: { duration: 0.12, ease: 'easeOut' },
+                }}
+                exit={{
+                  opacity: 0,
+                  x: annDirection > 0 ? 20 : -20,
+                  transition: { duration: 0.08, ease: 'easeIn' },
+                }}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100">
@@ -157,41 +169,26 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </motion.div>
             </AnimatePresence>
 
-            {/* Dots and controls */}
+            {/* Interactive Pagination Dots (بدون أسهم أو نصوص عدادات - نقاط تفاعلية مريحة) */}
             {activeAnnouncements.length > 1 && (
-              <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100">
-                <div className="flex items-center gap-1.5">
-                  {activeAnnouncements.map((_, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setCurrentAnnIndex(idx)}
-                      className={`h-1.5 rounded-full transition-all ${
-                        idx === currentAnnIndex ? 'w-5 bg-blue-600' : 'w-1.5 bg-slate-200'
+              <div className="flex items-center justify-center gap-2 pt-3 mt-3.5 border-t border-slate-100">
+                {activeAnnouncements.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setCurrentAnnIndex(idx)}
+                    className="p-1.5 -m-1.5 focus:outline-hidden"
+                    aria-label={`تنبيه ${idx + 1}`}
+                  >
+                    <div
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        idx === currentAnnIndex
+                          ? 'w-7 bg-blue-600 shadow-xs'
+                          : 'w-2 bg-slate-200 hover:bg-slate-300'
                       }`}
-                      aria-label={`تنبيه ${idx + 1}`}
                     />
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={prevAnnouncement}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors"
-                    aria-label="السابق"
-                  >
-                    <ChevronRight size={18} />
                   </button>
-                  <button
-                    type="button"
-                    onClick={nextAnnouncement}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors"
-                    aria-label="التالي"
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
-                </div>
+                ))}
               </div>
             )}
           </div>
@@ -220,79 +217,122 @@ export const HomeView: React.FC<HomeViewProps> = ({
             onTouchEnd={handleDateTouchEnd}
             className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs transition-all relative overflow-hidden"
           >
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait" custom={dateDirection}>
               <motion.div
                 key={activeDate.id}
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -12 }}
-                transition={{ duration: 0.18 }}
+                custom={dateDirection}
+                initial={{ opacity: 0, x: dateDirection > 0 ? -20 : 20 }}
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                  transition: { duration: 0.12, ease: 'easeOut' },
+                }}
+                exit={{
+                  opacity: 0,
+                  x: dateDirection > 0 ? 20 : -20,
+                  transition: { duration: 0.08, ease: 'easeIn' },
+                }}
               >
-                <div className="space-y-2.5">
-                  {/* Top row: Type badge & Course badge */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100/80">
-                      {activeDate.typeLabelAr || 'تسليم'}
-                    </span>
-                    <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">
+                <div className="space-y-3">
+                  {/* Top row: Course Name, Type & Delivery Method badges */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100/80">
+                        {activeDate.typeLabelAr || 'تسليم'}
+                      </span>
+                      {activeDate.deliveryMethod === 'online' && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                          <Globe size={11} />
+                          <span>إلكتروني</span>
+                        </span>
+                      )}
+                      {activeDate.deliveryMethod === 'in_person' && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                          <FileCheck size={11} />
+                          <span>ورقي</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
                       {getCourseNameAr(activeDate.course)}
                     </span>
                   </div>
 
-                  {/* Main task / assignment title - full text on its own line */}
+                  {/* Main task / event title */}
                   <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug break-words">
                     {activeDate.eventName}
                   </h3>
 
-                  {/* Bottom row: Deadline & time */}
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs sm:text-sm">
-                    <div className="flex items-center gap-2 text-slate-700 font-medium">
-                      <Calendar size={16} className="text-blue-600 shrink-0" />
-                      <span>أخر موعد: <strong className="text-slate-900 font-extrabold">{activeDate.displayDateAr}</strong></span>
+                  {/* Location if present */}
+                  {activeDate.location && (
+                    <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+                      <MapPin size={13} className="text-slate-400 shrink-0" />
+                      <span>المكان: <strong className="text-slate-800">{activeDate.location}</strong></span>
                     </div>
-                    {activeDate.time && (
-                      <span className="text-xs text-slate-500 font-medium">({activeDate.time})</span>
-                    )}
+                  )}
+
+                  {/* Note / Instructions if present */}
+                  {activeDate.note && (
+                    <div className="flex items-start gap-2 text-xs text-slate-600 bg-slate-50 border border-slate-200/70 rounded-xl p-2.5 leading-relaxed">
+                      <Info size={14} className="text-blue-600 shrink-0 mt-0.5" />
+                      <span>{activeDate.note}</span>
+                    </div>
+                  )}
+
+                  {/* Submission Link Button if available */}
+                  {activeDate.submissionUrl && (
+                    <div>
+                      <a
+                        href={activeDate.submissionUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-3 py-1.5 rounded-xl transition-all shadow-2xs"
+                      >
+                        <ExternalLink size={13} />
+                        <span>{activeDate.submissionUrlTitle || 'رابط استمارة التسليم'}</span>
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Bottom row: Direct Deadline date & Remaining countdown tag */}
+                  <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs sm:text-sm">
+                    <div className="flex items-center gap-1.5 text-slate-800 font-bold">
+                      <Calendar size={15} className="text-blue-600 shrink-0" />
+                      <span>{activeDate.displayDateAr}</span>
+                      {activeDate.time && (
+                        <span className="text-slate-500 font-normal text-xs">({activeDate.time})</span>
+                      )}
+                    </div>
+
+                    <span className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-lg">
+                      {activeDate.remainingTimeAr}
+                    </span>
                   </div>
                 </div>
               </motion.div>
             </AnimatePresence>
 
-            {/* Dots and controls for dates */}
+            {/* Interactive Pagination Dots (بدون أسهم أو نصوص عدادات - نقاط تفاعلية مريحة) */}
             {nearestDates.length > 1 && (
-              <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100">
-                <div className="flex items-center gap-1.5">
-                  {nearestDates.map((_, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setCurrentDateIndex(idx)}
-                      className={`h-1.5 rounded-full transition-all ${
-                        idx === currentDateIndex ? 'w-5 bg-blue-600' : 'w-1.5 bg-slate-200'
+              <div className="flex items-center justify-center gap-2 pt-3 mt-3.5 border-t border-slate-100">
+                {nearestDates.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setCurrentDateIndex(idx)}
+                    className="p-1.5 -m-1.5 focus:outline-hidden"
+                    aria-label={`موعد ${idx + 1}`}
+                  >
+                    <div
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        idx === currentDateIndex
+                          ? 'w-7 bg-blue-600 shadow-xs'
+                          : 'w-2 bg-slate-200 hover:bg-slate-300'
                       }`}
-                      aria-label={`موعد ${idx + 1}`}
                     />
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={prevDate}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors"
-                    aria-label="السابق"
-                  >
-                    <ChevronRight size={18} />
                   </button>
-                  <button
-                    type="button"
-                    onClick={nextDate}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors"
-                    aria-label="التالي"
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
-                </div>
+                ))}
               </div>
             )}
           </div>
@@ -404,4 +444,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       />
     </div>
   );
-};
+});
+
+HomeView.displayName = 'HomeView';
+

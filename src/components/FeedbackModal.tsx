@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { X, CheckCircle2, AlertTriangle, Lightbulb, MessageSquare, Send } from 'lucide-react';
 import { FeedbackType } from '../types';
 
@@ -7,15 +7,13 @@ interface FeedbackModalProps {
   onClose: () => void;
 }
 
-export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
+export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClose }) => {
   const [type, setType] = useState<FeedbackType>('error');
   const [courseOrSection, setCourseOrSection] = useState('');
   const [details, setDetails] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  if (!isOpen) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!details.trim()) return;
 
@@ -44,7 +42,9 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
       setType('error');
       onClose();
     }, 1800);
-  };
+  }, [details, type, courseOrSection, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -182,4 +182,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
       </div>
     </div>
   );
-};
+});
+
+FeedbackModal.displayName = 'FeedbackModal';
+

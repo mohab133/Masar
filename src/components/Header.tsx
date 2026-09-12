@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { FEELogo } from './FEELogo';
 
-export const Header: React.FC = () => {
+export const Header: React.FC = memo(() => {
   return (
     <header
       id="app-main-header"
@@ -23,6 +23,9 @@ export const Header: React.FC = () => {
       </div>
     </header>
   );
-};
+});
+
+Header.displayName = 'Header';
+
 
 

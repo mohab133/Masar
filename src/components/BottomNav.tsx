@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Home, CalendarDays, BookOpen, Clock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { TabType } from '../types';
@@ -8,7 +8,7 @@ interface BottomNavProps {
   onChangeTab: (tab: TabType) => void;
 }
 
-export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onChangeTab }) => {
+export const BottomNav: React.FC<BottomNavProps> = memo(({ activeTab, onChangeTab }) => {
   const tabs: { id: TabType; label: string; icon: React.ComponentType<{ className?: string; size?: number }> }[] = [
     { id: 'home', label: 'الرئيسية', icon: Home },
     { id: 'schedule', label: 'الجدول', icon: CalendarDays },
@@ -68,4 +68,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onChangeTab }) 
       </div>
     </nav>
   );
-};
+});
+
+BottomNav.displayName = 'BottomNav';
+

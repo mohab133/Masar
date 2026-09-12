@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { X, Download, ZoomIn, ZoomOut, CheckCircle2, FileImage } from 'lucide-react';
 import { OfficialScheduleDocument } from '../types';
 
@@ -8,7 +8,7 @@ interface OfficialScheduleModalProps {
   document: OfficialScheduleDocument | null;
 }
 
-export const OfficialScheduleModal: React.FC<OfficialScheduleModalProps> = ({
+export const OfficialScheduleModal: React.FC<OfficialScheduleModalProps> = memo(({
   isOpen,
   onClose,
   document,
@@ -16,9 +16,8 @@ export const OfficialScheduleModal: React.FC<OfficialScheduleModalProps> = ({
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [isDownloaded, setIsDownloaded] = useState(false);
 
-  if (!isOpen || !document) return null;
-
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
+    if (!document) return;
     const svgElement = window.document.getElementById('official-schedule-svg') as unknown as SVGElement | null;
     if (svgElement) {
       try {
@@ -73,7 +72,17 @@ export const OfficialScheduleModal: React.FC<OfficialScheduleModalProps> = ({
 
     setIsDownloaded(true);
     setTimeout(() => setIsDownloaded(false), 3500);
-  };
+  }, [document]);
+
+  const handleZoomIn = useCallback(() => {
+    setZoomLevel((prev) => Math.min(prev + 0.25, 2.5));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoomLevel((prev) => Math.max(prev - 0.25, 0.75));
+  }, []);
+
+  if (!isOpen || !document) return null;
 
   return (
     <div
@@ -470,4 +479,7 @@ export const OfficialScheduleModal: React.FC<OfficialScheduleModalProps> = ({
       </div>
     </div>
   );
-};
+});
+
+OfficialScheduleModal.displayName = 'OfficialScheduleModal';
+

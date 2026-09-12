@@ -100,6 +100,13 @@ export const UPCOMING_DATES: AcademicEvent[] = [
     remainingTimeAr: 'بعد 3 أيام',
     daysUntil: 3,
     location: 'معمل كيمياء 4',
+    note: 'مدة الكويز 15 دقيقة في بداية السكشن. يُرجى إحضار الآلة الحاسبة والبالطو الأبيض.',
+    instructions: [
+      'يشمل محتوى التجارب المعملية الأولى والثانية فقط.',
+      'الإجابة في ورقة الأسئلة الموزعة بالمعمل.',
+      'ممنوع تبادل الأدوات أو الآلات الحاسبة داخل المعمل.'
+    ],
+    deliveryMethod: 'in_person',
   },
   {
     id: 'ev-2',
@@ -112,6 +119,15 @@ export const UPCOMING_DATES: AcademicEvent[] = [
     time: '11:59 م',
     remainingTimeAr: 'بعد 5 أيام',
     daysUntil: 5,
+    note: 'التسليم إلكترونياً بصيغة PDF. تأكد من إرفاق صور العينات المجهرية بدقة.',
+    submissionUrl: 'https://forms.gle/sampleBioReportUpload',
+    submissionUrlTitle: 'رابط استمارة رفع التقرير (Google Form)',
+    instructions: [
+      'تسمية الملف: Bio_LabReport_SectionNumber_StudentName.pdf',
+      'الحد الأقصى لحجم الملف المرفوع: 10 ميجابايت.',
+      'لن تُقبل التسليمات عبر البريد الإلكتروني بعد إغلاق الفورم.'
+    ],
+    deliveryMethod: 'online',
   },
   {
     id: 'ev-3',
@@ -124,6 +140,12 @@ export const UPCOMING_DATES: AcademicEvent[] = [
     time: '08:00 م',
     remainingTimeAr: 'بعد 7 أيام',
     daysUntil: 7,
+    note: 'يُسلّم في كشكول التمارين للمهندس المشرف، مع توضيح خطوات الحل بالقوانين.',
+    instructions: [
+      'حل المسائل الزوجية إجباري والمسائل الفردية بونص إضافي.',
+      'رسم المنحنيات البيانية على ورق رسم بياني وإرفاقه داخل الكشكول.'
+    ],
+    deliveryMethod: 'in_person',
   },
   {
     id: 'ev-4',
@@ -137,6 +159,8 @@ export const UPCOMING_DATES: AcademicEvent[] = [
     remainingTimeAr: 'بعد 11 يوماً',
     daysUntil: 11,
     location: 'معمل الفيزياء 1',
+    note: 'كل طالب سيجري تجربة واحدة عشوائية مع حساب معامل الانكسار ومناقشة النتائج.',
+    deliveryMethod: 'in_person',
   },
   {
     id: 'ev-5-assign',
@@ -150,6 +174,8 @@ export const UPCOMING_DATES: AcademicEvent[] = [
     remainingTimeAr: 'بعد 17 يوماً',
     daysUntil: 17,
     location: 'مكتب المعيد بالقسم',
+    note: 'التسليم الورقي بمكتب المعيد بالدور الثاني قسم الهندسة الكيميائية.',
+    deliveryMethod: 'in_person',
   },
   {
     id: 'ev-6',
@@ -162,6 +188,14 @@ export const UPCOMING_DATES: AcademicEvent[] = [
     time: '02:00 م',
     remainingTimeAr: 'بعد 31 يوماً',
     daysUntil: 31,
+    note: 'المشروع بحد أقصى 4 طلاب في المجموعة. يرجى تسجيل بيانات الفريق عبر الرابط.',
+    submissionUrl: 'https://forms.gle/sampleChemProjectProposal',
+    submissionUrlTitle: 'رابط تسجيل بيانات الفريق وموضوع المشروع',
+    instructions: [
+      'كتابة ملخص في صفحة واحدة يشمل الهدف وخطة العمل والتجارب المقترحة.',
+      'يقوم ليدر الفريق فقط بملء نموذج التسجيل وإرفاق المقترح.'
+    ],
+    deliveryMethod: 'online',
   },
 ];
 
