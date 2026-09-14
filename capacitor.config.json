@@ -1,0 +1,9 @@
+{
+  "appId": "com.masar.studentapp",
+  "appName": "Masar",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
