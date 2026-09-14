@@ -9,10 +9,8 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 const REGISTER_DELAY_MS = 800;
-// Enable only in builds that include android/app/google-services.json.
 // Calling FCM registration without Firebase configuration can terminate the
 // Android process immediately after notification permission is granted.
-const PUSH_NOTIFICATIONS_ENABLED = import.meta.env.VITE_ENABLE_PUSH_NOTIFICATIONS === 'true';
 const PUSH_REGISTRATION_ENABLED = import.meta.env.VITE_ENABLE_PUSH_REGISTRATION === 'true';
 
 let initializationPromise: Promise<void> | null = null;
@@ -81,7 +79,7 @@ async function registerListeners(): Promise<void> {
 }
 
 async function initializePushNotificationsInternal(): Promise<void> {
-  if (!PUSH_NOTIFICATIONS_ENABLED || !Capacitor.isNativePlatform()) return;
+  if (!Capacitor.isNativePlatform()) return;
 
   try {
     const permission = await PushNotifications.checkPermissions();
