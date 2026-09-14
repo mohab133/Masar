@@ -26,4 +26,4 @@ workflows:
           ./gradlew assembleRelease --no-daemon
 
     artifacts:
-      - android/app/build/outputs/apk/release/app-release.apk
+      - "**/*.apk"
