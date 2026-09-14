@@ -9,6 +9,8 @@ workflows:
       java: 21
       groups:
         - masar
+      android_signing:
+        - masar_release
 
     scripts:
       - name: Install npm dependencies

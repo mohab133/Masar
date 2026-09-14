@@ -1,5 +1,10 @@
 apply plugin: 'com.android.application'
 
+def codemagicKeystorePath = System.getenv('CM_KEYSTORE_PATH')
+def codemagicKeystorePassword = System.getenv('CM_KEYSTORE_PASSWORD')
+def codemagicKeyAlias = System.getenv('CM_KEY_ALIAS')
+def codemagicKeyPassword = System.getenv('CM_KEY_PASSWORD')
+
 android {
     namespace = "com.masar.studentapp"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,10 +21,19 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            storeFile = codemagicKeystorePath ? file(codemagicKeystorePath) : null
+            storePassword = codemagicKeystorePassword
+            keyAlias = codemagicKeyAlias
+            keyPassword = codemagicKeyPassword
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 }
