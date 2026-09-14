@@ -1,6 +1,0 @@
-{
-  "name": "Masar",
-  "description": "تطبيق FEE الأكاديمي لطلاب كلية الهندسة الإلكترونية بمنوف لمتابعة المحاضرات والسكاشن وجداول التسليمات الرسمية",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
