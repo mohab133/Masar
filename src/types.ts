@@ -35,13 +35,6 @@ export interface ScheduleEvent {
   notes?: string | null;
 }
 
-export interface LiveSectionInfo {
-  event: ScheduleEvent;
-  status: 'running' | 'started_recently' | 'starting_soon';
-  statusTextAr: string;
-  timeDiffMinutes: number;
-}
-
 export type FileCategory = 
   | 'slides'
   | 'sheets'
@@ -101,14 +94,6 @@ export interface AcademicEvent {
 }
 
 export type FeedbackType = 'error' | 'suggestion' | 'note';
-
-export interface FeedbackSubmission {
-  id: string;
-  type: FeedbackType;
-  courseOrSection?: string;
-  details: string;
-  submittedAt: string;
-}
 
 export interface AppAsset {
   id: string;

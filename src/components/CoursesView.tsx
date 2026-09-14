@@ -11,7 +11,6 @@ interface CoursesViewProps {
 
 interface CourseCardProps {
   course: Course;
-  index: number;
   onSelect: (course: Course) => void;
 }
 
@@ -21,8 +20,8 @@ const getDepartmentLabel = (department?: Course['department'] | null) => {
   return 'عام';
 };
 
-const CourseCard: React.FC<CourseCardProps> = memo(({ course, index, onSelect }) => {
-  const meta = getCourseIconMeta(course.nameEn || course.nameAr || '', index);
+const CourseCard: React.FC<CourseCardProps> = memo(({ course, onSelect }) => {
+  const meta = getCourseIconMeta(course.nameEn || course.nameAr || '');
   const Icon = meta.Icon;
 
   return (
@@ -92,11 +91,10 @@ export const CoursesView: React.FC<CoursesViewProps> = memo(({ courses }) => {
 
       {/* Courses List */}
       <div className="space-y-2.5">
-        {courses.length > 0 ? courses.map((course, index) => (
+        {courses.length > 0 ? courses.map((course) => (
           <CourseCard
             key={course.id}
             course={course}
-            index={index}
             onSelect={setSelectedCourse}
           />
         )) : (

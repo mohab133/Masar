@@ -1,10 +1,15 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { downloadFile } from './nativeDownloader';
 
 export function useDownload() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const completionCleanup = useRef<(() => void) | null>(null);
+
+  useEffect(() => () => {
+    completionCleanup.current?.();
+  }, []);
 
   const download = useCallback(async (url: string | null | undefined, fileName: string, mimeType = 'application/octet-stream') => {
     if (!url) {
@@ -15,18 +20,51 @@ export function useDownload() {
     }
     setLoading(true);
     setError(false);
-    setMessage('جاري تحميل الملف…');
+    setMessage('تم بدء تحميل الملف');
+    completionCleanup.current?.();
+    completionCleanup.current = null;
     try {
-      await downloadFile(url, fileName, mimeType);
-      setMessage(`تم تحميل ${fileName} بنجاح إلى مجلد التنزيلات`);
+      let finished = false;
+      let finishTimer: number | undefined;
+
+      const started = await downloadFile(
+        url,
+        fileName,
+        mimeType,
+        (startedFileName) => {
+          setMessage(`تم بدء تحميل ${startedFileName}`);
+        },
+        (result) => {
+          finished = true;
+          if (finishTimer) window.clearTimeout(finishTimer);
+          setLoading(false);
+          if (result.success) {
+            setError(false);
+            setMessage(`تم تحميل ${result.fileName || fileName} بنجاح`);
+          } else {
+            setError(true);
+            setMessage(result.error || 'فشل تحميل الملف، حاول مرة أخرى');
+          }
+          window.setTimeout(() => setMessage(null), 3500);
+        },
+      );
+
+      // download() resolving only means Android accepted the job. Do not wait for the file.
+      completionCleanup.current = started.cleanup;
+      finishTimer = window.setTimeout(() => {
+        if (!finished) {
+          setLoading(false);
+          setMessage(null);
+        }
+      }, 30 * 60 * 1000);
+
       return true;
     } catch (cause) {
-      setError(true);
-      setMessage(cause instanceof Error ? cause.message : 'فشل تحميل الملف، حاول مرة أخرى');
-      return false;
-    } finally {
       setLoading(false);
+      setError(true);
+      setMessage(cause instanceof Error ? cause.message : 'تعذر بدء تحميل الملف، حاول مرة أخرى');
       window.setTimeout(() => setMessage(null), 3500);
+      return false;
     }
   }, []);
 

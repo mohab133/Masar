@@ -34,9 +34,10 @@ export function getFallbackData(): MasarData {
 }
 
 export async function fetchMasarData(signal?: AbortSignal): Promise<MasarData> {
-  const response = await fetch(`${API_BASE_URL}/api/bootstrap`, {
+  const response = await fetch(`${API_BASE_URL}/api/bootstrap?refresh=${Date.now()}`, {
     signal,
-    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+    headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' },
   });
 
   if (!response.ok) {

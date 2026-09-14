@@ -68,32 +68,22 @@ public class MasarDownloaderPlugin extends Plugin {
             result.put("location", "Download");
             result.put("downloadId", downloadId);
             call.resolve(result);
+            monitorDownload(downloadId, safeFileName);
         } catch (Exception e) {
             call.reject(e.getMessage() == null ? "تعذر بدء التنزيل" : e.getMessage());
         }
     }
 
-    @PluginMethod
-    public void waitForCompletion(PluginCall call) {
-        long downloadId = call.getLong("downloadId", -1L);
-        if (downloadId <= 0) {
-            call.reject("معرّف التنزيل غير صالح");
-            return;
-        }
-
+    private void monitorDownload(long downloadId, String fallbackFileName) {
         new Thread(() -> {
             DownloadManager manager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-            if (manager == null) {
-                notifyReject(call, "تعذر الوصول إلى خدمة التنزيل");
-                return;
-            }
+            if (manager == null) return;
 
             Cursor cursor = null;
             try {
                 while (true) {
                     cursor = manager.query(new DownloadManager.Query().setFilterById(downloadId));
                     if (cursor == null || !cursor.moveToFirst()) {
-                        notifyReject(call, "تعذر العثور على عملية التنزيل");
                         return;
                     }
 
@@ -103,26 +93,34 @@ public class MasarDownloaderPlugin extends Plugin {
                         String title = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TITLE));
                         JSObject result = new JSObject();
                         result.put("success", true);
-                        result.put("fileName", title == null ? "الملف" : title);
+                        result.put("downloadId", downloadId);
+                        result.put("fileName", title == null ? fallbackFileName : title);
                         result.put("location", "Download");
                         result.put("localUri", localUri == null ? "" : localUri);
-                        notifyResolve(call, result);
+                        getActivity().runOnUiThread(() -> notifyListeners("downloadComplete", result));
                         return;
                     }
 
                     if (status == DownloadManager.STATUS_FAILED) {
                         int reason = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON));
-                        notifyReject(call, friendlyDownloadError(reason));
+                        JSObject result = new JSObject();
+                        result.put("success", false);
+                        result.put("downloadId", downloadId);
+                        result.put("fileName", fallbackFileName);
+                        result.put("error", friendlyDownloadError(reason));
+                        getActivity().runOnUiThread(() -> notifyListeners("downloadComplete", result));
                         return;
                     }
 
-                    Thread.sleep(350);
+                    cursor.close();
+                    cursor = null;
+                    Thread.sleep(500);
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                notifyReject(call, "تم إيقاف التنزيل");
-            } catch (Exception e) {
-                notifyReject(call, e.getMessage() == null ? "فشل تحميل الملف" : e.getMessage());
+            } catch (Exception ignored) {
+                // The Android DownloadManager owns the actual download and its notification.
+                // A monitoring failure must not turn a successfully started download into an error.
             } finally {
                 if (cursor != null) cursor.close();
             }
@@ -188,11 +186,4 @@ public class MasarDownloaderPlugin extends Plugin {
         return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
     }
 
-    private void notifyResolve(PluginCall call, JSObject result) {
-        getActivity().runOnUiThread(() -> call.resolve(result));
-    }
-
-    private void notifyReject(PluginCall call, String message) {
-        getActivity().runOnUiThread(() -> call.reject(message));
-    }
 }

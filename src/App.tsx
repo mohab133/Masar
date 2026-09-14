@@ -37,12 +37,15 @@ export default function App() {
   const [pullDistance, setPullDistance] = useState(0);
   const pullDistanceRef = useRef(0);
 
-  const getPageScrollTop = () =>
-    Math.max(
+  const getPageScrollTop = () => {
+    const scrollingElement = document.scrollingElement;
+    return Math.max(
       window.scrollY || 0,
+      scrollingElement?.scrollTop || 0,
       document.documentElement.scrollTop || 0,
-      document.body.scrollTop || 0
+      document.body.scrollTop || 0,
     );
+  };
 
   const handlePullTouchStart = (e: React.TouchEvent) => {
     const target = e.target as HTMLElement | null;
@@ -70,7 +73,10 @@ export default function App() {
     if (getPageScrollTop() > 2) return;
 
     isPulling.current = true;
-    const distance = Math.min(80, dy * 0.6);
+    // Stop the browser's native overscroll once a real downward pull starts.
+    // This lets the custom indicator control the gesture instead of the WebView.
+    e.preventDefault();
+    const distance = Math.min(96, dy * 0.65);
     pullDistanceRef.current = distance;
     setPullDistance(distance);
   };
@@ -144,22 +150,31 @@ export default function App() {
       {/* Mobile Application Container */}
       <div
         className="w-full max-w-md min-h-screen bg-slate-50 flex flex-col shadow-sm relative overflow-x-hidden"
-        style={{ touchAction: 'pan-y' }}
+        style={{ touchAction: 'pan-y', overscrollBehaviorY: 'contain' }}
         onTouchStart={(e) => { handleTouchStart(e); handlePullTouchStart(e); }}
         onTouchMove={handlePullTouchMove}
         onTouchEnd={(e) => { handleTouchEnd(e); handlePullTouchEnd(); }}
+        onTouchCancel={handlePullTouchEnd}
       >
         {(pullDistance > 0 || isRefreshing) && !isLoading && (
           <div
-            className="fixed left-1/2 z-40 -translate-x-1/2 pointer-events-none"
-            style={{ top: `${isRefreshing ? 16 : Math.max(12, pullDistance - 28)}px` }}
+            className={`fixed left-1/2 z-40 pointer-events-none ${pullDistance > 0 ? '' : 'refresh-indicator-return'}`}
+            style={{
+              top: 'calc(env(safe-area-inset-top) + 88px)',
+              opacity: isRefreshing ? 1 : Math.min(1, pullDistance / 28),
+              transform: `translate(-50%, ${isRefreshing ? 0 : Math.min(54, pullDistance * 0.56)}px)`,
+            }}
             aria-hidden="true"
           >
-            <div className="w-9 h-9 rounded-full bg-white shadow-md border border-slate-200 flex items-center justify-center">
-              <div
-                className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-blue-600 animate-spin"
-                style={{ transform: `rotate(${pullDistance * 4}deg)` }}
-              />
+            <div className="w-10 h-10 rounded-full bg-white shadow-md border border-slate-200 flex items-center justify-center">
+              {isRefreshing ? (
+                <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-blue-600 animate-spin" />
+              ) : (
+                <div
+                  className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-blue-600"
+                  style={{ transform: `rotate(${Math.min(180, pullDistance * 3.75)}deg)` }}
+                />
+              )}
             </div>
           </div>
         )}

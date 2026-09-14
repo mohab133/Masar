@@ -1,18 +1,26 @@
-import { registerPlugin } from '@capacitor/core';
+import { PluginListenerHandle, registerPlugin } from '@capacitor/core';
+
+interface DownloadStarted {
+  success: boolean;
+  fileName: string;
+  location: string;
+  downloadId: number;
+}
+
+export interface DownloadFinished {
+  success: boolean;
+  fileName: string;
+  location: string;
+  localUri?: string;
+  error?: string;
+}
 
 interface MasarDownloaderPlugin {
-  download(options: { url: string; fileName: string; mimeType?: string }): Promise<{
-    success: boolean;
-    fileName: string;
-    location: string;
-    downloadId: number;
-  }>;
-  waitForCompletion(options: { downloadId: number }): Promise<{
-    success: boolean;
-    fileName: string;
-    location: string;
-    localUri?: string;
-  }>;
+  download(options: { url: string; fileName: string; mimeType?: string }): Promise<DownloadStarted>;
+  addListener(
+    eventName: 'downloadComplete',
+    listenerFunc: (result: DownloadFinished & { downloadId: number }) => void,
+  ): Promise<PluginListenerHandle>;
 }
 
 const MasarDownloader = registerPlugin<MasarDownloaderPlugin>('MasarDownloader');
@@ -31,11 +39,50 @@ function inferMimeType(fileName: string, fallback: string) {
   return mimeTypes[extension || ''] || fallback;
 }
 
-export async function downloadFile(url: string, fileName: string, mimeType = 'application/octet-stream') {
+export async function downloadFile(
+  url: string,
+  fileName: string,
+  mimeType = 'application/octet-stream',
+  onStarted?: (fileName: string) => void,
+  onFinished?: (result: DownloadFinished) => void,
+) {
   if (!url) throw new Error('الملف غير متاح حاليًا');
   if (!navigator.onLine) throw new Error('لا يوجد اتصال بالإنترنت');
 
-  const resolvedMimeType = inferMimeType(fileName, mimeType);
-  const started = await MasarDownloader.download({ url, fileName, mimeType: resolvedMimeType });
-  return MasarDownloader.waitForCompletion({ downloadId: started.downloadId });
+  let listener: PluginListenerHandle | undefined;
+  let startedId: number | undefined;
+  let cleanupTimer: number | undefined;
+  let cleanedUp = false;
+
+  const cleanup = () => {
+    if (cleanedUp) return;
+    cleanedUp = true;
+    if (cleanupTimer) window.clearTimeout(cleanupTimer);
+    void listener?.remove();
+  };
+
+  try {
+    // Register before enqueueing so even very small files cannot finish before the listener exists.
+    listener = await MasarDownloader.addListener('downloadComplete', (result) => {
+      if (startedId === undefined || result.downloadId !== startedId) return;
+      onFinished?.(result);
+      cleanup();
+    });
+
+    const resolvedMimeType = inferMimeType(fileName, mimeType);
+    const started = await MasarDownloader.download({
+      url,
+      fileName,
+      mimeType: resolvedMimeType,
+    });
+
+    startedId = started.downloadId;
+    onStarted?.(started.fileName || fileName);
+    cleanupTimer = window.setTimeout(cleanup, 60 * 60 * 1000);
+
+    return { ...started, cleanup };
+  } catch (error) {
+    cleanup();
+    throw error;
+  }
 }

@@ -2,8 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { API_BASE_URL, MasarData, fetchMasarData, getFallbackData } from './masarApi';
 import { readCachedMasarData, writeCachedMasarData } from './offlineCache';
 
-type DataSource = 'remote' | 'cache' | 'bundled';
-
 const REFRESH_THROTTLE_MS = 1000 * 60 * 3;
 const REQUEST_TIMEOUT_MS = 10000;
 const INITIAL_RETRIES = 3;
@@ -14,9 +12,6 @@ export function useMasarData() {
   const [isLoading, setIsLoading] = useState(Boolean(API_BASE_URL) && !cached);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isOnlineData, setIsOnlineData] = useState(Boolean(cached));
-  const [dataSource, setDataSource] = useState<DataSource>(cached ? 'cache' : 'bundled');
-  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(cached?.savedAt || null);
 
   const lastRefreshAttemptRef = useRef(0);
   const requestControllerRef = useRef<AbortController | null>(null);
@@ -45,10 +40,7 @@ export function useMasarData() {
           if (controller.signal.aborted) return false;
 
           setData(nextData);
-          const savedAt = writeCachedMasarData(nextData);
-          setLastSyncedAt(savedAt);
-          setIsOnlineData(true);
-          setDataSource('remote');
+          writeCachedMasarData(nextData);
           setError(null);
           return true;
         } catch (requestError) {
@@ -60,18 +52,14 @@ export function useMasarData() {
 
       if (controller.signal.aborted) return false;
 
-      setIsOnlineData(false);
       const fallback = readCachedMasarData();
       if (fallback) {
         setData(fallback.data);
-        setLastSyncedAt(fallback.savedAt);
-        setDataSource('cache');
         setError(null);
       } else {
         // Do not silently turn an API failure into an apparently empty app.
         // Keep the UI in a clear retry state until data can be loaded.
         setData(getFallbackData());
-        setDataSource('bundled');
         setError('تعذر تحميل بيانات التطبيق الآن.');
       }
       console.warn('Masar API unavailable. Using offline data when available.', lastError);
@@ -102,5 +90,5 @@ export function useMasarData() {
     };
   }, [refresh]);
 
-  return { data, isLoading, isRefreshing, error, isOnlineData, dataSource, lastSyncedAt, refresh };
+  return { data, isLoading, isRefreshing, error, refresh };
 }

@@ -22,11 +22,10 @@ const DAYS_OF_WEEK = [
 
 interface ScheduleEventCardProps {
   item: ScheduleEvent;
-  idx: number;
 }
 
-const ScheduleEventCard: React.FC<ScheduleEventCardProps> = memo(({ item, idx }) => {
-  const meta = getCourseIconMeta(`${item.course} ${item.courseCode ?? ''}`, idx);
+const ScheduleEventCard: React.FC<ScheduleEventCardProps> = memo(({ item }) => {
+  const meta = getCourseIconMeta(`${item.course} ${item.courseCode ?? ''}`);
   const Icon = meta.Icon;
   const typeText = item.type === 'lecture' ? 'محاضرة' : item.sectionNumber ? `سكشن ${item.sectionNumber}` : 'سكشن';
 
@@ -288,8 +287,8 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
           className="space-y-3 pt-1"
         >
           {filteredEvents.length > 0 ? (
-            filteredEvents.map((item, idx) => (
-              <ScheduleEventCard key={item.id} item={item} idx={idx} />
+            filteredEvents.map((item) => (
+              <ScheduleEventCard key={item.id} item={item} />
             ))
           ) : (
             <EmptyState
