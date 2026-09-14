@@ -208,29 +208,33 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
               ))}
             </div>
           )}
-          {/* Midterm Schedule Card */}
-          <div className="bg-white border border-slate-200/90 border-r-4 border-r-amber-500 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-2xs">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-base font-bold text-slate-900">جدول الميدتيرم</span>
-                {midtermDoc?.fileUrl && midtermDoc.approvedDate && <span className="text-xs bg-amber-50 text-amber-800 font-bold px-2 py-0.5 rounded-md border border-amber-200/70">{midtermDoc.approvedDate}</span>}
+          {/* Midterm Schedule Card: يظهر فقط بعد نشر الجدول */}
+          {midtermDoc?.fileUrl && (
+            <div className="bg-white border border-slate-200/90 border-r-4 border-r-amber-500 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-2xs">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-base font-bold text-slate-900">جدول الميدتيرم</span>
+                  {midtermDoc.approvedDate && <span className="text-xs bg-amber-50 text-amber-800 font-bold px-2 py-0.5 rounded-md border border-amber-200/70">{midtermDoc.approvedDate}</span>}
+                </div>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">مواعيد وقاعات الامتحانات الرسمية المعتمدة</p>
               </div>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">{midtermDoc?.fileUrl ? 'مواعيد وقاعات الامتحانات الرسمية المعتمدة' : 'لم يتم نشر جدول الميدتيرم بعد'}</p>
+              <DownloadButton available onClick={() => void handleOpenDoc(midtermDoc)} label="تحميل جدول الميدتيرم" />
             </div>
-            {midtermDoc ? <DownloadButton available={Boolean(midtermDoc.fileUrl)} onClick={() => void handleOpenDoc(midtermDoc)} label="تحميل جدول الميدتيرم" /> : <span className="text-xs font-semibold text-slate-400 whitespace-nowrap">غير متاح حاليًا</span>}
-          </div>
+          )}
 
-          {/* Final Schedule Card */}
-          <div className="bg-white border border-slate-200/90 border-r-4 border-r-purple-500 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-2xs">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-base font-bold text-slate-900">جدول الفاينال</span>
-                {finalDoc?.fileUrl && finalDoc.approvedDate && <span className="text-xs bg-purple-50 text-purple-800 font-bold px-2 py-0.5 rounded-md border border-purple-200/70">{finalDoc.approvedDate}</span>}
+          {/* Final Schedule Card: يظهر فقط بعد نشر الجدول */}
+          {finalDoc?.fileUrl && (
+            <div className="bg-white border border-slate-200/90 border-r-4 border-r-purple-500 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-2xs">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-base font-bold text-slate-900">جدول الفاينال</span>
+                  {finalDoc.approvedDate && <span className="text-xs bg-purple-50 text-purple-800 font-bold px-2 py-0.5 rounded-md border border-purple-200/70">{finalDoc.approvedDate}</span>}
+                </div>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">مواعيد وقاعات الامتحانات الرسمية المعتمدة</p>
               </div>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">{finalDoc?.fileUrl ? 'مواعيد وقاعات الامتحانات الرسمية المعتمدة' : 'لم يتم نشر جدول الفاينال بعد'}</p>
+              <DownloadButton available onClick={() => void handleOpenDoc(finalDoc)} label="تحميل جدول الفاينال" />
             </div>
-            {finalDoc ? <DownloadButton available={Boolean(finalDoc.fileUrl)} onClick={() => void handleOpenDoc(finalDoc)} label="تحميل جدول الفاينال" /> : <span className="text-xs font-semibold text-slate-400 whitespace-nowrap">غير متاح حاليًا</span>}
-          </div>
+          )}
         </div>
       )}
 

@@ -2,7 +2,7 @@ import React, { useState, memo } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { Course } from '../types';
 import { CourseDetailView } from './CourseDetailView';
-import { getCourseDepartmentLabel, getCourseIconMeta } from '../lib/courseIcons';
+import { getCourseIconMeta } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
 
 interface CoursesViewProps {
@@ -15,6 +15,12 @@ interface CourseCardProps {
   onSelect: (course: Course) => void;
 }
 
+const getDepartmentLabel = (department?: Course['department'] | null) => {
+  if (department === 'computers') return 'قسم حاسبات';
+  if (department === 'control_communications') return 'قسم تحكم واتصالات';
+  return 'عام';
+};
+
 const CourseCard: React.FC<CourseCardProps> = memo(({ course, index, onSelect }) => {
   const meta = getCourseIconMeta(course.nameEn || course.nameAr || '', index);
   const Icon = meta.Icon;
@@ -22,7 +28,7 @@ const CourseCard: React.FC<CourseCardProps> = memo(({ course, index, onSelect })
   return (
     <div
       onClick={() => onSelect(course)}
-      className={`bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl px-4 py-3.5 cursor-pointer hover:border-blue-300 transition-all shadow-2xs group`}
+      className={`bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl px-3.5 py-3 cursor-pointer hover:border-blue-300 transition-all shadow-2xs group`}
     >
       <div className="flex items-center gap-3 min-w-0">
         <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${meta.bgClass}`}>
@@ -30,23 +36,26 @@ const CourseCard: React.FC<CourseCardProps> = memo(({ course, index, onSelect })
             <img
               src={course.iconUrl}
               alt=""
-              className="w-7 h-7 object-contain rounded-lg"
+              className="w-6 h-6 object-contain rounded-lg"
               loading="lazy"
               onError={(event) => { event.currentTarget.style.display = 'none'; }}
             />
           ) : (
-            <Icon size={20} />
+            <Icon size={18} />
           )}
         </div>
 
         <div className="min-w-0 flex-1 text-right">
-          <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-700 transition-colors leading-snug truncate" dir="auto">
+          <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors leading-snug truncate" dir="auto">
             {course.nameAr || course.nameEn}
           </h3>
+          <span className="mt-1 inline-flex max-w-full items-center rounded-lg bg-slate-50 border border-slate-200/80 px-2 py-0.5 text-[11px] font-semibold text-slate-500 truncate">
+            {getDepartmentLabel(course.department)}
+          </span>
         </div>
 
-        <div className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors shrink-0">
-          <ChevronLeft size={18} />
+        <div className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors shrink-0">
+          <ChevronLeft size={17} />
         </div>
       </div>
     </div>
@@ -73,7 +82,7 @@ export const CoursesView: React.FC<CoursesViewProps> = memo(({ courses }) => {
   }
 
   return (
-    <div id="courses-screen-view" className="space-y-3.5 pb-24 pt-1" dir="rtl">
+    <div id="courses-screen-view" className="space-y-3 pb-24 pt-1" dir="rtl">
       {/* Screen Title */}
       <div className="flex items-center justify-between px-1">
         <h2 className="text-base font-bold text-slate-800 tracking-wide">
@@ -82,7 +91,7 @@ export const CoursesView: React.FC<CoursesViewProps> = memo(({ courses }) => {
       </div>
 
       {/* Courses List */}
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {courses.length > 0 ? courses.map((course, index) => (
           <CourseCard
             key={course.id}

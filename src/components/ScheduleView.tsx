@@ -32,15 +32,15 @@ const ScheduleEventCard: React.FC<ScheduleEventCardProps> = memo(({ item, idx })
 
   return (
     <div
-      className={`bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl p-4 hover:border-blue-300 transition-all shadow-2xs`}
+      className={`bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl p-3 hover:border-blue-300 transition-all shadow-2xs`}
     >
       {/* Card Header: Subject Icon Logo + Course Name & Type Badge */}
-      <div className="flex items-center justify-between gap-3 mb-3">
+      <div className="flex items-center justify-between gap-2.5 mb-2.5">
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border ${meta.bgClass}`}>
-            <Icon size={19} />
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${meta.bgClass}`}>
+            <Icon size={17} />
           </div>
-          <h3 className="text-base font-bold text-slate-900 leading-snug break-words text-right min-w-0 flex-1" dir="auto">
+          <h3 className="text-sm font-bold text-slate-900 leading-snug break-words text-right min-w-0 flex-1" dir="auto">
             {getArabicCourseName(item.course)}
           </h3>
         </div>
@@ -60,15 +60,15 @@ const ScheduleEventCard: React.FC<ScheduleEventCardProps> = memo(({ item, idx })
       </div>
 
       {/* Card Body: Time, Location */}
-      <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-        <div className="flex items-center gap-1.5 bg-slate-50/90 border border-slate-200/80 px-3 py-1.5 rounded-xl text-slate-700 font-medium">
+      <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <div className="flex items-center gap-1.5 bg-slate-50/90 border border-slate-200/80 px-2.5 py-1.5 rounded-xl text-slate-700 font-medium">
           <Clock size={14} className="text-blue-600 shrink-0" />
           <span className="font-semibold">
             {item.startTime} - {item.endTime}
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-slate-50/90 border border-slate-200/80 px-3 py-1.5 rounded-xl text-slate-800 font-bold">
+        <div className="flex items-center gap-1.5 bg-slate-50/90 border border-slate-200/80 px-2.5 py-1.5 rounded-xl text-slate-800 font-bold">
           <MapPin size={14} className="text-rose-500 shrink-0" />
           <span>{item.location}</span>
         </div>
@@ -76,7 +76,7 @@ const ScheduleEventCard: React.FC<ScheduleEventCardProps> = memo(({ item, idx })
 
       {/* Important Notes / Tips */}
       {item.notes && (
-        <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-start gap-1.5 text-xs text-amber-800 bg-amber-50/70 px-3 py-2 rounded-xl">
+        <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-start gap-1.5 text-xs text-amber-800 bg-amber-50/70 px-3 py-2 rounded-xl">
           <span className="font-semibold">{item.notes}</span>
         </div>
       )}
@@ -133,16 +133,16 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
       <DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
 
       {/* Schedule Image Button */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-2xs">
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-2xs">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/80">
-            <FileImage size={20} />
+          <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/80">
+            <FileImage size={18} />
           </div>
           <div>
-            <span className="text-sm font-bold text-slate-900 block">
+            <span className="text-xs font-bold text-slate-900 block">
               صورة الجدول الأسبوعي الرسمي
             </span>
-            <span className="text-xs text-slate-500 font-medium block">
+            <span className="text-[11px] text-slate-500 font-medium block">
               جدول المحاضرات والسكاشن المعتمد
             </span>
           </div>
@@ -169,7 +169,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
           type="button"
           id="schedule-tab-lectures"
           onClick={() => setScheduleType('lecture')}
-          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all relative z-10 ${
+          className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all relative z-10 ${
             scheduleType === 'lecture'
               ? 'text-blue-700 font-black'
               : 'text-slate-600 hover:text-slate-900 font-bold'
@@ -187,7 +187,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
           type="button"
           id="schedule-tab-sections"
           onClick={() => setScheduleType('section')}
-          className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all relative z-10 ${
+          className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all relative z-10 ${
             scheduleType === 'section'
               ? 'text-blue-700 font-black'
               : 'text-slate-600 hover:text-slate-900 font-bold'
@@ -264,7 +264,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
               key={day.id}
               type="button"
               onClick={() => setSelectedDay(day.id)}
-              className={`flex-1 py-2.5 px-1 rounded-xl text-center text-xs sm:text-sm transition-all relative ${
+              className={`flex-1 py-2 px-1 rounded-xl text-center text-xs transition-all relative ${
                 isSelected
                   ? 'text-white font-bold shadow-xs'
                   : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 font-bold'

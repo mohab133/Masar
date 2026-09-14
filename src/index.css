@@ -21,6 +21,19 @@ body {
   background: #ffffff;
   box-sizing: border-box;
   overflow-x: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* App text is display-only by default. Keep form controls selectable/editable. */
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 #root {
