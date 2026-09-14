@@ -15,4 +15,3 @@ coverage/
 backend/service-account*.json
 
 # Firebase Android configuration
-android/app/google-services.json
