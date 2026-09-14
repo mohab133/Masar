@@ -24,15 +24,13 @@ const EMPTY_DATA: MasarData = {
 };
 
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://jbvngzazhcmovlkoarzk.supabase.co/functions/v1/masar-api').replace(/\/$/, '');
 
 export function getFallbackData(): MasarData {
   return EMPTY_DATA;
 }
 
 export async function fetchMasarData(signal?: AbortSignal): Promise<MasarData> {
-  if (!API_BASE_URL) return EMPTY_DATA;
-
   const response = await fetch(`${API_BASE_URL}/api/bootstrap`, {
     signal,
     headers: { Accept: 'application/json' },
@@ -53,8 +51,6 @@ export async function fetchMasarData(signal?: AbortSignal): Promise<MasarData> {
 }
 
 export async function submitFeedback(details: string, clientId?: string): Promise<void> {
-  if (!API_BASE_URL) throw new Error('API is not configured');
-
   const response = await fetch(`${API_BASE_URL}/api/feedback`, {
     method: 'POST',
     headers: {

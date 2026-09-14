@@ -36,18 +36,12 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
 
     setIsSending(true);
     try {
-      if (import.meta.env.VITE_API_BASE_URL) {
-        let clientId = localStorage.getItem(FEEDBACK_CLIENT_ID_KEY);
-        if (!clientId) {
-          clientId = crypto.randomUUID?.() || `client-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-          localStorage.setItem(FEEDBACK_CLIENT_ID_KEY, clientId);
-        }
-        await submitFeedback(value, clientId);
-      } else {
-        const newNote = { id: `note-${Date.now()}`, details: value, submittedAt: new Date().toISOString() };
-        const existing = JSON.parse(localStorage.getItem('masar_feedback_entries') || '[]');
-        localStorage.setItem('masar_feedback_entries', JSON.stringify([...existing, newNote]));
+      let clientId = localStorage.getItem(FEEDBACK_CLIENT_ID_KEY);
+      if (!clientId) {
+        clientId = crypto.randomUUID?.() || `client-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        localStorage.setItem(FEEDBACK_CLIENT_ID_KEY, clientId);
       }
+      await submitFeedback(value, clientId);
 
       localStorage.setItem('masar_feedback_last_submitted_at', String(Date.now()));
       setErrorMessage('');

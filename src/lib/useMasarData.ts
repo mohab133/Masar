@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { MasarData, fetchMasarData, getFallbackData } from './masarApi';
+import { API_BASE_URL, MasarData, fetchMasarData, getFallbackData } from './masarApi';
 import { readCachedMasarData, writeCachedMasarData } from './offlineCache';
 
 type DataSource = 'remote' | 'cache' | 'bundled';
@@ -10,7 +10,7 @@ const REQUEST_TIMEOUT_MS = 10000;
 export function useMasarData() {
   const cached = readCachedMasarData();
   const [data, setData] = useState<MasarData>(cached?.data || getFallbackData());
-  const [isLoading, setIsLoading] = useState(Boolean(import.meta.env.VITE_API_BASE_URL) && !cached);
+  const [isLoading, setIsLoading] = useState(Boolean(API_BASE_URL) && !cached);
   const [isOnlineData, setIsOnlineData] = useState(Boolean(cached));
   const [dataSource, setDataSource] = useState<DataSource>(cached ? 'cache' : 'bundled');
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(cached?.savedAt || null);
@@ -19,12 +19,6 @@ export function useMasarData() {
   const requestControllerRef = useRef<AbortController | null>(null);
 
   const refresh = useCallback(async (force = false) => {
-    if (!import.meta.env.VITE_API_BASE_URL) {
-      setIsOnlineData(false);
-      setIsLoading(false);
-      return;
-    }
-
     const now = Date.now();
     if (!force && now - lastRefreshAttemptRef.current < REFRESH_THROTTLE_MS) return;
     lastRefreshAttemptRef.current = now;

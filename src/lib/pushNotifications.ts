@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { API_BASE_URL } from './masarApi';
 import {
   ActionPerformed,
   PushNotificationSchema,
@@ -7,7 +8,6 @@ import {
 } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 const REGISTER_DELAY_MS = 800;
 // Calling FCM registration without Firebase configuration can terminate the
 // Android process immediately after notification permission is granted.
