@@ -4,6 +4,7 @@ import { Announcement } from '../types';
 import { getDynamicBorderClass } from '../lib/courseIcons';
 import { ConfirmModal } from './ConfirmModal';
 import { downloadFile } from '../lib/nativeDownloader';
+import { isAnnouncementNew } from '../lib/announcementUtils';
 
 interface AllAnnouncementsModalProps {
   isOpen: boolean;
@@ -51,8 +52,8 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
                   <Bell size={18} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">التنبيهات</h3>
-                  <p className="text-xs text-slate-500">أحدث إعلانات الكلية والتحديثات</p>
+                  <h3 className="text-base font-bold text-slate-900">الإشعارات</h3>
+                  <p className="text-xs text-slate-500">أحدث الإشعارات وإعلانات الكلية</p>
                 </div>
               </div>
               <button
@@ -77,13 +78,20 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
                       <Tag size={12} />
                       {ann.courseRef || "عام"}
                     </span>
-                    <span className="text-xs text-slate-500 flex items-center gap-1">
-                      <Calendar size={12} />
-                      {ann.date}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {isAnnouncementNew(ann) && (
+                        <span className="text-xs font-black text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                          جديد
+                        </span>
+                      )}
+                      <span className="text-xs text-slate-500 flex items-center gap-1">
+                        <Calendar size={12} />
+                        {ann.date}
+                      </span>
+                    </div>
                   </div>
                   <h4 className="text-sm font-bold text-slate-900 mb-1 leading-snug break-words text-right" dir="auto">تنبيه</h4>
-                  <p className="text-[15px] text-slate-700 leading-8 break-words text-right" dir="auto">{ann.content}</p>
+                  <p className="text-base text-slate-700 leading-8 break-words text-right" dir="auto">{ann.content}</p>
                   {(ann.linkUrl || ann.attachmentUrl) && (
                     <div className="mt-3 pt-3 border-t border-slate-100 flex gap-2 flex-wrap">
                       {ann.linkUrl && (

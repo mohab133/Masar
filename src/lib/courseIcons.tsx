@@ -161,7 +161,7 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       topAccentClass: 'border-t-4 border-t-blue-500',
     };
   }
-  if (nameLower.includes('تصميم منطقي') || nameLower.includes('logic design') || nameLower.includes('logic')) {
+  if (nameLower.includes('تصميم منطقي') || nameLower.includes('التصميم المنطقي') || nameLower.includes('logic design') || nameLower.includes('logic-design') || nameLower.includes('logic')) {
     return {
       Icon: Binary,
       bgClass: 'bg-indigo-50 text-indigo-600 border-indigo-200/80',

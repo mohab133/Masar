@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useEffect, useRef, useState, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, CheckCircle2, Send } from 'lucide-react';
 import { submitFeedback } from '../lib/masarApi';
@@ -17,14 +17,35 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isMounted, setIsMounted] = useState(isOpen);
+  const [isOverLimit, setIsOverLimit] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsMounted(true);
+      setErrorMessage('');
+      setIsOverLimit(false);
+    } else if (isMounted) {
+      const timer = window.setTimeout(() => setIsMounted(false), 160);
+      return () => window.clearTimeout(timer);
+    }
+  }, [isOpen, isMounted]);
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 104), 360)}px`;
+  }, [details]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const value = details.trim();
     if (!value || isSending) return;
     setErrorMessage('');
-    if (value.length > MAX_FEEDBACK_LENGTH) {
-      setErrorMessage(`الملاحظة طويلة جدًا. الحد الأقصى ${MAX_FEEDBACK_LENGTH} حرف.`);
+    if (isOverLimit || value.length > MAX_FEEDBACK_LENGTH) {
+      setErrorMessage(`الحد الأقصى ${MAX_FEEDBACK_LENGTH} حرف.`);
       return;
     }
 
@@ -59,25 +80,24 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
     }
   };
 
-  if (!isOpen) return null;
+  if (!isMounted) return null;
 
   const modal = (
     <>
-      {isOpen && (
+      <div
+        id="feedback-modal-overlay"
+        data-no-swipe="true"
+        className={`fixed inset-0 z-50 w-screen min-h-[100dvh] flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-[1px] p-0 sm:p-4 transition-opacity duration-150 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+        dir="rtl"
+        onClick={onClose}
+      >
         <div
-          id="feedback-modal-overlay"
-          data-no-swipe="true"
-        className="fixed inset-0 z-50 w-screen min-h-[100dvh] flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-[1px] p-0 sm:p-4"
-          dir="rtl"
-          onClick={onClose}
-        >
-          <div
-            id="feedback-modal-card"
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col"
+          id="feedback-modal-card"
+          onClick={(e) => e.stopPropagation()}
+          className={`w-full max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col transform transition-transform duration-150 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-3'}`}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
               <div>
                 <h3 className="text-base font-bold text-slate-900">كتابة ملاحظة</h3>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -95,7 +115,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
             </div>
 
             {/* Content */}
-            <div className="p-5">
+          <div className="p-5">
               {isSubmitted ? (
                 <div className="py-6 flex flex-col items-center text-center">
                   <div className="w-11 h-11 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5">
@@ -118,18 +138,29 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
                   )}
                   <div>
                     <textarea
+                      ref={textareaRef}
                       id="feedback-details"
                       rows={4}
                       value={details}
-                      maxLength={MAX_FEEDBACK_LENGTH}
-                      onChange={(e) => setDetails(e.target.value)}
+                      onChange={(e) => {
+                        const rawValue = e.target.value;
+                        if (rawValue.length > MAX_FEEDBACK_LENGTH) {
+                          setDetails(rawValue.slice(0, MAX_FEEDBACK_LENGTH));
+                          setIsOverLimit(true);
+                          setErrorMessage(`الحد الأقصى ${MAX_FEEDBACK_LENGTH} حرف.`);
+                        } else {
+                          setDetails(rawValue);
+                          if (isOverLimit) {
+                            setIsOverLimit(false);
+                            setErrorMessage('');
+                          }
+                        }
+                      }}
                       placeholder="اكتب ملاحظتك هنا..."
-                      aria-describedby="feedback-limit"
-                      className="w-full p-3 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-hidden focus:border-blue-500 bg-slate-50/50 resize-none text-slate-800 placeholder:text-slate-400"
+                      className={`w-full p-3 text-xs sm:text-sm rounded-xl border bg-slate-50/50 resize-none overflow-y-auto text-slate-800 placeholder:text-slate-400 focus:outline-hidden transition-colors ${isOverLimit ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'}`}
                       autoFocus
                       required
                     />
-                    <p id="feedback-limit" className="mt-1 text-[10px] text-slate-400 text-left">الحد الأقصى 2000 حرف</p>
                   </div>
 
                   <button
@@ -142,10 +173,9 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
                   </button>
                 </form>
               )}
-            </div>
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 

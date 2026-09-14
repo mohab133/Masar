@@ -18,17 +18,11 @@ interface CourseCardProps {
 const CourseCard: React.FC<CourseCardProps> = memo(({ course, index, onSelect }) => {
   const meta = getCourseIconMeta(course.nameEn || course.nameAr || '', index);
   const Icon = meta.Icon;
-  const departmentLabel = course.department === 'computers'
-    ? 'قسم حاسبات'
-    : course.department === 'control_communications'
-      ? 'قسم تحكم واتصالات'
-      : getCourseDepartmentLabel(course.nameAr || course.nameEn || '');
-  const fileCount = course.files?.length ?? course.filesCount ?? 0;
 
   return (
     <div
       onClick={() => onSelect(course)}
-      className={`bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl p-4 cursor-pointer hover:border-blue-300 transition-all shadow-2xs group`}
+      className={`bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl px-4 py-3.5 cursor-pointer hover:border-blue-300 transition-all shadow-2xs group`}
     >
       <div className="flex items-center gap-3 min-w-0">
         <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${meta.bgClass}`}>
@@ -46,24 +40,9 @@ const CourseCard: React.FC<CourseCardProps> = memo(({ course, index, onSelect })
         </div>
 
         <div className="min-w-0 flex-1 text-right">
-          <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-700 transition-colors leading-snug whitespace-normal" dir="auto">
+          <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-700 transition-colors leading-snug truncate" dir="auto">
             {course.nameAr || course.nameEn}
           </h3>
-
-          {course.nameAr && course.nameEn && (
-            <div className="text-xs text-slate-500 font-medium leading-tight mt-0.5" dir="ltr">
-              {course.nameEn}
-            </div>
-          )}
-
-          <div className="flex items-center gap-2 mt-2 flex-wrap">
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${meta.badgeClass}`}>
-              {fileCount} ملفات
-            </span>
-            <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 text-slate-600">
-              {departmentLabel}
-            </span>
-          </div>
         </div>
 
         <div className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors shrink-0">

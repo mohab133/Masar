@@ -14,6 +14,7 @@ export interface Announcement {
   linkUrl?: string | null;
   attachmentUrl?: string | null;
   attachmentName?: string | null;
+  created_at?: string | null;
 }
 
 export type ScheduleType = 'lecture' | 'section';

@@ -15,7 +15,8 @@ function isAnnouncement(value: unknown): value is Announcement {
     && (value.courseRef === undefined || value.courseRef === null || isString(value.courseRef))
     && (value.linkUrl === undefined || value.linkUrl === null || isString(value.linkUrl))
     && (value.attachmentUrl === undefined || value.attachmentUrl === null || isString(value.attachmentUrl))
-    && (value.attachmentName === undefined || value.attachmentName === null || isString(value.attachmentName));
+    && (value.attachmentName === undefined || value.attachmentName === null || isString(value.attachmentName))
+    && (value.created_at === undefined || value.created_at === null || isString(value.created_at));
 }
 
 function isAcademicEvent(value: unknown): value is AcademicEvent {

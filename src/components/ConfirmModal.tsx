@@ -94,7 +94,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = memo(({
             {title}
           </h3>
 
-          <p className="mx-auto mt-2 max-w-[20rem] text-[14px] font-medium leading-6 text-slate-600">
+          <p className="mx-auto mt-2 max-w-[20rem] text-sm font-medium leading-6 text-slate-600">
             {message}
           </p>
         </div>
@@ -106,14 +106,14 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = memo(({
               onConfirm();
               onClose();
             }}
-            className="min-h-11 flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-[14px] font-extrabold text-white shadow-sm transition-colors hover:bg-blue-700 active:bg-blue-800"
+            className="min-h-11 flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-blue-700 active:bg-blue-800"
           >
             {confirmText || defaultConfirmText}
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="min-h-11 min-w-[5rem] rounded-xl px-4 py-2.5 text-[14px] font-bold text-slate-600 transition-colors hover:bg-white active:bg-slate-100"
+            className="min-h-11 min-w-[5rem] rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-white active:bg-slate-100"
           >
             {cancelText}
           </button>

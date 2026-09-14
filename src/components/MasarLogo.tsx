@@ -26,7 +26,7 @@ export const MasarLogo: React.FC<MasarLogoProps> = memo(({
           <span className="text-xl font-black text-slate-900 tracking-normal">
             مَسَارْ
           </span>
-          <span className="text-[10px] font-semibold text-slate-400 tracking-wide">
+          <span className="text-xs font-semibold text-slate-400 tracking-wide">
             دليلك الأكاديمي
           </span>
         </div>

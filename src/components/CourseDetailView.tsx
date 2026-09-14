@@ -32,10 +32,9 @@ interface CategoryConfig {
 const CATEGORIES: CategoryConfig[] = [
   { id: 'slides', label: 'سلايدات', icon: Presentation },
   { id: 'sheets', label: 'شيتات', icon: FileSpreadsheet },
-  { id: 'solutions', label: 'حل الشيتات', icon: CheckCircle2 },
+  { id: 'solutions', label: 'الحلول', icon: CheckCircle2 },
   { id: 'summaries', label: 'ملخصات', icon: BookmarkCheck },
   { id: 'exams', label: 'امتحانات سابقة', icon: GraduationCap },
-  { id: 'other', label: 'أخرى', icon: FileText },
 ];
 
 const normalizeCategory = (cat: FileCategory): CategoryTab => {
@@ -184,11 +183,11 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
         </button>
 
         <div className="min-w-0 flex-1">
-          <h2 className="text-[14px] sm:text-[15px] font-extrabold text-slate-900 leading-[1.35] tracking-tight break-words">
+          <h2 className="text-sm sm:text-base font-extrabold text-slate-900 leading-[1.35] tracking-tight break-words">
             {course.nameAr || course.nameEn}
           </h2>
           {course.nameAr && (
-            <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-snug mt-0.5">
+            <p className="text-xs sm:text-xs text-slate-500 font-medium leading-snug mt-0.5">
               {course.nameEn}
             </p>
           )}
@@ -225,7 +224,7 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
               <Icon size={16} className={isSelected ? 'text-white' : 'text-slate-400'} />
               <span>{cat.label}</span>
               <span
-                className={`text-[11px] px-1.5 py-0.2 rounded-full font-bold ${
+                className={`text-xs px-1.5 py-0.2 rounded-full font-bold ${
                   isSelected
                     ? 'bg-white/20 text-white'
                     : 'bg-slate-100 text-slate-600'

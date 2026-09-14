@@ -8,6 +8,7 @@ import { ScheduleView } from './components/ScheduleView';
 import { CoursesView } from './components/CoursesView';
 import { DatesView } from './components/DatesView';
 import { FeedbackModal } from './components/FeedbackModal';
+import { AllAnnouncementsModal } from './components/AllAnnouncementsModal';
 import { initializePushNotifications } from './lib/pushNotifications';
 
 const TAB_ORDER: TabType[] = ['home', 'schedule', 'courses', 'dates'];
@@ -16,6 +17,7 @@ export default function App() {
   const { data } = useMasarData();
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   useEffect(() => {
     void initializePushNotifications();
@@ -89,14 +91,16 @@ export default function App() {
         onTouchEnd={handleTouchEnd}
       >
         {/* Main Application Header */}
-        <Header onOpenFeedback={() => setIsFeedbackOpen(true)} />
+        <Header
+          onOpenFeedback={() => setIsFeedbackOpen(true)}
+          onOpenNotifications={() => setIsNotificationsOpen(true)}
+        />
 
         {/* Main screen content. Lightweight 150ms transition keeps navigation smooth without heavy JS animation. */}
         <main className="flex-1 px-4.5 pt-24 relative">
           <div key={activeTab} className="w-full tab-page-enter" aria-live="polite">
               {activeTab === 'home' && (
                 <HomeView
-                  announcements={data.announcements}
                   upcomingDates={data.dates}
                   onNavigateToDates={() => handleTabChange('dates')}
                   appAssets={data.appAssets}
@@ -122,6 +126,13 @@ export default function App() {
 
         {/* Bottom Navigation with animated active pill */}
         <BottomNav activeTab={activeTab} onChangeTab={handleTabChange} />
+
+        {/* In-app Notification Center */}
+        <AllAnnouncementsModal
+          isOpen={isNotificationsOpen}
+          onClose={() => setIsNotificationsOpen(false)}
+          announcements={data.announcements.filter((announcement) => announcement.status === 'active')}
+        />
 
         {/* Global Feedback Sheet / Modal */}
         <FeedbackModal

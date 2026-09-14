@@ -9,8 +9,7 @@ import {
   FileText,
   Download,
 } from 'lucide-react';
-import { Announcement, AcademicEvent, AppAsset } from '../types';
-import { AllAnnouncementsModal } from './AllAnnouncementsModal';
+import { AcademicEvent, AppAsset } from '../types';
 import { ConfirmModal } from './ConfirmModal';
 import { formatDeadline } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
@@ -18,14 +17,12 @@ import { DownloadToast } from './DownloadToast';
 import { downloadFile } from '../lib/nativeDownloader';
 
 interface HomeViewProps {
-  announcements: Announcement[];
   upcomingDates: AcademicEvent[];
   onNavigateToDates: () => void;
   appAssets: AppAsset[];
 }
 
 export const HomeView: React.FC<HomeViewProps> = memo(({
-  announcements,
   upcomingDates,
   onNavigateToDates,
   appAssets,
@@ -33,9 +30,6 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
   // Announcements Carousel State
   const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState(false);
-  const [currentAnnIndex, setCurrentAnnIndex] = useState(0);
-  const [isAnnModalOpen, setIsAnnModalOpen] = useState(false);
-  const annTouchStartX = useRef<number | null>(null);
 
   // Confirm Modal State for links & downloads
   const [confirmState, setConfirmState] = useState<{
@@ -56,48 +50,11 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
   const dateTouchStartX = useRef<number | null>(null);
 
-  const activeAnnouncements = useMemo(() => {
-    return [...(announcements || [])]
-      .filter((a) => a.status === 'active')
-      .sort((a, b) => {
-        const aTime = Date.parse(a.date);
-        const bTime = Date.parse(b.date);
-        if (Number.isNaN(aTime) || Number.isNaN(bTime)) return 0;
-        return bTime - aTime;
-      });
-  }, [announcements]);
-
   const nearestDates = useMemo(() => {
     return (upcomingDates || []).slice(0, 6);
   }, [upcomingDates]);
 
-  // Announcement navigation
-  const prevAnnouncement = useCallback(() => {
-    setCurrentAnnIndex((prev) => (prev > 0 ? prev - 1 : activeAnnouncements.length - 1));
-  }, [activeAnnouncements.length]);
-
-  const nextAnnouncement = useCallback(() => {
-    setCurrentAnnIndex((prev) => (prev < activeAnnouncements.length - 1 ? prev + 1 : 0));
-  }, [activeAnnouncements.length]);
-
-  const handleAnnTouchStart = useCallback((e: React.TouchEvent) => {
-    e.stopPropagation();
-    annTouchStartX.current = e.touches[0].clientX;
-  }, []);
-
-  const handleAnnTouchEnd = useCallback((e: React.TouchEvent) => {
-    e.stopPropagation();
-    if (annTouchStartX.current === null) return;
-    const touchEndX = e.changedTouches[0].clientX;
-    const diff = annTouchStartX.current - touchEndX;
-
-    if (diff > 35) {
-      prevAnnouncement();
-    } else if (diff < -35) {
-      nextAnnouncement();
-    }
-    annTouchStartX.current = null;
-  }, [prevAnnouncement, nextAnnouncement]);
+  const activeDate = nearestDates[currentDateIndex] || nearestDates[0];
 
   // Upcoming Dates navigation
   const prevDate = useCallback(() => {
@@ -127,8 +84,6 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
     dateTouchStartX.current = null;
   }, [prevDate, nextDate]);
 
-  const activeAnnouncement = activeAnnouncements[currentAnnIndex] || activeAnnouncements[0];
-  const activeDate = nearestDates[currentDateIndex] || nearestDates[0];
   const handleBylawDownload = useCallback(async () => {
     const bylaw = appAssets.find((asset) => asset.assetKey === 'menouf_bylaw' && asset.fileUrl);
     if (!bylaw?.fileUrl) {
@@ -152,118 +107,6 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
   return (
     <div id="home-screen-view" className="space-y-5 pb-24 pt-1" dir="rtl">
       <DownloadToast message={downloadMessage} error={downloadError} />
-      {/* SECTION 1: IMPORTANT ANNOUNCEMENTS (التنبيهات) */}
-      {activeAnnouncements.length > 0 ? (
-        <section id="home-announcements-section" aria-label="التنبيهات" data-no-swipe="true">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="text-sm font-bold text-slate-700">التنبيهات</span>
-            {activeAnnouncements.length > 1 && (
-              <button
-                type="button"
-                onClick={() => setIsAnnModalOpen(true)}
-                className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                عرض الكل ({activeAnnouncements.length})
-              </button>
-            )}
-          </div>
-
-          <div
-            id="announcement-carousel-card"
-            onTouchStart={handleAnnTouchStart}
-            onTouchEnd={handleAnnTouchEnd}
-            className="bg-white border border-slate-200/90 border-r-4 border-r-blue-600 rounded-2xl p-4 sm:p-5 shadow-2xs transition-all relative overflow-hidden"
-          >
-            
-              <div
-                key={activeAnnouncement.id}
-              >
-                <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
-                  <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 max-w-full break-words" dir="auto">
-                    {activeAnnouncement.courseRef || activeAnnouncement.categoryNameAr}
-                  </span>
-                  <span className="text-xs text-slate-500 font-medium">
-                    {activeAnnouncement.timeAgo}
-                  </span>
-                </div>
-
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1.5 leading-snug break-words text-right" dir="auto">
-                  تنبيه
-                </h3>
-                <p className="text-[15px] text-slate-700 leading-8 break-words text-right" dir="auto">
-                  {activeAnnouncement.content}
-                </p>
-
-                {(activeAnnouncement.linkUrl || activeAnnouncement.attachmentUrl) && (
-                  <div className="mt-3 pt-3 border-t border-slate-100 flex justify-start gap-2 flex-wrap">
-                    {activeAnnouncement.linkUrl && (
-                      <button
-                        type="button"
-                        onClick={() => setConfirmState({
-                          isOpen: true,
-                          title: 'فتح الرابط',
-                          message: 'سيتم فتح الرابط خارج التطبيق. هل تريد المتابعة؟',
-                          type: 'link',
-                          onConfirm: () => window.open(activeAnnouncement.linkUrl!, '_blank', 'noopener,noreferrer'),
-                        })}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-100 text-xs font-bold"
-                      >
-                        <ExternalLink size={15} />
-                        عرض الرابط
-                      </button>
-                    )}
-                    {activeAnnouncement.attachmentUrl && (
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            await downloadFile(activeAnnouncement.attachmentUrl!, activeAnnouncement.attachmentName || 'attachment', 'application/octet-stream');
-                            setDownloadError(false);
-                            setDownloadMessage('تم تحميل الملف بنجاح إلى مجلد التنزيلات');
-                          } catch (error) {
-                            setDownloadError(true);
-                            setDownloadMessage(error instanceof Error ? error.message : 'فشل تحميل الملف، حاول مرة أخرى');
-                          }
-                          setTimeout(() => setDownloadMessage(null), 3500);
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold"
-                      >
-                        <Download size={15} />
-                        تحميل الملف
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            
-
-            {/* Dots indicator */}
-            {activeAnnouncements.length > 1 && (
-              <div className="flex items-center justify-center pt-3 mt-3 border-t border-slate-100 gap-1.5">
-                {activeAnnouncements.map((_, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setCurrentAnnIndex(idx)}
-                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                      idx === currentAnnIndex ? 'w-5 bg-blue-600' : 'w-1.5 bg-slate-200'
-                    }`}
-                    aria-label={`تنبيه ${idx + 1}`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      ) : (
-        <section id="home-announcements-section" aria-label="التنبيهات" data-no-swipe="true">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="text-sm font-bold text-slate-700">التنبيهات</span>
-          </div>
-          <EmptyState compact icon="inbox" title="لا توجد تنبيهات جديدة حاليًا" description="ستظهر هنا أحدث إعلانات الكلية والتحديثات عند نشرها" />
-        </section>
-      )}
-
       {/* SECTION 2: UPCOMING DEADLINES / DATES (أقرب المواعيد والتسليمات - بنفس شكل التنبيهات) */}
       {nearestDates.length > 0 && activeDate ? (
         <section id="home-upcoming-dates-section" aria-label="أقرب التسليمات والمواعيد">
@@ -456,7 +299,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                   <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
                     لائحة هندسة منوف
                   </h4>
-                  <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md">
+                  <span className="text-xs font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md">
                     PDF
                   </span>
                 </div>
@@ -480,13 +323,6 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
       </section>
 
       {/* Announcements Full Modal */}
-      <AllAnnouncementsModal
-        isOpen={isAnnModalOpen}
-        onClose={() => setIsAnnModalOpen(false)}
-        announcements={activeAnnouncements}
-      />
-
-      {/* Confirmation Dialog */}
       <ConfirmModal
         isOpen={confirmState.isOpen}
         title={confirmState.title}

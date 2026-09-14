@@ -25,7 +25,7 @@ interface ScheduleEventCardProps {
 }
 
 const ScheduleEventCard: React.FC<ScheduleEventCardProps> = memo(({ item, idx }) => {
-  const meta = getCourseIconMeta(item.course, idx);
+  const meta = getCourseIconMeta(`${item.course} ${item.courseCode ?? ''}`, idx);
   const Icon = meta.Icon;
   const typeText = item.type === 'lecture' ? 'محاضرة' : item.sectionNumber ? `سكشن ${item.sectionNumber}` : 'سكشن';
 

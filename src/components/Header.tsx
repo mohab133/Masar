@@ -1,12 +1,13 @@
 import React, { memo } from 'react';
-import { MessageSquarePlus } from 'lucide-react';
+import { Bell, MessageSquarePlus } from 'lucide-react';
 import { MasarLogo } from './MasarLogo';
 
 interface HeaderProps {
   onOpenFeedback: () => void;
+  onOpenNotifications: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = memo(({ onOpenFeedback }) => {
+export const Header: React.FC<HeaderProps> = memo(({ onOpenFeedback, onOpenNotifications }) => {
   return (
     <header
       id="app-main-header"
@@ -27,6 +28,17 @@ export const Header: React.FC<HeaderProps> = memo(({ onOpenFeedback }) => {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            id="header-notifications-button"
+            type="button"
+            onClick={onOpenNotifications}
+            className="relative inline-flex items-center justify-center w-10 h-10 rounded-xl text-slate-600 bg-slate-50 hover:bg-slate-100 active:bg-slate-100 border border-slate-200/80 transition-all"
+            aria-label="فتح الإشعارات"
+            title="الإشعارات"
+          >
+            <Bell size={20} />
+          </button>
+
           <button
           id="header-feedback-button"
           type="button"
