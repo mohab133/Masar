@@ -15,21 +15,64 @@ import { clearNotificationsUnread, hasUnreadNotifications as getHasUnreadNotific
 const TAB_ORDER: TabType[] = ['home', 'schedule', 'courses', 'dates'];
 
 export default function App() {
-  const { data } = useMasarData();
+  const { data, isLoading, isRefreshing, error, refresh } = useMasarData();
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(() => getHasUnreadNotifications());
 
   useEffect(() => {
-    void initializePushNotifications();
+    // Notification permission is optional and must not compete with the first data load.
+    if (!isLoading) void initializePushNotifications();
     return subscribeToUnreadNotifications(setHasUnreadNotifications);
-  }, []);
+  }, [isLoading]);
 
   // Touch gesture references for main page swipe
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
   const isSwiping = useRef<boolean>(false);
+  const pullStartY = useRef<number | null>(null);
+  const pullStartX = useRef<number | null>(null);
+  const isPulling = useRef<boolean>(false);
+  const [pullDistance, setPullDistance] = useState(0);
+
+  const handlePullTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (
+      window.scrollY > 0 ||
+      target?.closest('button, input, textarea, a, select, [data-no-swipe], .overflow-x-auto, [role="tablist"], #course-detail-view, .scrollable, .no-swipe')
+    ) {
+      pullStartY.current = null;
+      pullStartX.current = null;
+      isPulling.current = false;
+      return;
+    }
+
+    pullStartY.current = e.touches[0].clientY;
+    pullStartX.current = e.touches[0].clientX;
+    isPulling.current = false;
+  };
+
+  const handlePullTouchMove = (e: React.TouchEvent) => {
+    if (pullStartY.current === null || pullStartX.current === null || isRefreshing) return;
+    const dy = e.touches[0].clientY - pullStartY.current;
+    const dx = e.touches[0].clientX - pullStartX.current;
+
+    if (dy <= 0 || Math.abs(dx) > Math.abs(dy)) return;
+    if (window.scrollY > 0) return;
+
+    isPulling.current = true;
+    setPullDistance(Math.min(72, dy * 0.45));
+  };
+
+  const handlePullTouchEnd = () => {
+    const shouldRefresh = isPulling.current && pullDistance >= 54 && !isRefreshing;
+    pullStartY.current = null;
+    pullStartX.current = null;
+    isPulling.current = false;
+    setPullDistance(0);
+    if (shouldRefresh) void refresh(true);
+  };
 
   const handleTabChange = (newTab: TabType) => {
     if (newTab === activeTab) return;
@@ -90,9 +133,42 @@ export default function App() {
       {/* Mobile Application Container */}
       <div
         className="w-full max-w-md min-h-screen bg-slate-50 flex flex-col shadow-sm relative overflow-x-hidden"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
+        onTouchStart={(e) => { handleTouchStart(e); handlePullTouchStart(e); }}
+        onTouchMove={handlePullTouchMove}
+        onTouchEnd={(e) => { handleTouchEnd(e); handlePullTouchEnd(); }}
       >
+        {(pullDistance > 0 || isRefreshing) && !isLoading && (
+          <div
+            className="fixed left-1/2 z-40 -translate-x-1/2 pointer-events-none"
+            style={{ top: `${isRefreshing ? 16 : Math.max(12, pullDistance - 28)}px` }}
+            aria-hidden="true"
+          >
+            <div className="w-9 h-9 rounded-full bg-white shadow-md border border-slate-200 flex items-center justify-center">
+              <div
+                className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-blue-600 animate-spin"
+                style={{ transform: `rotate(${pullDistance * 4}deg)` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="absolute inset-0 z-30 bg-slate-50 flex flex-col items-center justify-center px-8 text-center" dir="rtl">
+            <div className="w-10 h-10 rounded-full border-2 border-slate-200 border-t-blue-600 animate-spin" />
+            <p className="mt-4 text-sm font-semibold text-slate-700">جارٍ تحميل بيانات التطبيق...</p>
+            <p className="mt-1 text-xs text-slate-400">يتم الاتصال بالخادم، لحظة واحدة</p>
+          </div>
+        )}
+
+        {!isLoading && error && data.courses.length === 0 && data.schedule.length === 0 && (
+          <div className="absolute inset-0 z-30 bg-slate-50 flex flex-col items-center justify-center px-8 text-center" dir="rtl">
+            <div className="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center text-lg font-bold">!</div>
+            <p className="mt-4 text-sm font-bold text-slate-800">تعذر تحميل البيانات</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">تأكد من اتصال الإنترنت وحاول مرة أخرى.</p>
+            <button type="button" onClick={() => void refresh(true)} className="mt-4 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold active:scale-95 transition-transform">إعادة المحاولة</button>
+          </div>
+        )}
+
         {/* Main Application Header */}
         <Header
           onOpenFeedback={() => setIsFeedbackOpen(true)}

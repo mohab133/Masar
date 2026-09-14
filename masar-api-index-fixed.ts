@@ -280,7 +280,7 @@ Deno.serve(async (req) => {
       const payload = await req.json();
       const details = typeof payload.details === "string" ? payload.details.trim() : "";
       if (!details) return json({ error: "details is required" }, 400);
-      if (details.length > 2000) return json({ error: "details is too long" }, 400);
+      if (details.length > 300) return json({ error: "details is too long" }, 400);
 
       const { data, error } = await supabase.from("feedback").insert({
         id: crypto.randomUUID(),

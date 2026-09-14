@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, CheckCircle2, Send } from 'lucide-react';
 import { submitFeedback } from '../lib/masarApi';
 
-const MAX_FEEDBACK_LENGTH = 2000;
+const MAX_FEEDBACK_LENGTH = 300;
 const FEEDBACK_COOLDOWN_MS = 30 * 1000;
 const FEEDBACK_CLIENT_ID_KEY = 'masar_feedback_client_id';
 
@@ -158,6 +158,9 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
                       autoFocus
                       required
                     />
+                    <div className={`mt-1.5 text-left text-[11px] font-medium ${details.length >= MAX_FEEDBACK_LENGTH ? 'text-red-600' : 'text-slate-400'}`} dir="ltr">
+                      {details.length} / {MAX_FEEDBACK_LENGTH}
+                    </div>
                   </div>
 
                   <button
