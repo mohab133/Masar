@@ -21,13 +21,13 @@ insert into storage.buckets (id, name, public)
 values ('course-icons', 'course-icons', true)
 on conflict (id) do update set public = excluded.public;
 
--- Public read for icons. Upload/delete remains restricted to the service role used by the bot.
+-- Public read for icons. Upload/delete remains restricted to the service role.
 drop policy if exists "course-icons public read" on storage.objects;
 create policy "course-icons public read"
 on storage.objects for select
 using (bucket_id = 'course-icons');
 
--- Transactional bulk importer. The Telegram bot calls this function with service-role credentials.
+-- Transactional bulk importer for trusted administrative integrations.
 create or replace function public.import_masar_study_data(
   p_courses jsonb,
   p_schedule jsonb
