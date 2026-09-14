@@ -161,6 +161,17 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       topAccentClass: 'border-t-4 border-t-blue-500',
     };
   }
+  if (nameLower.includes('تصميم منطقي') || nameLower.includes('logic design') || nameLower.includes('logic')) {
+    return {
+      Icon: Binary,
+      bgClass: 'bg-indigo-50 text-indigo-600 border-indigo-200/80',
+      badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
+      accentColor: 'bg-indigo-500',
+      borderRightClass: 'border-r-4 border-r-indigo-500',
+      topAccentClass: 'border-t-4 border-t-indigo-500',
+    };
+  }
+
   if (
     nameLower.includes('comp') ||
     nameLower.includes('حاسب')
@@ -203,16 +214,6 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       accentColor: 'bg-violet-500',
       borderRightClass: 'border-r-4 border-r-violet-500',
       topAccentClass: 'border-t-4 border-t-violet-500',
-    };
-  }
-  if (nameLower.includes('تصميم منطقي') || nameLower.includes('logic design') || nameLower.includes('logic')) {
-    return {
-      Icon: Binary,
-      bgClass: 'bg-indigo-50 text-indigo-600 border-indigo-200/80',
-      badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
-      accentColor: 'bg-indigo-500',
-      borderRightClass: 'border-r-4 border-r-indigo-500',
-      topAccentClass: 'border-t-4 border-t-indigo-500',
     };
   }
   if (nameLower.includes('بحث') || nameLower.includes('تحليل') || nameLower.includes('research') || nameLower.includes('analysis')) {

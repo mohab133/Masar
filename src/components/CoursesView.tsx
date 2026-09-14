@@ -31,6 +31,20 @@ const CourseCard: React.FC<CourseCardProps> = memo(({ course, index, onSelect })
       className={`bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl p-4 cursor-pointer hover:border-blue-300 transition-all shadow-2xs group`}
     >
       <div className="flex items-center gap-3 min-w-0">
+        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${meta.bgClass}`}>
+          {course.iconUrl ? (
+            <img
+              src={course.iconUrl}
+              alt=""
+              className="w-7 h-7 object-contain rounded-lg"
+              loading="lazy"
+              onError={(event) => { event.currentTarget.style.display = 'none'; }}
+            />
+          ) : (
+            <Icon size={20} />
+          )}
+        </div>
+
         <div className="min-w-0 flex-1 text-right">
           <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-700 transition-colors leading-snug whitespace-normal" dir="auto">
             {course.nameAr || course.nameEn}
@@ -50,20 +64,6 @@ const CourseCard: React.FC<CourseCardProps> = memo(({ course, index, onSelect })
               {departmentLabel}
             </span>
           </div>
-        </div>
-
-        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${meta.bgClass}`}>
-          {course.iconUrl ? (
-            <img
-              src={course.iconUrl}
-              alt=""
-              className="w-7 h-7 object-contain rounded-lg"
-              loading="lazy"
-              onError={(event) => { event.currentTarget.style.display = 'none'; }}
-            />
-          ) : (
-            <Icon size={20} />
-          )}
         </div>
 
         <div className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors shrink-0">
