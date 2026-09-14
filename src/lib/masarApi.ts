@@ -33,22 +33,80 @@ export function getFallbackData(): MasarData {
   return EMPTY_DATA;
 }
 
-export async function fetchMasarData(signal?: AbortSignal): Promise<MasarData> {
-  const response = await fetch(`${API_BASE_URL}/api/bootstrap?refresh=${Date.now()}`, {
-    signal,
-    cache: 'no-store',
-    headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' },
-  });
+export class MasarApiError extends Error {
+  readonly kind: 'offline' | 'timeout' | 'server' | 'http' | 'invalid_data' | 'network';
+  readonly status?: number;
 
-  if (!response.ok) {
-    throw new Error(`Masar API returned ${response.status}`);
+  constructor(
+    message: string,
+    kind: MasarApiError['kind'],
+    status?: number,
+  ) {
+    super(message);
+    this.name = 'MasarApiError';
+    this.kind = kind;
+    this.status = status;
+  }
+}
+
+export function getMasarApiErrorMessage(error: unknown): string {
+  if (error instanceof MasarApiError) {
+    if (error.kind === 'offline') return 'لا يوجد اتصال بالإنترنت حاليًا.';
+    if (error.kind === 'timeout') return 'الخادم لم يستجب في الوقت المحدد. حاول مرة أخرى.';
+    if (error.kind === 'invalid_data') return 'الخادم أرسل بيانات غير صالحة. حاول مرة أخرى.';
+    if (error.kind === 'http') {
+      if (error.status === 401 || error.status === 403) return 'الخادم رفض الاتصال بالتطبيق.';
+      if (error.status === 404) return 'خدمة البيانات غير متاحة حاليًا.';
+      if (error.status >= 500) return 'يوجد عطل مؤقت في خادم البيانات.';
+      return `تعذر تحميل البيانات من الخادم (رمز ${error.status}).`;
+    }
+    if (error.kind === 'server') return 'حدث خطأ داخل خادم البيانات.';
+    return 'تعذر الوصول إلى خادم البيانات. تحقق من الشبكة وحاول مرة أخرى.';
   }
 
-  const rawData: unknown = await response.json();
-  const data = validateMasarData(rawData);
+  if (error instanceof DOMException && error.name === 'AbortError') {
+    return 'انتهت مهلة الاتصال بالخادم. حاول مرة أخرى.';
+  }
+  if (error instanceof TypeError) {
+    return 'تعذر الوصول إلى خادم البيانات. اتصال الإنترنت موجود لكن الخادم لم يمكن الوصول إليه.';
+  }
+  return 'تعذر تحميل بيانات التطبيق حاليًا. حاول مرة أخرى.';
+}
 
+export async function fetchMasarData(signal?: AbortSignal): Promise<MasarData> {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    throw new MasarApiError('Device is offline', 'offline');
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/api/bootstrap?refresh=${Date.now()}`, {
+      signal,
+      cache: 'no-store',
+      headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' },
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new MasarApiError('Request timed out or was cancelled', 'timeout');
+    }
+    throw new MasarApiError(error instanceof Error ? error.message : 'Network request failed', 'network');
+  }
+
+  if (!response.ok) {
+    const status = response.status;
+    throw new MasarApiError(`Masar API returned ${status}`, status >= 500 ? 'server' : 'http', status);
+  }
+
+  let rawData: unknown;
+  try {
+    rawData = await response.json();
+  } catch {
+    throw new MasarApiError('Masar API returned a non-JSON response', 'invalid_data');
+  }
+
+  const data = validateMasarData(rawData);
   if (!data) {
-    throw new Error('Masar API returned invalid data');
+    throw new MasarApiError('Masar API returned invalid data', 'invalid_data');
   }
 
   return data;

@@ -191,7 +191,7 @@ export default function App() {
           <div className="absolute inset-0 z-30 bg-slate-50 flex flex-col items-center justify-center px-8 text-center" dir="rtl">
             <div className="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center text-lg font-bold">!</div>
             <p className="mt-4 text-sm font-bold text-slate-800">تعذر تحميل البيانات</p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">تأكد من اتصال الإنترنت وحاول مرة أخرى.</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">{error}</p>
             <button type="button" onClick={() => void refresh(true)} className="mt-4 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold active:scale-95 transition-transform">إعادة المحاولة</button>
           </div>
         )}

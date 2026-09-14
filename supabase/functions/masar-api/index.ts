@@ -89,29 +89,38 @@ function mapOfficialSchedule(row: any) {
 }
 
 async function getBootstrap() {
-  const [announcements, dates, schedule, courses, files, official, appAssets] = await Promise.all([
-    supabase.from("announcements").select("*").eq("status", "active").order("created_at", { ascending: false }),
-    supabase.from("dates").select("*").order("event_date", { ascending: true }),
-    supabase.from("schedule").select("id,course,course_code,type,section_number,lecture_number,day_of_week,day_name_ar,start_time,end_time,location,instructor,notes").order("day_of_week", { ascending: true }).order("start_time", { ascending: true }),
-    supabase.from("courses").select("id,code,name_en,name_ar,instructor,files_count,department,icon_url").order("code", { ascending: true }),
-    supabase.from("course_files").select("id,course_id,title,category,file_type,file_name,storage_path,file_size,file_size_bytes,total_pages,published_at,created_at").order("published_at", { ascending: false }),
-    supabase.from("official_schedules").select("*").order("approved_date", { ascending: false }),
-    supabase.from("app_assets").select("*"),
-  ]);
+  const queries = [
+    ["announcements", supabase.from("announcements").select("*").eq("status", "active").order("created_at", { ascending: false })],
+    ["dates", supabase.from("dates").select("*").order("event_date", { ascending: true })],
+    ["schedule", supabase.from("schedule").select("id,course,course_code,type,section_number,lecture_number,day_of_week,day_name_ar,start_time,end_time,location,instructor,notes").order("day_of_week", { ascending: true }).order("start_time", { ascending: true })],
+    ["courses", supabase.from("courses").select("id,code,name_en,name_ar,instructor,files_count,department,icon_url").order("code", { ascending: true })],
+    ["course_files", supabase.from("course_files").select("id,course_id,title,category,file_type,file_name,storage_path,file_size,file_size_bytes,total_pages,published_at,created_at").order("published_at", { ascending: false })],
+    ["official_schedules", supabase.from("official_schedules").select("*").order("approved_date", { ascending: false })],
+    ["app_assets", supabase.from("app_assets").select("*")],
+  ] as const;
 
-  for (const result of [announcements, dates, schedule, courses, files, official, appAssets]) {
-    if (result.error) throw result.error;
-  }
+  const results = await Promise.all(queries.map(async ([name, query]) => {
+    const startedAt = Date.now();
+    const result = await query;
+    if (result.error) {
+      console.error("bootstrap query failed", { table: name, message: result.error.message, code: result.error.code, details: result.error.details, hint: result.error.hint });
+      throw new Error(`BOOTSTRAP_QUERY_FAILED:${name}:${result.error.message}`);
+    }
+    console.log("bootstrap query ok", { table: name, rows: result.data?.length ?? 0, ms: Date.now() - startedAt });
+    return result.data ?? [];
+  }));
+
+  const [announcementsData, datesData, scheduleData, coursesData, filesData, officialData, appAssetsData] = results;
 
   const filesByCourse = new Map<string, any[]>();
-  for (const row of files.data ?? []) {
+  for (const row of filesData) {
     const list = filesByCourse.get(row.course_id) ?? [];
     list.push(mapCourseFile(row));
     filesByCourse.set(row.course_id, list);
   }
 
   return {
-    announcements: (announcements.data ?? []).map((row: any) => ({
+    announcements: announcementsData.map((row: any) => ({
       ...row,
       timeAgo: row.time_ago,
       categoryNameAr: row.category_name_ar,
@@ -123,7 +132,7 @@ async function getBootstrap() {
         : null,
       attachmentName: row.attachment_name ?? null,
     })),
-    dates: (dates.data ?? []).map((row: any) => ({
+    dates: datesData.map((row: any) => ({
       id: row.id,
       type: row.type,
       typeLabelAr: row.type_label_ar,
@@ -136,10 +145,10 @@ async function getBootstrap() {
       daysUntil: row.days_until,
       location: row.location ?? undefined,
     })),
-    schedule: (schedule.data ?? []).map(mapSchedule),
-    courses: (courses.data ?? []).map((row: any) => mapCourse(row, filesByCourse)),
-    officialSchedules: (official.data ?? []).map(mapOfficialSchedule),
-    appAssets: (appAssets.data ?? []).map((row: any) => ({
+    schedule: scheduleData.map(mapSchedule),
+    courses: coursesData.map((row: any) => mapCourse(row, filesByCourse)),
+    officialSchedules: officialData.map(mapOfficialSchedule),
+    appAssets: appAssetsData.map((row: any) => ({
       id: row.id,
       assetKey: row.asset_key,
       title: row.title,
@@ -273,7 +282,15 @@ Deno.serve(async (req) => {
   const path = normalizePath(url.pathname);
 
   try {
-    if (req.method === "GET" && path === "/api/health") return json({ ok: true, service: "masar-api" });
+    if (req.method === "GET" && path === "/api/health") {
+      const startedAt = Date.now();
+      const { error } = await supabase.from("courses").select("id").limit(1);
+      if (error) {
+        console.error("health database check failed", { message: error.message, code: error.code });
+        return json({ ok: false, service: "masar-api", dbOk: false, error: "DATABASE_UNAVAILABLE", ms: Date.now() - startedAt }, 503);
+      }
+      return json({ ok: true, service: "masar-api", dbOk: true, ms: Date.now() - startedAt });
+    }
     if (req.method === "GET" && path === "/api/bootstrap") return json(await getBootstrap());
 
     if (req.method === "POST" && path === "/api/feedback") {
@@ -330,7 +347,12 @@ Deno.serve(async (req) => {
 
     return json({ error: "Not found" }, 404);
   } catch (error) {
-    console.error(error);
-    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("masar-api request failed", { path, method: req.method, message });
+    if (message.startsWith("BOOTSTRAP_QUERY_FAILED:")) {
+      const [, table, ...rest] = message.split(":");
+      return json({ error: "BOOTSTRAP_QUERY_FAILED", table, message: rest.join(":") }, 500);
+    }
+    return json({ error: message }, 500);
   }
 });

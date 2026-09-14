@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { API_BASE_URL, MasarData, fetchMasarData, getFallbackData } from './masarApi';
+import { API_BASE_URL, MasarData, fetchMasarData, getFallbackData, getMasarApiErrorMessage } from './masarApi';
 import { readCachedMasarData, writeCachedMasarData } from './offlineCache';
 
 const REFRESH_THROTTLE_MS = 1000 * 60 * 3;
@@ -60,7 +60,7 @@ export function useMasarData() {
         // Do not silently turn an API failure into an apparently empty app.
         // Keep the UI in a clear retry state until data can be loaded.
         setData(getFallbackData());
-        setError('تعذر تحميل بيانات التطبيق الآن.');
+        setError(getMasarApiErrorMessage(lastError));
       }
       console.warn('Masar API unavailable. Using offline data when available.', lastError);
       return false;
