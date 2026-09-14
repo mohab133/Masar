@@ -7,6 +7,7 @@ import {
   Token,
 } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { markNotificationsUnread } from './notificationCenter';
 
 const REGISTER_DELAY_MS = 800;
 // Calling FCM registration without Firebase configuration can terminate the
@@ -50,6 +51,7 @@ async function registerListeners(): Promise<void> {
     'pushNotificationReceived',
     async (notification: PushNotificationSchema) => {
       console.info('Masar notification received in foreground', notification.title);
+      markNotificationsUnread();
 
       try {
         await LocalNotifications.schedule({
@@ -72,6 +74,7 @@ async function registerListeners(): Promise<void> {
     'pushNotificationActionPerformed',
     (action: ActionPerformed) => {
       console.info('Masar notification opened', action.notification.data);
+      markNotificationsUnread();
     },
   );
 

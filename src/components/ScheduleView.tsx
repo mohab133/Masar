@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useCallback, memo } from 'react';
-import { MapPin, Clock, FileImage, Download, Filter } from 'lucide-react';
+import { MapPin, Clock, FileImage, Filter } from 'lucide-react';
 import { ScheduleEvent, ScheduleType, OfficialScheduleDocument } from '../types';
 import { getArabicCourseName, getCourseIconMeta } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
 import { DownloadToast } from './DownloadToast';
-import { downloadFile } from '../lib/nativeDownloader';
+import { useDownload } from '../lib/useDownload';
+import { DownloadButton } from './DownloadButton';
 
 interface ScheduleViewProps {
   scheduleEvents: ScheduleEvent[];
@@ -93,22 +94,11 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
   const [selectedDay, setSelectedDay] = useState<number>(0);
 
   // Student's chosen section
-  const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
-  const [downloadError, setDownloadError] = useState(false);
+  const { message: downloadMessage, error: downloadError, loading: downloadLoading, download } = useDownload();
 
   const handleOfficialDownload = useCallback(async (doc: OfficialScheduleDocument) => {
-    if (!doc.fileUrl) return;
-    setDownloadMessage(null);
-    setDownloadError(false);
-    try {
-      await downloadFile(doc.fileUrl, doc.downloadFileName || 'official-schedule.jpg', 'image/jpeg');
-      setDownloadMessage('تم تحميل الجدول بنجاح إلى مجلد التنزيلات');
-    } catch (error) {
-      setDownloadError(true);
-      setDownloadMessage(error instanceof Error ? error.message : 'فشل تحميل الملف، حاول مرة أخرى');
-    }
-    window.setTimeout(() => setDownloadMessage(null), 3500);
-  }, []);
+    await download(doc.fileUrl, doc.downloadFileName || 'official-schedule.jpg', 'image/jpeg');
+  }, [download]);
 
   const [selectedSection, setSelectedSection] = useState<string>(() => {
     try {
@@ -140,7 +130,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
 
   return (
     <div id="schedule-screen-view" className="space-y-4 pb-24 pt-1" dir="rtl">
-      <DownloadToast message={downloadMessage} error={downloadError} />
+      <DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
 
       {/* Schedule Image Button */}
       <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-2xs">
@@ -160,17 +150,10 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
 
         {(() => {
           const doc = officialSchedules.find((item) => item.type === 'lectures_sections' && item.fileUrl);
-          return (
-            <button
-              type="button"
-              onClick={() => doc && handleOfficialDownload(doc)}
-              disabled={!doc?.fileUrl}
-              className={`p-2.5 rounded-xl border transition-all shrink-0 flex items-center justify-center shadow-2xs ${doc?.fileUrl ? 'bg-blue-50 text-blue-700 border-blue-200/80 hover:bg-blue-100 cursor-pointer' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'}`}
-              aria-label="تحميل الجدول الرسمي"
-              title={doc?.fileUrl ? 'تحميل الجدول الرسمي' : 'الجدول غير متاح حاليًا'}
-            >
-              <Download size={18} />
-            </button>
+          return doc ? (
+            <DownloadButton available={Boolean(doc.fileUrl)} onClick={() => void handleOfficialDownload(doc)} label="تحميل الجدول الرسمي" />
+          ) : (
+            <span className="text-xs font-semibold text-slate-400 whitespace-nowrap">غير متاح حاليًا</span>
           );
         })()}
       </div>

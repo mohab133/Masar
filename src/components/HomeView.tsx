@@ -14,7 +14,7 @@ import { ConfirmModal } from './ConfirmModal';
 import { formatDeadline } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
 import { DownloadToast } from './DownloadToast';
-import { downloadFile } from '../lib/nativeDownloader';
+import { useDownload } from '../lib/useDownload';
 
 interface HomeViewProps {
   upcomingDates: AcademicEvent[];
@@ -28,8 +28,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
   appAssets,
 }) => {
   // Announcements Carousel State
-  const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
-  const [downloadError, setDownloadError] = useState(false);
+  const { message: downloadMessage, error: downloadError, loading: downloadLoading, download } = useDownload();
 
   // Confirm Modal State for links & downloads
   const [confirmState, setConfirmState] = useState<{
@@ -86,27 +85,12 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 
   const handleBylawDownload = useCallback(async () => {
     const bylaw = appAssets.find((asset) => asset.assetKey === 'menouf_bylaw' && asset.fileUrl);
-    if (!bylaw?.fileUrl) {
-      setDownloadError(true);
-      setDownloadMessage('ملف اللائحة غير متاح حاليًا');
-      window.setTimeout(() => setDownloadMessage(null), 3500);
-      return;
-    }
-    setDownloadMessage(null);
-    setDownloadError(false);
-    try {
-      await downloadFile(bylaw.fileUrl, bylaw.fileName || 'menouf-bylaw.pdf', 'application/pdf');
-      setDownloadMessage('تم تحميل اللائحة بنجاح إلى مجلد التنزيلات');
-    } catch (error) {
-      setDownloadError(true);
-      setDownloadMessage(error instanceof Error ? error.message : 'فشل تحميل الملف، حاول مرة أخرى');
-    }
-    window.setTimeout(() => setDownloadMessage(null), 3500);
-  }, [appAssets]);
+    await download(bylaw?.fileUrl, bylaw?.fileName || 'menouf-bylaw.pdf', 'application/pdf');
+  }, [appAssets, download]);
 
   return (
     <div id="home-screen-view" className="space-y-5 pb-24 pt-1" dir="rtl">
-      <DownloadToast message={downloadMessage} error={downloadError} />
+      <DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
       {/* SECTION 2: UPCOMING DEADLINES / DATES (أقرب المواعيد والتسليمات - بنفس شكل التنبيهات) */}
       {nearestDates.length > 0 && activeDate ? (
         <section id="home-upcoming-dates-section" aria-label="أقرب التسليمات والمواعيد">
@@ -310,11 +294,11 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
             </div>
 
             <span
-              className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 transition-all shrink-0 flex items-center justify-center shadow-2xs group-hover:bg-blue-100"
+              className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 transition-all duration-200 shrink-0 flex items-center justify-center shadow-2xs group-hover:bg-blue-100 group-hover:border-blue-200 active:scale-95"
               aria-hidden="true"
               title="تحميل اللائحة"
             >
-              <Download size={18} />
+              <Download size={19} strokeWidth={2.2} />
             </span>
               </button>
             );

@@ -89,16 +89,17 @@ function mapOfficialSchedule(row: any) {
 }
 
 async function getBootstrap() {
-  const [announcements, dates, schedule, courses, files, official] = await Promise.all([
+  const [announcements, dates, schedule, courses, files, official, appAssets] = await Promise.all([
     supabase.from("announcements").select("*").eq("status", "active").order("created_at", { ascending: false }),
     supabase.from("dates").select("*").order("event_date", { ascending: true }),
     supabase.from("schedule").select("id,course,course_code,type,section_number,lecture_number,day_of_week,day_name_ar,start_time,end_time,location,instructor,notes").order("day_of_week", { ascending: true }).order("start_time", { ascending: true }),
     supabase.from("courses").select("id,code,name_en,name_ar,instructor,files_count,department,icon_url").order("code", { ascending: true }),
     supabase.from("course_files").select("id,course_id,title,category,file_type,file_name,storage_path,file_size,file_size_bytes,total_pages,published_at,created_at").order("published_at", { ascending: false }),
     supabase.from("official_schedules").select("*").order("approved_date", { ascending: false }),
+    supabase.from("app_assets").select("*"),
   ]);
 
-  for (const result of [announcements, dates, schedule, courses, files, official]) {
+  for (const result of [announcements, dates, schedule, courses, files, official, appAssets]) {
     if (result.error) throw result.error;
   }
 
@@ -122,10 +123,32 @@ async function getBootstrap() {
         : null,
       attachmentName: row.attachment_name ?? null,
     })),
-    dates: dates.data ?? [],
+    dates: (dates.data ?? []).map((row: any) => ({
+      id: row.id,
+      type: row.type,
+      typeLabelAr: row.type_label_ar,
+      course: row.course,
+      eventName: row.event_name,
+      date: row.event_date,
+      displayDateAr: row.display_date_ar,
+      time: row.event_time ?? undefined,
+      remainingTimeAr: row.remaining_time_ar,
+      daysUntil: row.days_until,
+      location: row.location ?? undefined,
+    })),
     schedule: (schedule.data ?? []).map(mapSchedule),
     courses: (courses.data ?? []).map((row: any) => mapCourse(row, filesByCourse)),
     officialSchedules: (official.data ?? []).map(mapOfficialSchedule),
+    appAssets: (appAssets.data ?? []).map((row: any) => ({
+      id: row.id,
+      assetKey: row.asset_key,
+      title: row.title,
+      fileName: row.file_name,
+      fileType: row.file_type,
+      fileUrl: row.storage_path
+        ? supabase.storage.from(row.storage_bucket).getPublicUrl(row.storage_path).data.publicUrl
+        : null,
+    })),
   };
 }
 
@@ -135,23 +158,109 @@ async function hashToken(token: string) {
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function sendPush(title: string, body: string, data: Record<string, string> = {}) {
-  const serverKey = Deno.env.get("FCM_SERVER_KEY");
-  if (!serverKey) return { sent: 0, skipped: true };
-  const { data: tokens, error } = await supabase.from("device_tokens").select("fcm_token");
-  if (error) throw error;
-  let sent = 0;
-  for (const row of tokens ?? []) {
-    const response = await fetch("https://fcm.googleapis.com/fcm/send", {
-      method: "POST",
-      headers: { Authorization: `key=${serverKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ to: row.fcm_token, notification: { title, body }, data }),
-    });
-    if (response.ok) sent++;
-  }
-  return { sent, skipped: false };
+let cachedAccessToken: string | null = null;
+let cachedAccessTokenExpiresAt = 0;
+
+function b64url(bytes: Uint8Array) {
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+function b64urlText(v: string) { return b64url(new TextEncoder().encode(v)); }
+function pemDer(pem: string) {
+  const clean = pem.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g, "");
+  const bin = atob(clean);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
 }
 
+async function getFcmAccessToken(sa: any) {
+  const now = Math.floor(Date.now() / 1000);
+  if (cachedAccessToken && cachedAccessTokenExpiresAt > now + 60) return cachedAccessToken;
+  const header = { alg: "RS256", typ: "JWT" };
+  const payload = {
+    iss: sa.client_email,
+    scope: "https://www.googleapis.com/auth/firebase.messaging",
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now,
+    exp: now + 3600,
+  };
+  const unsigned = `${b64urlText(JSON.stringify(header))}.${b64urlText(JSON.stringify(payload))}`;
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    pemDer(sa.private_key),
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = new Uint8Array(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, new TextEncoder().encode(unsigned)));
+  const assertion = `${unsigned}.${b64url(sig)}`;
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion,
+    }).toString(),
+  });
+  const body = await response.json();
+  if (!response.ok || !body.access_token) {
+    throw new Error(`FCM OAuth token error: ${body.error_description ?? body.error ?? "unknown error"}`);
+  }
+  cachedAccessToken = body.access_token;
+  cachedAccessTokenExpiresAt = now + Number(body.expires_in ?? 3600);
+  return cachedAccessToken;
+}
+
+async function sendPush(title: string, body: string, data: Record<string, string> = {}) {
+  const raw = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
+  if (!raw) return { sent: 0, failed: 0, skipped: true, reason: "FCM_SERVICE_ACCOUNT_JSON is not configured" };
+  let sa: any;
+  try { sa = JSON.parse(raw); } catch { return { sent: 0, failed: 0, skipped: true, reason: "FCM_SERVICE_ACCOUNT_JSON is invalid JSON" }; }
+  if (!sa.client_email || !sa.private_key || !sa.project_id) {
+    return { sent: 0, failed: 0, skipped: true, reason: "FCM service account is missing required fields" };
+  }
+
+  const accessToken = await getFcmAccessToken(sa);
+  const { data: tokens, error } = await supabase.from("device_tokens").select("token_hash,fcm_token").eq("active", true);
+  if (error) throw new Error(`device_tokens query failed: ${error.message}`);
+
+  let sent = 0;
+  let failed = 0;
+  for (const row of tokens ?? []) {
+    if (!row.fcm_token) continue;
+    const response = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ message: { token: row.fcm_token, notification: { title, body }, data } }),
+    });
+    const text = await response.text();
+    if (response.ok) { sent++; continue; }
+    failed++;
+    try {
+      const details = JSON.stringify(JSON.parse(text));
+      if (details.includes("UNREGISTERED") || details.includes("registration-token-not-registered")) {
+        await supabase.from("device_tokens").update({ active: false, updated_at: new Date().toISOString() }).eq("token_hash", row.token_hash);
+      }
+    } catch { /* ignore malformed FCM errors */ }
+    console.error("FCM send failed", response.status, text);
+  }
+  return { sent, failed, skipped: false };
+}
+
+function isAuthorized(req: Request) {
+  const provided = req.headers.get("apikey") ?? "";
+  const keysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
+  if (keysRaw) {
+    try {
+      const keys = JSON.parse(keysRaw);
+      if (Object.values(keys).some((value: any) => typeof value === "string" && value === provided)) return true;
+    } catch { /* fallback below */ }
+  }
+  const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  return Boolean(legacy && provided === legacy);
+}
 function normalizePath(pathname: string) {
   const marker = "/masar-api";
   const index = pathname.indexOf(marker);
@@ -210,10 +319,13 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
-    if (req.method === "POST" && path === "/api/notifications/broadcast") {
+    if (req.method === "POST" && (path === "/api/notifications/broadcast" || path === "/")) {
+      if (!isAuthorized(req)) return json({ error: "Unauthorized" }, 401);
       const payload = await req.json();
-      const result = await sendPush(payload.title ?? "مسار", payload.body ?? "", payload.data ?? {});
-      return json(result);
+      const title = String(payload.title ?? "مسار");
+      const body = String(payload.body ?? "");
+      const data = payload.data && typeof payload.data === "object" ? payload.data : {};
+      return json(await sendPush(title, body, data));
     }
 
     return json({ error: "Not found" }, 404);

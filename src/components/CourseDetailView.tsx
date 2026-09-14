@@ -7,21 +7,20 @@ import {
   CheckCircle2,
   BookmarkCheck,
   GraduationCap,
-  Download,
-  Check
 } from 'lucide-react';
 import { Course, CourseFile, FileCategory } from '../types';
 import { getDynamicBorderClass } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
 import { DownloadToast } from './DownloadToast';
-import { downloadFile } from '../lib/nativeDownloader';
+import { useDownload } from '../lib/useDownload';
+import { DownloadButton } from './DownloadButton';
 
 interface CourseDetailViewProps {
   course: Course;
   onBack: () => void;
 }
 
-type CategoryTab = 'slides' | 'sheets' | 'solutions' | 'summaries' | 'exams' | 'other';
+type CategoryTab = 'slides' | 'sheets' | 'solutions' | 'summaries' | 'exams';
 
 interface CategoryConfig {
   id: CategoryTab;
@@ -37,13 +36,13 @@ const CATEGORIES: CategoryConfig[] = [
   { id: 'exams', label: 'امتحانات سابقة', icon: GraduationCap },
 ];
 
-const normalizeCategory = (cat: FileCategory): CategoryTab => {
+const normalizeCategory = (cat: FileCategory): CategoryTab | null => {
   if (cat === 'slides' || cat === 'lectures') return 'slides';
   if (cat === 'sheets' || cat === 'sections') return 'sheets';
   if (cat === 'solutions' || cat === 'solved_questions') return 'solutions';
   if (cat === 'summaries' || cat === 'reviews') return 'summaries';
   if (cat === 'exams') return 'exams';
-  return 'other';
+  return null;
 };
 
 interface CourseFileCardProps {
@@ -77,26 +76,11 @@ const CourseFileCard: React.FC<CourseFileCardProps> = memo(({ file, idx, downloa
 
       {/* Action Button: Download */}
       <div className="shrink-0">
-        <button
-          type="button"
-          onClick={(e) => file.url && onDownload(e, file)}
-          disabled={!file.url}
-          className={`p-2.5 rounded-xl text-xs sm:text-sm font-bold border transition-all ${
-            downloadingId === file.id
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              : file.url
-                ? 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100'
-                : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'
-          }`}
-          title={file.url ? 'تحميل الملف' : 'الملف غير متاح حاليًا'}
-          aria-label={file.url ? 'تحميل الملف' : 'الملف غير متاح حاليًا'}
-        >
-          {downloadingId === file.id ? (
-            <Check size={18} className="text-emerald-600" />
-          ) : (
-            <Download size={18} />
-          )}
-        </button>
+        <DownloadButton
+          available={Boolean(file.url)}
+          downloading={downloadingId === file.id}
+          onClick={(e) => onDownload(e, file)}
+        />
       </div>
     </div>
   );
@@ -107,8 +91,7 @@ CourseFileCard.displayName = 'CourseFileCard';
 export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course, onBack }) => {
   const [activeTab, setActiveTab] = useState<CategoryTab>('slides');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
-  const [downloadError, setDownloadError] = useState(false);
+  const { message: downloadMessage, error: downloadError, loading: downloadLoading, download } = useDownload();
   const files = useMemo(() => course.files || [], [course.files]);
 
   // Count files per category
@@ -119,13 +102,10 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
       solutions: 0,
       summaries: 0,
       exams: 0,
-      other: 0,
     };
     files.forEach((file) => {
       const norm = normalizeCategory(file.category);
-      if (counts[norm] !== undefined) {
-        counts[norm] += 1;
-      }
+      if (norm) counts[norm] += 1;
     });
     return counts;
   }, [files]);
@@ -137,26 +117,18 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
 
   const handleDownload = useCallback(async (e: React.MouseEvent, file: CourseFile) => {
     e.stopPropagation();
-    if (!file.url) return;
+    const extension = (file.type || 'pdf').toLowerCase();
+    const mimeType = extension === 'pdf' ? 'application/pdf'
+      : extension === 'slides' ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+      : extension === 'sheet' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      : 'application/octet-stream';
     setDownloadingId(file.id);
     try {
-      const extension = (file.type || 'pdf').toLowerCase();
-      const mimeType = extension === 'pdf' ? 'application/pdf'
-        : extension === 'slides' ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-        : extension === 'sheet' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        : 'application/octet-stream';
-      await downloadFile(file.url, `${file.id}.${extension}`, mimeType);
-      setDownloadError(false);
-      setDownloadMessage(`تم تحميل ${file.title} بنجاح إلى مجلد التنزيلات`);
-      window.setTimeout(() => setDownloadMessage(null), 3500);
-    } catch (error) {
-      setDownloadError(true);
-      setDownloadMessage(error instanceof Error ? error.message : 'فشل تحميل الملف، حاول مرة أخرى');
-      window.setTimeout(() => setDownloadMessage(null), 3500);
+      await download(file.url, `${file.id}.${extension}`, mimeType);
     } finally {
-      setTimeout(() => setDownloadingId(null), 800);
+      window.setTimeout(() => setDownloadingId(null), 800);
     }
-  }, []);
+  }, [download]);
 
 
   return (
@@ -169,7 +141,7 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
       dir="rtl"
     >
 
-      <DownloadToast message={downloadMessage} error={downloadError} />
+      <DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
 
       {/* Clean Course Header without duplication */}
       <div className="flex items-center gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
@@ -198,7 +170,7 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
         </span>
       </div>
 
-      {/* Category Tabs (سلايدات، شيتات، حل الشيتات، ملخصات، امتحانات) */}
+      {/* Category Tabs */}
       <div
         data-no-swipe="true"
         onTouchStart={(e) => e.stopPropagation()}

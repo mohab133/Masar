@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useCallback, memo } from 'react';
-import { Download, Calendar, MapPin, Clock, Info, X } from 'lucide-react';
+import { Calendar, MapPin, Clock, Info, X } from 'lucide-react';
 import { AcademicEvent, OfficialScheduleDocument } from '../types';
-import { ConfirmModal } from './ConfirmModal';
 import { getArabicCourseName, getCourseIconMeta, formatDeadline } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
 import { DownloadToast } from './DownloadToast';
-import { downloadFile } from '../lib/nativeDownloader';
+import { useDownload } from '../lib/useDownload';
+import { DownloadButton } from './DownloadButton';
 
 interface DatesViewProps {
   events: AcademicEvent[];
@@ -80,38 +80,17 @@ AcademicEventCard.displayName = 'AcademicEventCard';
 
 export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSchedules }) => {
   const [filter, setFilter] = useState<FilterCategory>('assignments');
-  const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
-  const [downloadError, setDownloadError] = useState(false);
+  const { message: downloadMessage, error: downloadError, loading: downloadLoading, download } = useDownload();
   const [selectedEventForDetails, setSelectedEventForDetails] = useState<AcademicEvent | null>(null);
-  const [confirmModalState, setConfirmModalState] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    onConfirm: () => {},
-  });
+
 
   const midtermDoc = useMemo(() => officialSchedules.find((d) => d.type === 'midterm'), [officialSchedules]);
   const finalDoc = useMemo(() => officialSchedules.find((d) => d.type === 'final'), [officialSchedules]);
 
   const handleOpenDoc = useCallback(async (doc: OfficialScheduleDocument) => {
-    if (!doc.fileUrl) return;
-    setDownloadMessage(null);
-    setDownloadError(false);
-    try {
-      const mimeType = doc.type === 'lectures_sections' ? 'image/jpeg' : 'application/pdf';
-      await downloadFile(doc.fileUrl, doc.downloadFileName || 'exam-schedule.pdf', mimeType);
-      setDownloadMessage(`تم تحميل ${doc.title} بنجاح إلى مجلد التنزيلات`);
-    } catch (error) {
-      setDownloadError(true);
-      setDownloadMessage(error instanceof Error ? error.message : 'فشل تحميل الملف، حاول مرة أخرى');
-    }
-    window.setTimeout(() => setDownloadMessage(null), 3500);
-  }, []);
+    const mimeType = doc.type === 'lectures_sections' ? 'image/jpeg' : 'application/pdf';
+    await download(doc.fileUrl, doc.downloadFileName || 'exam-schedule.pdf', mimeType);
+  }, [download]);
 
   const sortedEvents = useMemo(() => {
     return [...(events || [])].sort((a, b) => a.daysUntil - b.daysUntil);
@@ -134,7 +113,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
 
   return (
     <div id="dates-screen-view" className="space-y-4 pb-24 pt-1" dir="rtl">
-      <DownloadToast message={downloadMessage} error={downloadError} />
+      <DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
       {/* Filter Tabs: تسليمات | كويزات | جداول الامتحانات */}
       <div
         data-no-swipe="true"
@@ -238,9 +217,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
               </div>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">{midtermDoc?.fileUrl ? 'مواعيد وقاعات الامتحانات الرسمية المعتمدة' : 'لم يتم نشر جدول الميدتيرم بعد'}</p>
             </div>
-            <button type="button" onClick={() => midtermDoc?.fileUrl && handleOpenDoc(midtermDoc)} disabled={!midtermDoc?.fileUrl}
-              className={`p-2.5 rounded-xl border transition-all shrink-0 flex items-center justify-center shadow-2xs ${midtermDoc?.fileUrl ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200/80 cursor-pointer' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'}`}
-              aria-label="تحميل جدول الميدتيرم" title={midtermDoc?.fileUrl ? 'تحميل جدول الميدتيرم' : 'جدول الميدتيرم غير منشور'}><Download size={18} /></button>
+            {midtermDoc ? <DownloadButton available={Boolean(midtermDoc.fileUrl)} onClick={() => void handleOpenDoc(midtermDoc)} label="تحميل جدول الميدتيرم" /> : <span className="text-xs font-semibold text-slate-400 whitespace-nowrap">غير متاح حاليًا</span>}
           </div>
 
           {/* Final Schedule Card */}
@@ -252,24 +229,10 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
               </div>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">{finalDoc?.fileUrl ? 'مواعيد وقاعات الامتحانات الرسمية المعتمدة' : 'لم يتم نشر جدول الفاينال بعد'}</p>
             </div>
-            <button type="button" onClick={() => finalDoc?.fileUrl && handleOpenDoc(finalDoc)} disabled={!finalDoc?.fileUrl}
-              className={`p-2.5 rounded-xl border transition-all shrink-0 flex items-center justify-center shadow-2xs ${finalDoc?.fileUrl ? 'bg-purple-50 hover:bg-purple-100 text-purple-900 border-purple-200/80 cursor-pointer' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'}`}
-              aria-label="تحميل جدول الفاينال" title={finalDoc?.fileUrl ? 'تحميل جدول الفاينال' : 'جدول الفاينال غير منشور'}><Download size={18} /></button>
+            {finalDoc ? <DownloadButton available={Boolean(finalDoc.fileUrl)} onClick={() => void handleOpenDoc(finalDoc)} label="تحميل جدول الفاينال" /> : <span className="text-xs font-semibold text-slate-400 whitespace-nowrap">غير متاح حاليًا</span>}
           </div>
         </div>
       )}
-
-      {/* Download Confirm Modal */}
-      <ConfirmModal
-        isOpen={confirmModalState.isOpen}
-        title={confirmModalState.title}
-        message={confirmModalState.message}
-        type="download"
-        onConfirm={confirmModalState.onConfirm}
-        onClose={() =>
-          setConfirmModalState((prev) => ({ ...prev, isOpen: false }))
-        }
-      />
 
       {/* Task Details Modal */}
       

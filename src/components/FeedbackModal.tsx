@@ -26,6 +26,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
       setIsMounted(true);
       setErrorMessage('');
       setIsOverLimit(false);
+      setIsSubmitted(false);
+      setDetails('');
     } else if (isMounted) {
       const timer = window.setTimeout(() => setIsMounted(false), 160);
       return () => window.clearTimeout(timer);
@@ -36,7 +38,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = 'auto';
-    textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 104), 360)}px`;
+    textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 64), 360)}px`;
   }, [details]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,11 +69,6 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
       localStorage.setItem('masar_feedback_last_submitted_at', String(Date.now()));
       setErrorMessage('');
       setIsSubmitted(true);
-      setTimeout(() => {
-        setIsSubmitted(false);
-        setDetails('');
-        onClose();
-      }, 1200);
     } catch (err) {
       console.warn('Feedback send failed', err);
       setErrorMessage('تعذر إرسال الملاحظة الآن. حاول مرة أخرى.');
@@ -87,14 +84,14 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
       <div
         id="feedback-modal-overlay"
         data-no-swipe="true"
-        className={`fixed inset-0 z-50 w-screen min-h-[100dvh] flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-[1px] p-0 sm:p-4 transition-opacity duration-150 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed inset-0 z-50 w-screen min-h-[100dvh] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] p-4 transition-opacity duration-150 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
         dir="rtl"
         onClick={onClose}
       >
         <div
           id="feedback-modal-card"
           onClick={(e) => e.stopPropagation()}
-          className={`w-full max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col transform transition-transform duration-150 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-3'}`}
+          className={`w-full max-w-sm bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col transform transition-transform duration-150 ease-out ${isOpen ? 'translate-y-0 scale-100' : 'translate-y-2 scale-[0.98]'}`}
           >
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
@@ -140,7 +137,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
                     <textarea
                       ref={textareaRef}
                       id="feedback-details"
-                      rows={4}
+                      rows={2}
                       value={details}
                       onChange={(e) => {
                         const rawValue = e.target.value;
@@ -157,7 +154,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
                         }
                       }}
                       placeholder="اكتب ملاحظتك هنا..."
-                      className={`w-full p-3 text-xs sm:text-sm rounded-xl border bg-slate-50/50 resize-none overflow-y-auto text-slate-800 placeholder:text-slate-400 focus:outline-hidden transition-colors ${isOverLimit ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'}`}
+                      className={`w-full min-h-16 p-3 text-sm leading-6 rounded-xl border bg-slate-50/50 resize-none overflow-y-auto text-slate-800 placeholder:text-slate-400 focus:outline-hidden transition-colors ${isOverLimit ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'}`}
                       autoFocus
                       required
                     />

@@ -1,7 +1,6 @@
 package com.masar.studentapp;
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
@@ -10,7 +9,6 @@ import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.provider.MediaStore;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -18,11 +16,8 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
-import java.io.BufferedInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
 
 @CapacitorPlugin(name = "MasarDownloader")
 public class MasarDownloaderPlugin extends Plugin {
@@ -48,62 +43,140 @@ public class MasarDownloaderPlugin extends Plugin {
             return;
         }
 
+        try {
+            DownloadManager manager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+            if (manager == null) {
+                call.reject("تعذر تشغيل خدمة التنزيل");
+                return;
+            }
+
+            String safeFileName = makeUniqueFileName(fileName);
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlString));
+            request.setTitle(safeFileName);
+            request.setDescription("Masar • جاري تنزيل الملف");
+            request.setMimeType(mimeType);
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.setAllowedOverMetered(true);
+            request.setAllowedOverRoaming(true);
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, safeFileName);
+
+            long downloadId = manager.enqueue(request);
+
+            JSObject result = new JSObject();
+            result.put("success", true);
+            result.put("fileName", safeFileName);
+            result.put("location", "Download");
+            result.put("downloadId", downloadId);
+            call.resolve(result);
+        } catch (Exception e) {
+            call.reject(e.getMessage() == null ? "تعذر بدء التنزيل" : e.getMessage());
+        }
+    }
+
+    @PluginMethod
+    public void waitForCompletion(PluginCall call) {
+        long downloadId = call.getLong("downloadId", -1L);
+        if (downloadId <= 0) {
+            call.reject("معرّف التنزيل غير صالح");
+            return;
+        }
+
         new Thread(() -> {
-            Uri itemUri = null;
-            HttpURLConnection connection = null;
+            DownloadManager manager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+            if (manager == null) {
+                notifyReject(call, "تعذر الوصول إلى خدمة التنزيل");
+                return;
+            }
+
+            Cursor cursor = null;
             try {
-                URL url = new URL(urlString);
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setConnectTimeout(15000);
-                connection.setReadTimeout(30000);
-                connection.setInstanceFollowRedirects(true);
-                connection.setRequestProperty("Accept", "*/*");
-                connection.connect();
-
-                int responseCode = connection.getResponseCode();
-                if (responseCode < 200 || responseCode >= 300) {
-                    throw new Exception("HTTP " + responseCode);
-                }
-
-                ContentResolver resolver = getContext().getContentResolver();
-                ContentValues values = new ContentValues();
-                values.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
-                values.put(MediaStore.Downloads.MIME_TYPE, mimeType);
-                values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
-                values.put(MediaStore.Downloads.IS_PENDING, 1);
-
-                itemUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
-                if (itemUri == null) throw new Exception("تعذر إنشاء ملف التنزيل");
-
-                try (InputStream input = new BufferedInputStream(connection.getInputStream());
-                     OutputStream output = resolver.openOutputStream(itemUri)) {
-                    if (output == null) throw new Exception("تعذر فتح ملف التنزيل");
-                    byte[] buffer = new byte[8192];
-                    int count;
-                    while ((count = input.read(buffer)) != -1) {
-                        output.write(buffer, 0, count);
+                while (true) {
+                    cursor = manager.query(new DownloadManager.Query().setFilterById(downloadId));
+                    if (cursor == null || !cursor.moveToFirst()) {
+                        notifyReject(call, "تعذر العثور على عملية التنزيل");
+                        return;
                     }
-                    output.flush();
+
+                    int status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+                    if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                        String localUri = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI));
+                        String title = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TITLE));
+                        JSObject result = new JSObject();
+                        result.put("success", true);
+                        result.put("fileName", title == null ? "الملف" : title);
+                        result.put("location", "Download");
+                        result.put("localUri", localUri == null ? "" : localUri);
+                        notifyResolve(call, result);
+                        return;
+                    }
+
+                    if (status == DownloadManager.STATUS_FAILED) {
+                        int reason = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON));
+                        notifyReject(call, friendlyDownloadError(reason));
+                        return;
+                    }
+
+                    Thread.sleep(350);
                 }
-
-                ContentValues done = new ContentValues();
-                done.put(MediaStore.Downloads.IS_PENDING, 0);
-                resolver.update(itemUri, done, null, null);
-
-                JSObject result = new JSObject();
-                result.put("success", true);
-                result.put("fileName", fileName);
-                result.put("location", "Download");
-                notifyResolve(call, result);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                notifyReject(call, "تم إيقاف التنزيل");
             } catch (Exception e) {
-                if (itemUri != null) {
-                    try { getContext().getContentResolver().delete(itemUri, null, null); } catch (Exception ignored) {}
-                }
                 notifyReject(call, e.getMessage() == null ? "فشل تحميل الملف" : e.getMessage());
             } finally {
-                if (connection != null) connection.disconnect();
+                if (cursor != null) cursor.close();
             }
         }).start();
+    }
+
+    private String makeUniqueFileName(String original) {
+        String name = original.replaceAll("[\\\\/:*?\"<>|]", "_").trim();
+        if (name.isEmpty()) name = "Masar-file";
+
+        String base = name;
+        String extension = "";
+        int dot = name.lastIndexOf('.');
+        if (dot > 0 && dot < name.length() - 1) {
+            base = name.substring(0, dot);
+            extension = name.substring(dot);
+        }
+
+        Set<String> existing = new HashSet<>();
+        try (Cursor cursor = getContext().getContentResolver().query(
+                android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                new String[]{android.provider.MediaStore.Downloads.DISPLAY_NAME},
+                null, null, null)) {
+            if (cursor != null) {
+                int index = cursor.getColumnIndex(android.provider.MediaStore.Downloads.DISPLAY_NAME);
+                while (cursor.moveToNext()) {
+                    if (index >= 0) existing.add(cursor.getString(index));
+                }
+            }
+        } catch (Exception ignored) {}
+
+        if (!existing.contains(name)) return name;
+        for (int i = 1; i < 1000; i++) {
+            String candidate = base + " (" + i + ")" + extension;
+            if (!existing.contains(candidate)) return candidate;
+        }
+        return base + " (" + System.currentTimeMillis() + ")" + extension;
+    }
+
+    private String friendlyDownloadError(int reason) {
+        switch (reason) {
+            case DownloadManager.ERROR_FILE_ALREADY_EXISTS:
+                return "الملف موجود بالفعل في مجلد التنزيلات";
+            case DownloadManager.ERROR_INSUFFICIENT_SPACE:
+                return "مساحة التخزين غير كافية لتنزيل الملف";
+            case DownloadManager.ERROR_CANNOT_RESUME:
+            case DownloadManager.ERROR_UNKNOWN:
+                return "تعذر تنزيل الملف، حاول مرة أخرى";
+            case DownloadManager.ERROR_HTTP_DATA_ERROR:
+            case DownloadManager.ERROR_UNHANDLED_HTTP_CODE:
+                return "تعذر الوصول إلى الملف، حاول مرة أخرى";
+            default:
+                return "فشل تحميل الملف، حاول مرة أخرى";
+        }
     }
 
     private boolean hasInternet() {

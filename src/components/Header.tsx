@@ -5,9 +5,10 @@ import { MasarLogo } from './MasarLogo';
 interface HeaderProps {
   onOpenFeedback: () => void;
   onOpenNotifications: () => void;
+  hasUnreadNotifications: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = memo(({ onOpenFeedback, onOpenNotifications }) => {
+export const Header: React.FC<HeaderProps> = memo(({ onOpenFeedback, onOpenNotifications, hasUnreadNotifications }) => {
   return (
     <header
       id="app-main-header"
@@ -37,6 +38,12 @@ export const Header: React.FC<HeaderProps> = memo(({ onOpenFeedback, onOpenNotif
             title="الإشعارات"
           >
             <Bell size={20} />
+            {hasUnreadNotifications && (
+              <span
+                className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-blue-600 border-2 border-white"
+                aria-label="إشعار جديد"
+              />
+            )}
           </button>
 
           <button

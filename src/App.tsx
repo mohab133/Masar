@@ -10,6 +10,7 @@ import { DatesView } from './components/DatesView';
 import { FeedbackModal } from './components/FeedbackModal';
 import { AllAnnouncementsModal } from './components/AllAnnouncementsModal';
 import { initializePushNotifications } from './lib/pushNotifications';
+import { clearNotificationsUnread, hasUnreadNotifications as getHasUnreadNotifications, subscribeToUnreadNotifications } from './lib/notificationCenter';
 
 const TAB_ORDER: TabType[] = ['home', 'schedule', 'courses', 'dates'];
 
@@ -18,9 +19,11 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(() => getHasUnreadNotifications());
 
   useEffect(() => {
     void initializePushNotifications();
+    return subscribeToUnreadNotifications(setHasUnreadNotifications);
   }, []);
 
   // Touch gesture references for main page swipe
@@ -93,7 +96,11 @@ export default function App() {
         {/* Main Application Header */}
         <Header
           onOpenFeedback={() => setIsFeedbackOpen(true)}
-          onOpenNotifications={() => setIsNotificationsOpen(true)}
+          onOpenNotifications={() => {
+            clearNotificationsUnread();
+            setIsNotificationsOpen(true);
+          }}
+          hasUnreadNotifications={hasUnreadNotifications}
         />
 
         {/* Main screen content. Lightweight 150ms transition keeps navigation smooth without heavy JS animation. */}
