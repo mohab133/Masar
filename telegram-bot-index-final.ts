@@ -21,6 +21,21 @@ function newId() {
   return crypto.randomUUID();
 }
 
+async function insertAnnouncement(row: Record<string, unknown>) {
+  const { data, error } = await supabase
+    .from("announcements")
+    .insert(row)
+    .select("id,title,content,date,time_ago,category,category_name_ar,is_important,status,course_ref,link_url,attachment_path,attachment_name")
+    .single();
+
+  if (error) throw error;
+  if (!data?.id || data.status !== "active") {
+    throw new Error("تم حفظ الإعلان لكن لم تتم قراءته كسجل نشط من قاعدة البيانات المشتركة.");
+  }
+
+  return data;
+}
+
 function nullable(value: unknown) {
   const s = String(value ?? "").trim();
   return !s || s === "-" ? null : s;
@@ -400,8 +415,9 @@ async function handleAnnouncementDocument(chatId: number, document: any) {
       link_url: data.linkUrl || null, attachment_path: storagePath, attachment_name: originalName,
     };
     if (!row.content) throw new Error("محتوى الإعلان لا يمكن أن يكون فارغًا.");
-    const { error } = await supabase.from("announcements").insert(row);
-    if (error) {
+    try {
+      await insertAnnouncement(row);
+    } catch (error) {
       await supabase.storage.from(ANNOUNCEMENTS_BUCKET).remove([storagePath]);
       throw error;
     }
@@ -1488,8 +1504,11 @@ async function handleCallback(chatId: number, callbackId: string, data: string) 
       link_url: stateData.linkUrl || null,
     };
     if (!row.content) return home(chatId, "محتوى الإعلان لا يمكن أن يكون فارغًا.");
-    const { error } = await supabase.from("announcements").insert(row);
-    if (error) return send(chatId, `تعذر حفظ الإعلان: ${esc(error.message)}`, menuKeyboard);
+    try {
+      await insertAnnouncement(row);
+    } catch (error) {
+      return send(chatId, `تعذر حفظ الإعلان: ${esc(error instanceof Error ? error.message : error)}`, menuKeyboard);
+    }
     return home(chatId, "تمت إضافة الإعلان بنجاح.");
   }
 
@@ -1518,8 +1537,11 @@ async function handleCallback(chatId: number, callbackId: string, data: string) 
       link_url: stateData.linkUrl || null,
     };
     if (!row.content) return home(chatId, "محتوى الإعلان لا يمكن أن يكون فارغًا.");
-    const { error: insertError } = await supabase.from("announcements").insert(row);
-    if (insertError) return send(chatId, `تعذر حفظ الإعلان: ${esc(insertError.message)}`, menuKeyboard);
+    try {
+      await insertAnnouncement(row);
+    } catch (error) {
+      return send(chatId, `تعذر حفظ الإعلان: ${esc(error instanceof Error ? error.message : error)}`, menuKeyboard);
+    }
     return home(chatId, "تمت إضافة الإعلان بنجاح.");
   }
 
