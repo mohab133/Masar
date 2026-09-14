@@ -35,37 +35,6 @@ export const getArabicCourseName = (courseName: string): string => {
   return COURSE_NAME_AR_MAP[courseName] || courseName;
 };
 
-export type CourseDepartment = 'general' | 'computers' | 'control_communications';
-
-export const getCourseDepartment = (courseName: string): CourseDepartment => {
-  const name = (courseName || '').toLowerCase().trim();
-
-  if (name.includes('تصميم منطقي') || name.includes('logic design') || name.includes('logic')) {
-    return 'computers';
-  }
-
-  if (
-    name.includes('إشارات') ||
-    name.includes('اشارات') ||
-    name.includes('signals') ||
-    name.includes('كهرومغناطيس') ||
-    name.includes('electromagnetic') ||
-    name.includes('electromagnetics')
-  ) {
-    return 'control_communications';
-  }
-
-  return 'general';
-};
-
-export const getCourseDepartmentLabel = (courseName: string): string => {
-  const department = getCourseDepartment(courseName);
-
-  if (department === 'computers') return 'قسم حاسبات';
-  if (department === 'control_communications') return 'قسم تحكم واتصالات';
-  return 'عام';
-};
-
 export const formatDeadline = (dateStr?: string, fallback?: string): string => {
   if (!dateStr) return fallback || '';
   const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);

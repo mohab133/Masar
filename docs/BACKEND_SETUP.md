@@ -20,7 +20,7 @@ If the API is unavailable, Masar falls back to its local cache and bundled data.
 
 ## Supabase resources
 
-The backend data lives in Supabase PostgreSQL and Storage. Firebase FCM is used only for Android push delivery. Service-account credentials and other secrets stay in Supabase Edge Function secrets and must never be committed to GitHub.
+The backend data lives in Supabase PostgreSQL and Storage. The Edge Function source is kept under `supabase/functions/masar-api/`. Firebase FCM is used only for Android push delivery. Service-account credentials and other secrets stay in Supabase Edge Function secrets and must never be committed to GitHub.
 
 ## Local Android build
 

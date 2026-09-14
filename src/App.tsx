@@ -35,11 +35,19 @@ export default function App() {
   const pullStartX = useRef<number | null>(null);
   const isPulling = useRef<boolean>(false);
   const [pullDistance, setPullDistance] = useState(0);
+  const pullDistanceRef = useRef(0);
+
+  const getPageScrollTop = () =>
+    Math.max(
+      window.scrollY || 0,
+      document.documentElement.scrollTop || 0,
+      document.body.scrollTop || 0
+    );
 
   const handlePullTouchStart = (e: React.TouchEvent) => {
     const target = e.target as HTMLElement | null;
     if (
-      window.scrollY > 0 ||
+      getPageScrollTop() > 2 ||
       target?.closest('button, input, textarea, a, select, [data-no-swipe], .overflow-x-auto, [role="tablist"], #course-detail-view, .scrollable, .no-swipe')
     ) {
       pullStartY.current = null;
@@ -59,17 +67,20 @@ export default function App() {
     const dx = e.touches[0].clientX - pullStartX.current;
 
     if (dy <= 0 || Math.abs(dx) > Math.abs(dy)) return;
-    if (window.scrollY > 0) return;
+    if (getPageScrollTop() > 2) return;
 
     isPulling.current = true;
-    setPullDistance(Math.min(72, dy * 0.45));
+    const distance = Math.min(80, dy * 0.6);
+    pullDistanceRef.current = distance;
+    setPullDistance(distance);
   };
 
   const handlePullTouchEnd = () => {
-    const shouldRefresh = isPulling.current && pullDistance >= 54 && !isRefreshing;
+    const shouldRefresh = isPulling.current && pullDistanceRef.current >= 48 && !isRefreshing;
     pullStartY.current = null;
     pullStartX.current = null;
     isPulling.current = false;
+    pullDistanceRef.current = 0;
     setPullDistance(0);
     if (shouldRefresh) void refresh(true);
   };
@@ -133,6 +144,7 @@ export default function App() {
       {/* Mobile Application Container */}
       <div
         className="w-full max-w-md min-h-screen bg-slate-50 flex flex-col shadow-sm relative overflow-x-hidden"
+        style={{ touchAction: 'pan-y' }}
         onTouchStart={(e) => { handleTouchStart(e); handlePullTouchStart(e); }}
         onTouchMove={handlePullTouchMove}
         onTouchEnd={(e) => { handleTouchEnd(e); handlePullTouchEnd(); }}

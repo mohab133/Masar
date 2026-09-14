@@ -14,9 +14,11 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Custom Capacitor plugins must be registered BEFORE BridgeActivity creates the bridge.
+        // Otherwise the JS side can report: "plugin is not implemented on android".
+        registerPlugin(MasarDownloaderPlugin.class);
         SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
-        registerPlugin(MasarDownloaderPlugin.class);
         configureSystemBars();
     }
 

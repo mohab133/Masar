@@ -235,6 +235,14 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
               <DownloadButton available onClick={() => void handleOpenDoc(finalDoc)} label="تحميل جدول الفاينال" />
             </div>
           )}
+
+          {filteredEvents.length === 0 && !midtermDoc?.fileUrl && !finalDoc?.fileUrl && (
+            <EmptyState
+              icon="calendar"
+              title="لا توجد جداول امتحانات حاليًا"
+              description="ستظهر جداول الميدتيرم والفاينال هنا فور نشرها"
+            />
+          )}
         </div>
       )}
 

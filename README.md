@@ -21,6 +21,8 @@ npm run build:android
 
 For Android push notifications, place the Firebase Android configuration at `android/app/google-services.json` before the Android build.
 
+Project organization: application code lives under `src/`, Supabase functions and SQL live under `supabase/`, Android native code lives under `android/`, and operational documentation lives under `docs/`.
+
 ## Android build integrity
 
 Always build Android with `npm run build:android`. The command runs Vite, Capacitor sync, and a post-sync hash check that verifies the Android bundled web assets exactly match `dist`.
