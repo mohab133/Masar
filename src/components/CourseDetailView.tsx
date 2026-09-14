@@ -11,9 +11,10 @@ import {
   Check
 } from 'lucide-react';
 import { Course, CourseFile, FileCategory } from '../types';
-import { ConfirmModal } from './ConfirmModal';
 import { getDynamicBorderClass } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
+import { DownloadToast } from './DownloadToast';
+import { downloadFile } from '../lib/nativeDownloader';
 
 interface CourseDetailViewProps {
   course: Course;
@@ -107,18 +108,8 @@ CourseFileCard.displayName = 'CourseFileCard';
 export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course, onBack }) => {
   const [activeTab, setActiveTab] = useState<CategoryTab>('slides');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [confirmModalState, setConfirmModalState] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    onConfirm: () => {},
-  });
-
+  const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState(false);
   const files = useMemo(() => course.files || [], [course.files]);
 
   // Count files per category
@@ -145,21 +136,29 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
     return files.filter((file) => normalizeCategory(file.category) === activeTab);
   }, [files, activeTab]);
 
-  const handleDownload = useCallback((e: React.MouseEvent, file: CourseFile) => {
+  const handleDownload = useCallback(async (e: React.MouseEvent, file: CourseFile) => {
     e.stopPropagation();
     if (!file.url) return;
-    setConfirmModalState({
-      isOpen: true,
-      title: 'تحميل الملف',
-      message: `هل تريد تحميل ملف "${file.title}"؟`,
-      onConfirm: () => {
-        if (!file.url) return;
-        window.open(file.url, '_blank', 'noopener,noreferrer');
-        setDownloadingId(file.id);
-        setTimeout(() => setDownloadingId(null), 2000);
-      },
-    });
+    setDownloadingId(file.id);
+    try {
+      const extension = (file.type || 'pdf').toLowerCase();
+      const mimeType = extension === 'pdf' ? 'application/pdf'
+        : extension === 'slides' ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+        : extension === 'sheet' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        : 'application/octet-stream';
+      await downloadFile(file.url, `${file.id}.${extension}`, mimeType);
+      setDownloadError(false);
+      setDownloadMessage(`تم تحميل ${file.title} بنجاح إلى مجلد التنزيلات`);
+      window.setTimeout(() => setDownloadMessage(null), 3500);
+    } catch (error) {
+      setDownloadError(true);
+      setDownloadMessage(error instanceof Error ? error.message : 'فشل تحميل الملف، حاول مرة أخرى');
+      window.setTimeout(() => setDownloadMessage(null), 3500);
+    } finally {
+      setTimeout(() => setDownloadingId(null), 800);
+    }
   }, []);
+
 
   return (
     <div
@@ -170,6 +169,9 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
       className="space-y-4 pb-28 pt-1"
       dir="rtl"
     >
+
+      <DownloadToast message={downloadMessage} error={downloadError} />
+
       {/* Clean Course Header without duplication */}
       <div className="flex items-center gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
         <button
@@ -253,17 +255,6 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
         )}
       </div>
 
-      {/* Download Confirm Modal */}
-      <ConfirmModal
-        isOpen={confirmModalState.isOpen}
-        title={confirmModalState.title}
-        message={confirmModalState.message}
-        type="download"
-        onConfirm={confirmModalState.onConfirm}
-        onClose={() =>
-          setConfirmModalState((prev) => ({ ...prev, isOpen: false }))
-        }
-      />
     </div>
   );
 });

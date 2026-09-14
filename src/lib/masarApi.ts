@@ -4,6 +4,7 @@ import {
   Course,
   ScheduleEvent,
   OfficialScheduleDocument,
+  AppAsset,
 } from '../types';
 import { validateMasarData } from './apiValidation';
 
@@ -13,6 +14,7 @@ export interface MasarData {
   schedule: ScheduleEvent[];
   courses: Course[];
   officialSchedules: OfficialScheduleDocument[];
+  appAssets: AppAsset[];
 }
 
 const EMPTY_DATA: MasarData = {
@@ -21,6 +23,7 @@ const EMPTY_DATA: MasarData = {
   schedule: [],
   courses: [],
   officialSchedules: [],
+  appAssets: [],
 };
 
 

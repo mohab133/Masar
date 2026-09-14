@@ -109,6 +109,15 @@ export interface FeedbackSubmission {
   submittedAt: string;
 }
 
+export interface AppAsset {
+  id: string;
+  assetKey: string;
+  title: string;
+  fileName: string;
+  fileType: string;
+  fileUrl?: string | null;
+}
+
 export interface OfficialScheduleDocument {
   id: string;
   title: string;

@@ -10,7 +10,7 @@ export const Header: React.FC<HeaderProps> = memo(({ onOpenFeedback }) => {
   return (
     <header
       id="app-main-header"
-      className="sticky top-0 z-30 bg-white px-4.5 pt-safe-top pb-3 border-b border-slate-200/60"
+      className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md px-4.5 pt-safe-top pb-3 border-b border-slate-200/60 shadow-[0_2px_10px_rgba(15,23,42,0.03)]"
     >
       <div className="max-w-md mx-auto flex items-center justify-between">
         {/* Brand identity: Logo & Name enlarged per request */}

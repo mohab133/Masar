@@ -1,5 +1,5 @@
 import type { MasarData } from './masarApi';
-import type { Announcement, AcademicEvent, Course, CourseFile, ScheduleEvent, OfficialScheduleDocument } from '../types';
+import type { Announcement, AcademicEvent, Course, CourseFile, ScheduleEvent, OfficialScheduleDocument, AppAsset } from '../types';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
@@ -52,6 +52,12 @@ function isCourse(value: unknown): value is Course {
     && (value.iconUrl === undefined || value.iconUrl === null || isString(value.iconUrl));
 }
 
+function isAppAsset(value: unknown): value is AppAsset {
+  return isRecord(value) && isString(value.id) && isString(value.assetKey)
+    && isString(value.title) && isString(value.fileName) && isString(value.fileType)
+    && (value.fileUrl === undefined || value.fileUrl === null || isString(value.fileUrl));
+}
+
 function isOfficialSchedule(value: unknown): value is OfficialScheduleDocument {
   return isRecord(value) && isString(value.id) && isString(value.title) && isString(value.type)
     && isString(value.typeLabelAr) && isString(value.term) && isString(value.academicYear)
@@ -67,6 +73,7 @@ export function validateMasarData(value: unknown): MasarData | null {
   if (!isArray(value.schedule) || !value.schedule.every(isScheduleEvent)) return null;
   if (!isArray(value.courses) || !value.courses.every(isCourse)) return null;
   if (!isArray(value.officialSchedules) || !value.officialSchedules.every(isOfficialSchedule)) return null;
+  if (!isArray(value.appAssets) || !value.appAssets.every(isAppAsset)) return null;
 
   return {
     announcements: value.announcements,
@@ -74,5 +81,6 @@ export function validateMasarData(value: unknown): MasarData | null {
     schedule: value.schedule,
     courses: value.courses,
     officialSchedules: value.officialSchedules,
+    appAssets: value.appAssets,
   };
 }

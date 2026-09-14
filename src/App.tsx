@@ -92,13 +92,14 @@ export default function App() {
         <Header onOpenFeedback={() => setIsFeedbackOpen(true)} />
 
         {/* Main screen content. Lightweight 150ms transition keeps navigation smooth without heavy JS animation. */}
-        <main className="flex-1 px-4.5 pt-3.5 relative">
+        <main className="flex-1 px-4.5 pt-24 relative">
           <div key={activeTab} className="w-full tab-page-enter" aria-live="polite">
               {activeTab === 'home' && (
                 <HomeView
                   announcements={data.announcements}
                   upcomingDates={data.dates}
                   onNavigateToDates={() => handleTabChange('dates')}
+                  appAssets={data.appAssets}
                 />
               )}
 

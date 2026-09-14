@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useCallback, memo } from 'react';
 import { Download, Calendar, MapPin, Clock, Info, X } from 'lucide-react';
 import { AcademicEvent, OfficialScheduleDocument } from '../types';
-import { OfficialScheduleModal } from './OfficialScheduleModal';
 import { ConfirmModal } from './ConfirmModal';
 import { getArabicCourseName, getCourseIconMeta, formatDeadline } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
+import { DownloadToast } from './DownloadToast';
+import { downloadFile } from '../lib/nativeDownloader';
 
 interface DatesViewProps {
   events: AcademicEvent[];
@@ -79,8 +80,8 @@ AcademicEventCard.displayName = 'AcademicEventCard';
 
 export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSchedules }) => {
   const [filter, setFilter] = useState<FilterCategory>('assignments');
-  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
-  const [selectedDoc, setSelectedDoc] = useState<OfficialScheduleDocument | null>(null);
+  const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState(false);
   const [selectedEventForDetails, setSelectedEventForDetails] = useState<AcademicEvent | null>(null);
   const [confirmModalState, setConfirmModalState] = useState<{
     isOpen: boolean;
@@ -97,16 +98,19 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
   const midtermDoc = useMemo(() => officialSchedules.find((d) => d.type === 'midterm'), [officialSchedules]);
   const finalDoc = useMemo(() => officialSchedules.find((d) => d.type === 'final'), [officialSchedules]);
 
-  const handleOpenDoc = useCallback((doc: OfficialScheduleDocument) => {
-    setConfirmModalState({
-      isOpen: true,
-      title: 'تحميل جدول الامتحانات',
-      message: `هل تريد عرض وتحميل ${doc.title}؟`,
-      onConfirm: () => {
-        setSelectedDoc(doc);
-        setIsDocModalOpen(true);
-      },
-    });
+  const handleOpenDoc = useCallback(async (doc: OfficialScheduleDocument) => {
+    if (!doc.fileUrl) return;
+    setDownloadMessage(null);
+    setDownloadError(false);
+    try {
+      const mimeType = doc.type === 'lectures_sections' ? 'image/jpeg' : 'application/pdf';
+      await downloadFile(doc.fileUrl, doc.downloadFileName || 'exam-schedule.pdf', mimeType);
+      setDownloadMessage(`تم تحميل ${doc.title} بنجاح إلى مجلد التنزيلات`);
+    } catch (error) {
+      setDownloadError(true);
+      setDownloadMessage(error instanceof Error ? error.message : 'فشل تحميل الملف، حاول مرة أخرى');
+    }
+    window.setTimeout(() => setDownloadMessage(null), 3500);
   }, []);
 
   const sortedEvents = useMemo(() => {
@@ -130,6 +134,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
 
   return (
     <div id="dates-screen-view" className="space-y-4 pb-24 pt-1" dir="rtl">
+      <DownloadToast message={downloadMessage} error={downloadError} />
       {/* Filter Tabs: تسليمات | كويزات | جداول الامتحانات */}
       <div
         data-no-swipe="true"
@@ -253,16 +258,6 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
           </div>
         </div>
       )}
-
-      {/* Official Schedule Sheet Modal */}
-      <OfficialScheduleModal
-        isOpen={isDocModalOpen}
-        onClose={() => {
-          setIsDocModalOpen(false);
-          setSelectedDoc(null);
-        }}
-        document={selectedDoc}
-      />
 
       {/* Download Confirm Modal */}
       <ConfirmModal

@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useCallback, memo } from 'react';
 import { MapPin, Clock, FileImage, Download, Filter } from 'lucide-react';
 import { ScheduleEvent, ScheduleType, OfficialScheduleDocument } from '../types';
-import { OfficialScheduleModal } from './OfficialScheduleModal';
-import { ConfirmModal } from './ConfirmModal';
 import { getArabicCourseName, getCourseIconMeta } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
+import { DownloadToast } from './DownloadToast';
+import { downloadFile } from '../lib/nativeDownloader';
 
 interface ScheduleViewProps {
   scheduleEvents: ScheduleEvent[];
@@ -91,21 +91,25 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
 }) => {
   const [scheduleType, setScheduleType] = useState<ScheduleType>('lecture');
   const [selectedDay, setSelectedDay] = useState<number>(0);
-  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
-  const [selectedDoc, setSelectedDoc] = useState<OfficialScheduleDocument | null>(null);
-  const [confirmModalState, setConfirmModalState] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    onConfirm: () => {},
-  });
 
   // Student's chosen section
+  const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState(false);
+
+  const handleOfficialDownload = useCallback(async (doc: OfficialScheduleDocument) => {
+    if (!doc.fileUrl) return;
+    setDownloadMessage(null);
+    setDownloadError(false);
+    try {
+      await downloadFile(doc.fileUrl, doc.downloadFileName || 'official-schedule.jpg', 'image/jpeg');
+      setDownloadMessage('تم تحميل الجدول بنجاح إلى مجلد التنزيلات');
+    } catch (error) {
+      setDownloadError(true);
+      setDownloadMessage(error instanceof Error ? error.message : 'فشل تحميل الملف، حاول مرة أخرى');
+    }
+    window.setTimeout(() => setDownloadMessage(null), 3500);
+  }, []);
+
   const [selectedSection, setSelectedSection] = useState<string>(() => {
     try {
       return localStorage.getItem('masar_user_section') || 'all';
@@ -134,20 +138,10 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
     });
   }, [scheduleEvents, scheduleType, selectedDay, selectedSection]);
 
-  const handleOpenDoc = useCallback((doc: OfficialScheduleDocument) => {
-    setConfirmModalState({
-      isOpen: true,
-      title: 'تحميل صورة الجدول',
-      message: `هل تريد عرض وتحميل ${doc.title}؟`,
-      onConfirm: () => {
-        setSelectedDoc(doc);
-        setIsDocModalOpen(true);
-      },
-    });
-  }, []);
-
   return (
     <div id="schedule-screen-view" className="space-y-4 pb-24 pt-1" dir="rtl">
+      <DownloadToast message={downloadMessage} error={downloadError} />
+
       {/* Schedule Image Button */}
       <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-2xs">
         <div className="flex items-center gap-2.5">
@@ -164,16 +158,21 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => officialSchedules[0]?.fileUrl && handleOpenDoc(officialSchedules[0])}
-          className={`p-2.5 rounded-xl border transition-all shrink-0 flex items-center justify-center shadow-2xs ${officialSchedules[0]?.fileUrl ? 'bg-blue-50 text-blue-700 border-blue-200/80 hover:bg-blue-100 cursor-pointer' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'}`}
-          aria-label="تحميل الجدول"
-          disabled={!officialSchedules[0]?.fileUrl}
-          title={officialSchedules[0]?.fileUrl ? 'تحميل الجدول' : 'الجدول الرسمي غير منشور'}
-        >
-          <Download size={18} />
-        </button>
+        {(() => {
+          const doc = officialSchedules.find((item) => item.type === 'lectures_sections' && item.fileUrl);
+          return (
+            <button
+              type="button"
+              onClick={() => doc && handleOfficialDownload(doc)}
+              disabled={!doc?.fileUrl}
+              className={`p-2.5 rounded-xl border transition-all shrink-0 flex items-center justify-center shadow-2xs ${doc?.fileUrl ? 'bg-blue-50 text-blue-700 border-blue-200/80 hover:bg-blue-100 cursor-pointer' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'}`}
+              aria-label="تحميل الجدول الرسمي"
+              title={doc?.fileUrl ? 'تحميل الجدول الرسمي' : 'الجدول غير متاح حاليًا'}
+            >
+              <Download size={18} />
+            </button>
+          );
+        })()}
       </div>
 
       {/* Segmented Control: المحاضرات | السكاشن */}
@@ -320,27 +319,6 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
         </div>
       
 
-      {/* Official Schedule Sheet Modal */}
-      <OfficialScheduleModal
-        isOpen={isDocModalOpen}
-        onClose={() => {
-          setIsDocModalOpen(false);
-          setSelectedDoc(null);
-        }}
-        document={selectedDoc}
-      />
-
-      {/* Download Confirm Modal */}
-      <ConfirmModal
-        isOpen={confirmModalState.isOpen}
-        title={confirmModalState.title}
-        message={confirmModalState.message}
-        type="download"
-        onConfirm={confirmModalState.onConfirm}
-        onClose={() =>
-          setConfirmModalState((prev) => ({ ...prev, isOpen: false }))
-        }
-      />
     </div>
   );
 });

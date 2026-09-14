@@ -111,15 +111,13 @@ export const getDynamicBorderClass = (index: number): string => {
 
 export const getCourseIconMeta = (courseName: string, index?: number): CourseIconMeta => {
   const nameLower = (courseName || '').toLowerCase();
-  const overrideBorder = index !== undefined ? getDynamicBorderClass(index) : null;
-
   if (nameLower.includes('phys') || nameLower.includes('فيزياء')) {
     return {
       Icon: Atom,
       bgClass: 'bg-rose-50 text-rose-600 border-rose-200/80',
       badgeClass: 'bg-rose-50 text-rose-700 border-rose-200/80',
       accentColor: 'bg-rose-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-rose-500',
+      borderRightClass: 'border-r-4 border-r-rose-500',
       topAccentClass: 'border-t-4 border-t-rose-500',
     };
   }
@@ -129,7 +127,7 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       bgClass: 'bg-teal-50 text-teal-600 border-teal-200/80',
       badgeClass: 'bg-teal-50 text-teal-800 border-teal-200/80',
       accentColor: 'bg-teal-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-teal-500',
+      borderRightClass: 'border-r-4 border-r-teal-500',
       topAccentClass: 'border-t-4 border-t-teal-500',
     };
   }
@@ -139,7 +137,7 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       bgClass: 'bg-emerald-50 text-emerald-600 border-emerald-200/80',
       badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
       accentColor: 'bg-emerald-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-emerald-500',
+      borderRightClass: 'border-r-4 border-r-emerald-500',
       topAccentClass: 'border-t-4 border-t-emerald-500',
     };
   }
@@ -149,21 +147,30 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       bgClass: 'bg-amber-50 text-amber-600 border-amber-200/80',
       badgeClass: 'bg-amber-50 text-amber-700 border-amber-200/80',
       accentColor: 'bg-amber-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-amber-500',
+      borderRightClass: 'border-r-4 border-r-amber-500',
       topAccentClass: 'border-t-4 border-t-amber-500',
+    };
+  }
+  if (nameLower.includes('برمجة') || nameLower.includes('programming') || nameLower.includes('code')) {
+    return {
+      Icon: Code2,
+      bgClass: 'bg-blue-50 text-blue-600 border-blue-200/80',
+      badgeClass: 'bg-blue-50 text-blue-700 border-blue-200/80',
+      accentColor: 'bg-blue-500',
+      borderRightClass: 'border-r-4 border-r-blue-500',
+      topAccentClass: 'border-t-4 border-t-blue-500',
     };
   }
   if (
     nameLower.includes('comp') ||
-    nameLower.includes('حاسب') ||
-    nameLower.includes('برمجة')
+    nameLower.includes('حاسب')
   ) {
     return {
       Icon: Cpu,
       bgClass: 'bg-indigo-50 text-indigo-600 border-indigo-200/80',
       badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
       accentColor: 'bg-indigo-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-indigo-500',
+      borderRightClass: 'border-r-4 border-r-indigo-500',
       topAccentClass: 'border-t-4 border-t-indigo-500',
     };
   }
@@ -173,7 +180,7 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       bgClass: 'bg-sky-50 text-sky-600 border-sky-200/80',
       badgeClass: 'bg-sky-50 text-sky-700 border-sky-200/80',
       accentColor: 'bg-sky-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-sky-500',
+      borderRightClass: 'border-r-4 border-r-sky-500',
       topAccentClass: 'border-t-4 border-t-sky-500',
     };
   }
@@ -184,7 +191,7 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       bgClass: 'bg-cyan-50 text-cyan-600 border-cyan-200/80',
       badgeClass: 'bg-cyan-50 text-cyan-700 border-cyan-200/80',
       accentColor: 'bg-cyan-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-cyan-500',
+      borderRightClass: 'border-r-4 border-r-cyan-500',
       topAccentClass: 'border-t-4 border-t-cyan-500',
     };
   }
@@ -194,7 +201,7 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       bgClass: 'bg-violet-50 text-violet-600 border-violet-200/80',
       badgeClass: 'bg-violet-50 text-violet-700 border-violet-200/80',
       accentColor: 'bg-violet-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-violet-500',
+      borderRightClass: 'border-r-4 border-r-violet-500',
       topAccentClass: 'border-t-4 border-t-violet-500',
     };
   }
@@ -204,7 +211,7 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       bgClass: 'bg-indigo-50 text-indigo-600 border-indigo-200/80',
       badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
       accentColor: 'bg-indigo-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-indigo-500',
+      borderRightClass: 'border-r-4 border-r-indigo-500',
       topAccentClass: 'border-t-4 border-t-indigo-500',
     };
   }
@@ -214,18 +221,8 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       bgClass: 'bg-orange-50 text-orange-600 border-orange-200/80',
       badgeClass: 'bg-orange-50 text-orange-700 border-orange-200/80',
       accentColor: 'bg-orange-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-orange-500',
+      borderRightClass: 'border-r-4 border-r-orange-500',
       topAccentClass: 'border-t-4 border-t-orange-500',
-    };
-  }
-  if (nameLower.includes('برمجة') || nameLower.includes('programming') || nameLower.includes('code')) {
-    return {
-      Icon: Code2,
-      bgClass: 'bg-blue-50 text-blue-600 border-blue-200/80',
-      badgeClass: 'bg-blue-50 text-blue-700 border-blue-200/80',
-      accentColor: 'bg-blue-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-blue-500',
-      topAccentClass: 'border-t-4 border-t-blue-500',
     };
   }
   if (nameLower.includes('هندسة كهربية') || nameLower.includes('هندسة كهرب') || nameLower.includes('electrical engineering')) {
@@ -234,7 +231,7 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       bgClass: 'bg-yellow-50 text-yellow-700 border-yellow-200/80',
       badgeClass: 'bg-yellow-50 text-yellow-800 border-yellow-200/80',
       accentColor: 'bg-yellow-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-yellow-500',
+      borderRightClass: 'border-r-4 border-r-yellow-500',
       topAccentClass: 'border-t-4 border-t-yellow-500',
     };
   }
@@ -244,7 +241,7 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       bgClass: 'bg-fuchsia-50 text-fuchsia-600 border-fuchsia-200/80',
       badgeClass: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200/80',
       accentColor: 'bg-fuchsia-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-fuchsia-500',
+      borderRightClass: 'border-r-4 border-r-fuchsia-500',
       topAccentClass: 'border-t-4 border-t-fuchsia-500',
     };
   }
@@ -254,7 +251,7 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
       bgClass: 'bg-emerald-50 text-emerald-600 border-emerald-200/80',
       badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
       accentColor: 'bg-emerald-500',
-      borderRightClass: overrideBorder || 'border-r-4 border-r-emerald-500',
+      borderRightClass: 'border-r-4 border-r-emerald-500',
       topAccentClass: 'border-t-4 border-t-emerald-500',
     };
   }
@@ -264,7 +261,7 @@ export const getCourseIconMeta = (courseName: string, index?: number): CourseIco
     bgClass: 'bg-purple-50 text-purple-600 border-purple-200/80',
     badgeClass: 'bg-purple-50 text-purple-700 border-purple-200/80',
     accentColor: 'bg-purple-500',
-    borderRightClass: overrideBorder || 'border-r-4 border-r-purple-500',
+    borderRightClass: 'border-r-4 border-r-purple-500',
     topAccentClass: 'border-t-4 border-t-purple-500',
   };
 };

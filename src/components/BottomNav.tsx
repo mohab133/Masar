@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Home, CalendarDays, BookOpen, Clock } from 'lucide-react';
+import { Home, CalendarCheck2, BookOpen, Clock } from 'lucide-react';
 import { TabType } from '../types';
 
 interface BottomNavProps {
@@ -9,7 +9,7 @@ interface BottomNavProps {
 
 const TABS: { id: TabType; label: string; icon: React.ComponentType<{ className?: string; size?: number }> }[] = [
   { id: 'home', label: 'الرئيسية', icon: Home },
-  { id: 'schedule', label: 'الجدول', icon: CalendarDays },
+  { id: 'schedule', label: 'الجدول', icon: CalendarCheck2 },
   { id: 'courses', label: 'المواد', icon: BookOpen },
   { id: 'dates', label: 'المواعيد', icon: Clock },
 ];

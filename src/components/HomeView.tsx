@@ -9,24 +9,30 @@ import {
   FileText,
   Download,
 } from 'lucide-react';
-import { Announcement, AcademicEvent } from '../types';
+import { Announcement, AcademicEvent, AppAsset } from '../types';
 import { AllAnnouncementsModal } from './AllAnnouncementsModal';
 import { ConfirmModal } from './ConfirmModal';
 import { formatDeadline } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
+import { DownloadToast } from './DownloadToast';
+import { downloadFile } from '../lib/nativeDownloader';
 
 interface HomeViewProps {
   announcements: Announcement[];
   upcomingDates: AcademicEvent[];
   onNavigateToDates: () => void;
+  appAssets: AppAsset[];
 }
 
 export const HomeView: React.FC<HomeViewProps> = memo(({
   announcements,
   upcomingDates,
   onNavigateToDates,
+  appAssets,
 }) => {
   // Announcements Carousel State
+  const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState(false);
   const [currentAnnIndex, setCurrentAnnIndex] = useState(0);
   const [isAnnModalOpen, setIsAnnModalOpen] = useState(false);
   const annTouchStartX = useRef<number | null>(null);
@@ -123,9 +129,29 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 
   const activeAnnouncement = activeAnnouncements[currentAnnIndex] || activeAnnouncements[0];
   const activeDate = nearestDates[currentDateIndex] || nearestDates[0];
+  const handleBylawDownload = useCallback(async () => {
+    const bylaw = appAssets.find((asset) => asset.assetKey === 'menouf_bylaw' && asset.fileUrl);
+    if (!bylaw?.fileUrl) {
+      setDownloadError(true);
+      setDownloadMessage('ملف اللائحة غير متاح حاليًا');
+      window.setTimeout(() => setDownloadMessage(null), 3500);
+      return;
+    }
+    setDownloadMessage(null);
+    setDownloadError(false);
+    try {
+      await downloadFile(bylaw.fileUrl, bylaw.fileName || 'menouf-bylaw.pdf', 'application/pdf');
+      setDownloadMessage('تم تحميل اللائحة بنجاح إلى مجلد التنزيلات');
+    } catch (error) {
+      setDownloadError(true);
+      setDownloadMessage(error instanceof Error ? error.message : 'فشل تحميل الملف، حاول مرة أخرى');
+    }
+    window.setTimeout(() => setDownloadMessage(null), 3500);
+  }, [appAssets]);
 
   return (
     <div id="home-screen-view" className="space-y-5 pb-24 pt-1" dir="rtl">
+      <DownloadToast message={downloadMessage} error={downloadError} />
       {/* SECTION 1: IMPORTANT ANNOUNCEMENTS (التنبيهات) */}
       {activeAnnouncements.length > 0 ? (
         <section id="home-announcements-section" aria-label="التنبيهات" data-no-swipe="true">
@@ -189,13 +215,17 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                     {activeAnnouncement.attachmentUrl && (
                       <button
                         type="button"
-                        onClick={() => setConfirmState({
-                          isOpen: true,
-                          title: 'فتح المرفق',
-                          message: `سيتم فتح ${activeAnnouncement.attachmentName || 'الملف'} خارج التطبيق. هل تريد المتابعة؟`,
-                          type: 'download',
-                          onConfirm: () => window.open(activeAnnouncement.attachmentUrl!, '_blank', 'noopener,noreferrer'),
-                        })}
+                        onClick={async () => {
+                          try {
+                            await downloadFile(activeAnnouncement.attachmentUrl!, activeAnnouncement.attachmentName || 'attachment', 'application/octet-stream');
+                            setDownloadError(false);
+                            setDownloadMessage('تم تحميل الملف بنجاح إلى مجلد التنزيلات');
+                          } catch (error) {
+                            setDownloadError(true);
+                            setDownloadMessage(error instanceof Error ? error.message : 'فشل تحميل الملف، حاول مرة أخرى');
+                          }
+                          setTimeout(() => setDownloadMessage(null), 3500);
+                        }}
                         className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold"
                       >
                         <Download size={15} />
@@ -326,7 +356,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
           <div className="flex items-center justify-between mb-2 px-1">
             <span className="text-sm font-bold text-slate-700">أقرب التسليمات والمواعيد</span>
           </div>
-          <EmptyState compact icon="tasks" title="لا توجد تسليمات أو مواعيد قريبة" description="أنت حاليًا بدون استحقاقات مسجلة، وسنظهرها هنا فور إضافتها" />
+          <EmptyState compact icon="tasks" title="لا توجد تسليمات أو مواعيد قريبة" description="لا توجد لديك حاليًا مواعيد أو تسليمات مسجلة، وستظهر هنا فور إضافتها" />
         </section>
       )}
 
@@ -406,20 +436,27 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
           </button>
 
           {/* لائحة منوف PDF */}
-          <div
-            id="btn-menouf-bylaw-pdf"
-            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-rose-500 rounded-2xl hover:border-rose-300 hover:shadow-xs transition-all text-right w-full sm:col-span-2"
-          >
+          {(() => {
+            const bylaw = appAssets.find((asset) => asset.assetKey === 'menouf_bylaw' && asset.fileUrl);
+            return (
+              <button
+                id="btn-menouf-bylaw-pdf"
+                type="button"
+                onClick={handleBylawDownload}
+                disabled={!bylaw?.fileUrl}
+                className={`group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-blue-500 rounded-2xl hover:border-blue-300 hover:shadow-xs transition-all text-right w-full sm:col-span-2 ${bylaw?.fileUrl ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                aria-label="تحميل لائحة هندسة منوف"
+              >
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0 group-hover:scale-105 transition-transform">
                 <FileText size={22} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-rose-700 transition-colors">
+                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
                     لائحة هندسة منوف
                   </h4>
-                  <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded-md">
+                  <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md">
                     PDF
                   </span>
                 </div>
@@ -429,16 +466,16 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
               </div>
             </div>
 
-            <button
-              type="button"
-              disabled
-              className="p-2.5 bg-slate-100 text-slate-300 rounded-xl border border-slate-200 transition-all shrink-0 flex items-center justify-center cursor-not-allowed shadow-2xs"
-              aria-label="لائحة منوف غير متاحة حاليًا"
-              title="لائحة منوف غير متاحة حاليًا"
+            <span
+              className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 transition-all shrink-0 flex items-center justify-center shadow-2xs group-hover:bg-blue-100"
+              aria-hidden="true"
+              title="تحميل اللائحة"
             >
               <Download size={18} />
-            </button>
-          </div>
+            </span>
+              </button>
+            );
+          })()}
         </div>
       </section>
 

@@ -3,6 +3,7 @@ import { X, Bell, Calendar, Tag, ExternalLink, Download } from 'lucide-react';
 import { Announcement } from '../types';
 import { getDynamicBorderClass } from '../lib/courseIcons';
 import { ConfirmModal } from './ConfirmModal';
+import { downloadFile } from '../lib/nativeDownloader';
 
 interface AllAnnouncementsModalProps {
   isOpen: boolean;
@@ -102,7 +103,9 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
                             title: 'فتح المرفق',
                             message: `سيتم فتح ${ann.attachmentName || 'الملف'} خارج التطبيق. هل تريد المتابعة؟`,
                             type: 'download',
-                            onConfirm: () => window.open(ann.attachmentUrl!, '_blank', 'noopener,noreferrer'),
+                            onConfirm: async () => {
+                              await downloadFile(ann.attachmentUrl!, ann.attachmentName || 'attachment', 'application/octet-stream');
+                            },
                           })} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold">
                           <Download size={14} /> تحميل الملف
                         </button>
