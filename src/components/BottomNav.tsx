@@ -21,7 +21,7 @@ export const BottomNav: React.FC<BottomNavProps> = memo(({ activeTab, onChangeTa
       aria-label="التنقل الرئيسي"
       className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-[0_-2px_10px_rgba(15,23,42,0.03)]"
     >
-      <div className="max-w-md md:max-w-3xl mx-auto px-3 md:px-8 h-16 flex items-center justify-around pb-safe-bottom">
+      <div className="max-w-md md:max-w-3xl mx-auto px-3 md:px-6 h-16 flex items-center justify-around pb-safe-bottom">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
@@ -32,9 +32,9 @@ export const BottomNav: React.FC<BottomNavProps> = memo(({ activeTab, onChangeTa
               id={`tab-button-${tab.id}`}
               type="button"
               onClick={() => onChangeTab(tab.id)}
-              className="flex-1 flex flex-col items-center justify-center py-1.5 group relative select-none cursor-pointer"
+              className="flex-1 flex flex-col items-center justify-center py-1 group relative select-none cursor-pointer"
             >
-              <div className="relative flex items-center justify-center px-4 py-1">
+              <div className="relative flex items-center justify-center px-3 py-1">
                 {/* Static active indicator keeps the bottom bar responsive. */}
                 {isActive && (
                   <div

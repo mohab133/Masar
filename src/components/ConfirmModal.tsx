@@ -93,7 +93,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = memo(({
           <X size={19} strokeWidth={2} />
         </button>
 
-        <div className="px-6 pb-5 pt-7 text-center sm:px-7 sm:pt-8">
+        <div className="px-5 pb-5 pt-6 text-center sm:px-6 sm:pt-7">
           <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border ${iconBg}`}>
             {icon}
           </div>
@@ -110,7 +110,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = memo(({
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 border-t border-slate-100 bg-slate-50/70 px-5 py-4">
+        <div className="flex items-center gap-2 border-t border-slate-100 bg-slate-50/70 px-4 py-3.5">
           <button
             type="button"
             onClick={() => {

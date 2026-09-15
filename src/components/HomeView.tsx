@@ -88,7 +88,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
   }, [appAssets, download]);
 
   return (
-    <div id="home-screen-view" className="space-y-5 pb-24 pt-1" dir="rtl">
+    <div id="home-screen-view" className="app-screen" dir="rtl">
       {/* SECTION 2: UPCOMING DEADLINES / DATES (أقرب المواعيد والتسليمات - بنفس شكل التنبيهات) */}
       {nearestDates.length > 0 && activeDate ? (
         <section id="home-upcoming-dates-section" aria-label="أقرب التسليمات والمواعيد">
@@ -109,7 +109,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
             id="dates-carousel-card"
             onTouchStart={handleDateTouchStart}
             onTouchEnd={handleDateTouchEnd}
-            className="bg-white border border-slate-200/90 border-r-4 border-r-blue-600 rounded-2xl p-4 sm:p-5 shadow-2xs smooth-interaction relative overflow-hidden"
+            className="app-card bg-white border border-slate-200/90 border-r-4 border-r-blue-600 rounded-2xl shadow-2xs smooth-interaction relative overflow-hidden"
           >
             
               <div
@@ -191,7 +191,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
           <span className="text-sm font-bold text-slate-700">المنصات الجامعية واللوائح الرسمية</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* منصة ابن الهيثم */}
           <button
             type="button"

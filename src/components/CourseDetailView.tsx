@@ -55,7 +55,7 @@ const CourseFileCard: React.FC<CourseFileCardProps> = memo(({ file, idx, downloa
   return (
     <div
       onClick={(e) => file.url && onDownload(e, file)}
-      className={`bg-white border border-slate-200/90 ${getDynamicBorderClass(idx)} ${file.url ? 'hover:border-blue-300 cursor-pointer' : 'cursor-default'} rounded-2xl p-4 flex items-center justify-between gap-3 smooth-interaction shadow-2xs group`}
+      className={`app-card bg-white border border-slate-200/90 ${getDynamicBorderClass(idx)} ${file.url ? 'hover:border-blue-300 cursor-pointer' : 'cursor-default'} rounded-2xl flex items-center justify-between gap-3 smooth-interaction shadow-2xs group`}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 border border-blue-100/80 flex items-center justify-center shrink-0">
@@ -136,7 +136,7 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
       data-no-swipe="true"
       onTouchStart={(e) => e.stopPropagation()}
       onTouchEnd={(e) => e.stopPropagation()}
-      className="space-y-4 pb-28 pt-1"
+      className="app-screen"
       dir="rtl"
     >
 
@@ -207,7 +207,7 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
       </div>
 
       {/* Simple Files List under the selected category */}
-      <div className="space-y-2.5">
+      <div className="app-list">
         {currentCategoryFiles.length > 0 ? (
           currentCategoryFiles.map((file, idx) => (
             <CourseFileCard

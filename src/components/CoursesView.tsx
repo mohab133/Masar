@@ -90,7 +90,7 @@ export const CoursesView: React.FC<CoursesViewProps> = memo(({ courses }) => {
   }
 
   return (
-    <div id="courses-screen-view" className="page-pop-enter space-y-3 pb-24 pt-1" dir="rtl">
+    <div id="courses-screen-view" className="page-pop-enter app-screen" dir="rtl">
       {/* Screen Title */}
       <div className="flex items-center justify-between px-1">
         <h2 className="text-base font-bold text-slate-800 tracking-wide">
@@ -99,7 +99,7 @@ export const CoursesView: React.FC<CoursesViewProps> = memo(({ courses }) => {
       </div>
 
       {/* Courses List */}
-      <div className="space-y-2.5">
+      <div className="app-list">
         {courses.length > 0 ? courses.map((course) => (
           <CourseCard
             key={course.id}

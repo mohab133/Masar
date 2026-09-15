@@ -24,7 +24,7 @@ const AcademicEventCard: React.FC<AcademicEventCardProps> = memo(({ item, onOpen
 
   return (
     <div
-      className={`bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl p-4 hover:border-blue-300 transition-colors shadow-2xs space-y-3`}
+      className={`app-card bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl hover:border-blue-300 transition-colors shadow-2xs space-y-3`}
     >
       {/* Header: Course Logo Icon + Arabic Course Name & Remaining Time Badge */}
       <div className="flex items-center justify-between gap-3">
@@ -126,7 +126,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
   }, [sortedEvents, filter]);
 
   return (
-    <div id="dates-screen-view" className="space-y-4 pb-24 pt-1" dir="rtl">
+    <div id="dates-screen-view" className="app-screen" dir="rtl">
       {/* Filter Tabs: تسليمات | كويزات | جداول الامتحانات */}
       <div
         data-no-swipe="true"
@@ -188,7 +188,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
 
       {/* Main Content: Tasks List when on Assignments / Quizzes */}
       {filter !== 'exam_schedules' && (
-        <div className="space-y-3">
+        <div className="app-list">
           {filteredEvents.map((item) => (
             <AcademicEventCard
               key={item.id}
@@ -209,9 +209,9 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
 
       {/* Exam Schedules Tab (جداول الامتحانات) */}
       {filter === 'exam_schedules' && (
-        <div className="space-y-3 pt-1">
+        <div className="app-list">
           {filteredEvents.length > 0 && (
-            <div className="space-y-3">
+            <div className="app-list">
               {filteredEvents.map((item) => (
                 <AcademicEventCard
                   key={item.id}
@@ -268,7 +268,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className={`modal-card-pop bg-white border border-slate-200/80 rounded-[1.75rem] max-w-md w-full p-5 sm:p-6 space-y-5 shadow-2xl overflow-hidden ${selectedEventForDetails ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.98] opacity-0'}`}
+              className={`modal-card-pop bg-white border border-slate-200/80 rounded-[1.75rem] max-w-md w-full p-5 space-y-4 shadow-2xl overflow-hidden ${selectedEventForDetails ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.98] opacity-0'}`}
               dir="rtl"
             >
               <div className="relative flex items-start justify-between gap-3 border-b border-slate-100 pb-4">

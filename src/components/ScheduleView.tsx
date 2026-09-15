@@ -30,7 +30,7 @@ const ScheduleEventCard: React.FC<ScheduleEventCardProps> = memo(({ item }) => {
 
   return (
     <div
-      className={`bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl p-3 hover:border-blue-300 smooth-interaction shadow-2xs`}
+      className={`app-card bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl hover:border-blue-300 smooth-interaction shadow-2xs`}
     >
       {/* Card Header: Subject Icon Logo + Course Name & Type Badge */}
       <div className="flex items-center justify-between gap-2.5 mb-2.5">
@@ -127,7 +127,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
   }, [scheduleEvents, scheduleType, selectedDay, selectedSection]);
 
   return (
-    <div id="schedule-screen-view" className="space-y-4 pb-24 pt-1" dir="rtl">
+    <div id="schedule-screen-view" className="app-screen" dir="rtl">
 
       {/* Schedule Image Button */}
       <div className="bg-white border border-slate-200/90 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-2xs">
@@ -203,7 +203,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
       
         {scheduleType === 'section' && (
           <div
-            className="bg-white border border-slate-200/90 rounded-2xl p-3.5 space-y-2.5 overflow-hidden shadow-2xs"
+            className="app-card bg-white border border-slate-200/90 rounded-2xl space-y-3 overflow-hidden shadow-2xs"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
@@ -282,7 +282,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
       
         <div
           key={`${scheduleType}-${selectedDay}-${selectedSection}`}
-          className="space-y-3 pt-1"
+          className="app-list"
         >
           {filteredEvents.length > 0 ? (
             filteredEvents.map((item) => (
@@ -304,4 +304,3 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
 });
 
 ScheduleView.displayName = 'ScheduleView';
-
