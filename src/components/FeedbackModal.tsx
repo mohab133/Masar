@@ -165,7 +165,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
                       ref={textareaRef}
                       id="feedback-details"
                       className={`feedback-textarea w-full min-h-16 p-3 text-sm leading-6 rounded-xl border bg-slate-50/50 resize-none overflow-y-auto text-slate-800 placeholder:text-slate-400 focus:outline-hidden transition-colors ${isOverLimit ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'}`}
+                      style={{ WebkitUserSelect: 'text', userSelect: 'text', WebkitTouchCallout: 'default', touchAction: 'auto' }}
                       rows={2}
+                      inputMode="text"
+                      autoCorrect="on"
+                      spellCheck
                       value={details}
                       onChange={(e) => {
                         const rawValue = e.target.value;
