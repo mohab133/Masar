@@ -19,7 +19,28 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
   const [errorMessage, setErrorMessage] = useState('');
   const [isMounted, setIsMounted] = useState(isOpen);
   const [isOverLimit, setIsOverLimit] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (!isMounted || typeof window === 'undefined') return;
+
+    const visualViewport = window.visualViewport;
+    const updateViewportHeight = () => {
+      setViewportHeight(visualViewport?.height || window.innerHeight);
+    };
+
+    updateViewportHeight();
+    visualViewport?.addEventListener('resize', updateViewportHeight);
+    visualViewport?.addEventListener('scroll', updateViewportHeight);
+    window.addEventListener('resize', updateViewportHeight);
+
+    return () => {
+      visualViewport?.removeEventListener('resize', updateViewportHeight);
+      visualViewport?.removeEventListener('scroll', updateViewportHeight);
+      window.removeEventListener('resize', updateViewportHeight);
+    };
+  }, [isMounted]);
 
   useEffect(() => {
     if (isOpen) {
@@ -89,14 +110,15 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
       <div
         id="feedback-modal-overlay"
         data-no-swipe="true"
-        className={`overlay-fade fixed inset-0 z-50 w-screen min-h-[100dvh] flex items-center justify-center bg-slate-900/40 p-4 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+        className={`overlay-fade fixed inset-x-0 top-0 z-50 w-screen min-h-0 flex items-center justify-center overflow-y-auto bg-slate-900/40 p-4 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+        style={{ height: viewportHeight ? `${viewportHeight}px` : '100dvh' }}
         dir="rtl"
         onClick={onClose}
       >
         <div
           id="feedback-modal-card"
           onClick={(e) => e.stopPropagation()}
-          className={`modal-card-pop w-full max-w-sm bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col ${isOpen ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.985] opacity-0'}`}
+          className={`modal-card-pop w-full max-w-sm max-h-full bg-white rounded-2xl shadow-xl border border-slate-200 overflow-y-auto flex flex-col ${isOpen ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.985] opacity-0'}`}
           >
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
