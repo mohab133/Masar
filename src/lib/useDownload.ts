@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { downloadFile } from './nativeDownloader';
+import { sanitizeHttpUrl } from './safeUrl';
 
 export function useDownload() {
   const [message, setMessage] = useState<string | null>(null);
@@ -12,7 +13,8 @@ export function useDownload() {
   }, []);
 
   const download = useCallback(async (url: string | null | undefined, fileName: string, mimeType = 'application/octet-stream') => {
-    if (!url) {
+    const safeUrl = sanitizeHttpUrl(url);
+    if (!safeUrl) {
       setError(true);
       setMessage('الملف غير متاح حاليًا');
       window.setTimeout(() => setMessage(null), 3500);
@@ -28,7 +30,7 @@ export function useDownload() {
       let finishTimer: number | undefined;
 
       const started = await downloadFile(
-        url,
+        safeUrl,
         fileName,
         mimeType,
         (startedFileName) => {

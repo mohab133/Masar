@@ -66,7 +66,7 @@ const AcademicEventCard: React.FC<AcademicEventCardProps> = memo(({ item, onOpen
         <button
           type="button"
           onClick={() => onOpenDetails(item)}
-          className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-2.5 py-1 rounded-xl transition-all cursor-pointer shadow-2xs shrink-0"
+          className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-2.5 py-1 rounded-xl smooth-interaction cursor-pointer shadow-2xs shrink-0"
         >
           <Info size={13} />
           <span>اعرف المزيد</span>
@@ -124,7 +124,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
         <button
           type="button"
           onClick={() => setFilter('assignments')}
-          className={`flex-1 py-2 text-sm font-bold rounded-xl transition-all relative ${
+          className={`flex-1 py-2 text-sm font-bold rounded-xl smooth-interaction relative ${
             filter === 'assignments'
               ? 'text-blue-700 font-black'
               : 'text-slate-600 hover:text-slate-900 font-bold'
@@ -141,7 +141,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
         <button
           type="button"
           onClick={() => setFilter('quizzes')}
-          className={`flex-1 py-2 text-sm font-bold rounded-xl transition-all relative ${
+          className={`flex-1 py-2 text-sm font-bold rounded-xl smooth-interaction relative ${
             filter === 'quizzes'
               ? 'text-blue-700 font-black'
               : 'text-slate-600 hover:text-slate-900 font-bold'
@@ -158,7 +158,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
         <button
           type="button"
           onClick={() => setFilter('exam_schedules')}
-          className={`flex-1 py-2 text-sm font-bold rounded-xl transition-all relative ${
+          className={`flex-1 py-2 text-sm font-bold rounded-xl smooth-interaction relative ${
             filter === 'exam_schedules'
               ? 'text-blue-700 font-black'
               : 'text-slate-600 hover:text-slate-900 font-bold'

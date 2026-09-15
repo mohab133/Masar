@@ -13,6 +13,7 @@ import { initializePushNotifications } from './lib/pushNotifications';
 import { clearNotificationsUnread, hasUnreadNotifications as getHasUnreadNotifications, subscribeToUnreadNotifications } from './lib/notificationCenter';
 
 const TAB_ORDER: TabType[] = ['home', 'schedule', 'courses', 'dates'];
+const GESTURE_EXCLUSION_SELECTOR = 'button, input, textarea, a, select, [data-no-swipe], .overflow-x-auto, [role="tablist"], [role="dialog"], #course-detail-view, .scrollable, .no-swipe';
 
 export default function App() {
   const { data, isLoading, isRefreshing, error, refresh } = useMasarData();
@@ -27,7 +28,6 @@ export default function App() {
     return subscribeToUnreadNotifications(setHasUnreadNotifications);
   }, [isLoading]);
 
-  // Touch gesture references for main page swipe
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
   const isSwiping = useRef<boolean>(false);
@@ -36,22 +36,19 @@ export default function App() {
   const isPulling = useRef<boolean>(false);
   const [pullDistance, setPullDistance] = useState(0);
   const pullDistanceRef = useRef(0);
+  const pullFrameRef = useRef<number | null>(null);
 
-  const getPageScrollTop = () => {
-    const scrollingElement = document.scrollingElement;
-    return Math.max(
-      window.scrollY || 0,
-      scrollingElement?.scrollTop || 0,
-      document.documentElement.scrollTop || 0,
-      document.body.scrollTop || 0,
-    );
-  };
+  const getPageScrollTop = () => Math.max(
+    window.scrollY || 0,
+    document.documentElement.scrollTop || 0,
+    document.body.scrollTop || 0,
+  );
 
   const handlePullTouchStart = (e: React.TouchEvent) => {
     const target = e.target as HTMLElement | null;
     if (
       getPageScrollTop() > 2 ||
-      target?.closest('button, input, textarea, a, select, [data-no-swipe], .overflow-x-auto, [role="tablist"], #course-detail-view, .scrollable, .no-swipe')
+      target?.closest(GESTURE_EXCLUSION_SELECTOR)
     ) {
       pullStartY.current = null;
       pullStartX.current = null;
@@ -72,13 +69,17 @@ export default function App() {
     if (dy <= 0 || Math.abs(dx) > Math.abs(dy)) return;
     if (getPageScrollTop() > 2) return;
 
+    if (dy < 8) return;
+
     isPulling.current = true;
-    // Stop the browser's native overscroll once a real downward pull starts.
-    // This lets the custom indicator control the gesture instead of the WebView.
-    e.preventDefault();
-    const distance = Math.min(96, dy * 0.65);
+    const distance = Math.min(72, Math.max(0, (dy - 8) * 0.52));
     pullDistanceRef.current = distance;
-    setPullDistance(distance);
+    if (pullFrameRef.current === null) {
+      pullFrameRef.current = window.requestAnimationFrame(() => {
+        pullFrameRef.current = null;
+        setPullDistance(pullDistanceRef.current);
+      });
+    }
   };
 
   const handlePullTouchEnd = () => {
@@ -87,6 +88,10 @@ export default function App() {
     pullStartX.current = null;
     isPulling.current = false;
     pullDistanceRef.current = 0;
+    if (pullFrameRef.current !== null) {
+      window.cancelAnimationFrame(pullFrameRef.current);
+      pullFrameRef.current = null;
+    }
     setPullDistance(0);
     if (shouldRefresh) void refresh(true);
   };
@@ -96,14 +101,10 @@ export default function App() {
     setActiveTab(newTab);
   };
 
-  // Touch handlers for mobile swipe between primary tabs ONLY
   const handleTouchStart = (e: React.TouchEvent) => {
     const target = e.target as HTMLElement | null;
-    // Strictly ignore swipe if touch originates on interactive elements or scroll areas
     if (
-      target?.closest(
-        'button, input, textarea, a, select, [data-no-swipe], .overflow-x-auto, [role="tablist"], #course-detail-view, .scrollable, .no-swipe'
-      )
+      target?.closest(GESTURE_EXCLUSION_SELECTOR)
     ) {
       isSwiping.current = false;
       touchStartX.current = null;
@@ -126,13 +127,9 @@ export default function App() {
     touchStartY.current = null;
     isSwiping.current = false;
 
-    // Strict horizontal swipe check: min 60px distance & predominantly horizontal
     if (Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
       const currentIndex = TAB_ORDER.indexOf(activeTab);
 
-      // Inverted RTL Navigation:
-      // Swiping to the right (deltaX > 0) advances to the next tab in Arabic reading flow
-      // Swiping to the left (deltaX < 0) returns to the previous tab
       if (deltaX > 0) {
         if (currentIndex < TAB_ORDER.length - 1) {
           handleTabChange(TAB_ORDER[currentIndex + 1]);
@@ -147,14 +144,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex justify-center text-slate-900 selection:bg-slate-200">
-      {/* Mobile Application Container */}
       <div
-        className="w-full max-w-md min-h-screen bg-slate-50 flex flex-col shadow-sm relative overflow-x-hidden"
-        style={{ touchAction: 'pan-y', overscrollBehaviorY: 'contain' }}
-        onTouchStart={(e) => { handleTouchStart(e); handlePullTouchStart(e); }}
-        onTouchMove={handlePullTouchMove}
-        onTouchEnd={(e) => { handleTouchEnd(e); handlePullTouchEnd(); }}
-        onTouchCancel={handlePullTouchEnd}
+        className="w-full max-w-md min-h-screen bg-slate-50 flex flex-col shadow-sm relative"
+        style={{ overflowX: 'clip' }}
       >
         {(pullDistance > 0 || isRefreshing) && !isLoading && (
           <div
@@ -206,8 +198,14 @@ export default function App() {
           hasUnreadNotifications={hasUnreadNotifications}
         />
 
-        {/* Main screen content. Lightweight 150ms transition keeps navigation smooth without heavy JS animation. */}
-        <main className="flex-1 px-4.5 pt-24 relative">
+        <main
+          className="flex-1 px-4.5 pt-24 relative"
+          style={{ touchAction: 'pan-y', overscrollBehaviorY: 'contain' }}
+          onTouchStart={(e) => { handleTouchStart(e); handlePullTouchStart(e); }}
+          onTouchMove={handlePullTouchMove}
+          onTouchEnd={(e) => { handleTouchEnd(e); handlePullTouchEnd(); }}
+          onTouchCancel={handlePullTouchEnd}
+        >
           <div key={activeTab} className="w-full tab-page-enter" aria-live="polite">
               {activeTab === 'home' && (
                 <HomeView
@@ -234,17 +232,14 @@ export default function App() {
           </div>
         </main>
 
-        {/* Bottom Navigation with animated active pill */}
         <BottomNav activeTab={activeTab} onChangeTab={handleTabChange} />
 
-        {/* In-app Notification Center */}
         <AllAnnouncementsModal
           isOpen={isNotificationsOpen}
           onClose={() => setIsNotificationsOpen(false)}
           announcements={data.announcements.filter((announcement) => announcement.status === 'active')}
         />
 
-        {/* Global Feedback Sheet / Modal */}
         <FeedbackModal
           isOpen={isFeedbackOpen}
           onClose={() => setIsFeedbackOpen(false)}

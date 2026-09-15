@@ -7,6 +7,7 @@ import {
   AppAsset,
 } from '../types';
 import { validateMasarData } from './apiValidation';
+import { sanitizeHttpUrl } from './safeUrl';
 
 export interface MasarData {
   announcements: Announcement[];
@@ -26,8 +27,9 @@ const EMPTY_DATA: MasarData = {
   appAssets: [],
 };
 
-
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://jbvngzazhcmovlkoarzk.supabase.co/functions/v1/masar-api').replace(/\/$/, '');
+const configuredApiBaseUrl = sanitizeHttpUrl(import.meta.env.VITE_API_BASE_URL);
+const defaultApiBaseUrl = 'https://jbvngzazhcmovlkoarzk.supabase.co/functions/v1/masar-api';
+export const API_BASE_URL = (configuredApiBaseUrl || defaultApiBaseUrl).replace(/\/$/, '');
 
 export function getFallbackData(): MasarData {
   return EMPTY_DATA;

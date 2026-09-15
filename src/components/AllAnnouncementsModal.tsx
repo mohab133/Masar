@@ -122,7 +122,7 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
                             <button
                               type="button"
                               onClick={() => void download(ann.attachmentUrl, ann.attachmentName || 'attachment')}
-                              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 text-xs font-bold transition-all duration-200 hover:bg-blue-100 hover:border-blue-200 active:scale-[0.98]"
+                              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 text-xs font-bold smooth-interaction hover:bg-blue-100 hover:border-blue-200 active:scale-[0.98]"
                             >
                               <Download size={15} strokeWidth={2.2} /> تحميل الملف
                             </button>

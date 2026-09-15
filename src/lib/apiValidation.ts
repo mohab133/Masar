@@ -1,5 +1,6 @@
 import type { MasarData } from './masarApi';
 import type { Announcement, AcademicEvent, Course, CourseFile, ScheduleEvent, OfficialScheduleDocument, AppAsset } from '../types';
+import { sanitizeHttpUrl } from './safeUrl';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
@@ -77,11 +78,25 @@ export function validateMasarData(value: unknown): MasarData | null {
   if (!isArray(value.appAssets) || !value.appAssets.every(isAppAsset)) return null;
 
   return {
-    announcements: value.announcements,
+    announcements: value.announcements.map((item) => ({
+      ...item,
+      linkUrl: sanitizeHttpUrl(item.linkUrl),
+      attachmentUrl: sanitizeHttpUrl(item.attachmentUrl),
+    })),
     dates: value.dates,
     schedule: value.schedule,
-    courses: value.courses,
-    officialSchedules: value.officialSchedules,
-    appAssets: value.appAssets,
+    courses: value.courses.map((course) => ({
+      ...course,
+      iconUrl: sanitizeHttpUrl(course.iconUrl),
+      files: course.files.map((file) => ({ ...file, url: sanitizeHttpUrl(file.url) })),
+    })),
+    officialSchedules: value.officialSchedules.map((item) => ({
+      ...item,
+      fileUrl: sanitizeHttpUrl(item.fileUrl),
+    })),
+    appAssets: value.appAssets.map((item) => ({
+      ...item,
+      fileUrl: sanitizeHttpUrl(item.fileUrl),
+    })),
   };
 }

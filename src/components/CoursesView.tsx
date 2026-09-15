@@ -27,7 +27,7 @@ const CourseCard: React.FC<CourseCardProps> = memo(({ course, onSelect }) => {
   return (
     <div
       onClick={() => onSelect(course)}
-      className={`bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl px-3.5 py-3 cursor-pointer hover:border-blue-300 transition-all shadow-2xs group`}
+      className={`bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl px-3.5 py-3 cursor-pointer hover:border-blue-300 smooth-interaction shadow-2xs group`}
     >
       <div className="flex items-center gap-3 min-w-0">
         <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${meta.bgClass}`}>

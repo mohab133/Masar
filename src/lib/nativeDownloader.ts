@@ -1,4 +1,5 @@
 import { PluginListenerHandle, registerPlugin } from '@capacitor/core';
+import { sanitizeHttpUrl } from './safeUrl';
 
 interface DownloadStarted {
   success: boolean;
@@ -39,6 +40,14 @@ function inferMimeType(fileName: string, fallback: string) {
   return mimeTypes[extension || ''] || fallback;
 }
 
+function sanitizeFileName(fileName: string): string {
+  const cleaned = fileName
+    .replace(/[\\/:*?"<>|\u0000-\u001F]/g, '_')
+    .replace(/^\.+/, '')
+    .trim();
+  return (cleaned || 'download').slice(0, 180);
+}
+
 export async function downloadFile(
   url: string,
   fileName: string,
@@ -46,8 +55,10 @@ export async function downloadFile(
   onStarted?: (fileName: string) => void,
   onFinished?: (result: DownloadFinished) => void,
 ) {
-  if (!url) throw new Error('الملف غير متاح حاليًا');
+  const safeUrl = sanitizeHttpUrl(url);
+  if (!safeUrl) throw new Error('رابط الملف غير صالح');
   if (!navigator.onLine) throw new Error('لا يوجد اتصال بالإنترنت');
+  const safeFileName = sanitizeFileName(fileName);
 
   let listener: PluginListenerHandle | undefined;
   let startedId: number | undefined;
@@ -71,13 +82,13 @@ export async function downloadFile(
 
     const resolvedMimeType = inferMimeType(fileName, mimeType);
     const started = await MasarDownloader.download({
-      url,
-      fileName,
+      url: safeUrl,
+      fileName: safeFileName,
       mimeType: resolvedMimeType,
     });
 
     startedId = started.downloadId;
-    onStarted?.(started.fileName || fileName);
+    onStarted?.(started.fileName || safeFileName);
     cleanupTimer = window.setTimeout(cleanup, 60 * 60 * 1000);
 
     return { ...started, cleanup };

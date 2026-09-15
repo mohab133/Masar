@@ -111,7 +111,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
             id="dates-carousel-card"
             onTouchStart={handleDateTouchStart}
             onTouchEnd={handleDateTouchEnd}
-            className="bg-white border border-slate-200/90 border-r-4 border-r-blue-600 rounded-2xl p-4 sm:p-5 shadow-2xs transition-all relative overflow-hidden"
+            className="bg-white border border-slate-200/90 border-r-4 border-r-blue-600 rounded-2xl p-4 sm:p-5 shadow-2xs smooth-interaction relative overflow-hidden"
           >
             
               <div
@@ -168,7 +168,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                     key={idx}
                     type="button"
                     onClick={() => setCurrentDateIndex(idx)}
-                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                    className={`h-1.5 rounded-full smooth-interaction cursor-pointer ${
                       idx === currentDateIndex ? 'w-5 bg-blue-600' : 'w-1.5 bg-slate-200'
                     }`}
                     aria-label={`موعد ${idx + 1}`}
@@ -208,7 +208,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                   window.open('https://stdch.menofia.education/static/index.html', '_blank', 'noopener,noreferrer'),
               })
             }
-            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-teal-500 rounded-2xl hover:border-teal-300 hover:shadow-xs transition-all text-right w-full cursor-pointer"
+            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-teal-500 rounded-2xl hover:border-teal-300 hover:shadow-xs smooth-interaction text-right w-full cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-700 shrink-0 group-hover:scale-105 transition-transform">
@@ -242,7 +242,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                   window.open('https://menofia.education/login/index.php', '_blank', 'noopener,noreferrer'),
               })
             }
-            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-indigo-500 rounded-2xl hover:border-indigo-300 hover:shadow-xs transition-all text-right w-full cursor-pointer"
+            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-indigo-500 rounded-2xl hover:border-indigo-300 hover:shadow-xs smooth-interaction text-right w-full cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 shrink-0 group-hover:scale-105 transition-transform">
@@ -271,7 +271,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                 type="button"
                 onClick={handleBylawDownload}
                 disabled={!bylaw?.fileUrl}
-                className={`group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-blue-500 rounded-2xl hover:border-blue-300 hover:shadow-xs transition-all text-right w-full sm:col-span-2 ${bylaw?.fileUrl ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                className={`group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-blue-500 rounded-2xl hover:border-blue-300 hover:shadow-xs smooth-interaction text-right w-full sm:col-span-2 ${bylaw?.fileUrl ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                 aria-label="تحميل لائحة هندسة منوف"
               >
             <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -294,7 +294,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
             </div>
 
             <span
-              className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 transition-all duration-200 shrink-0 flex items-center justify-center shadow-2xs group-hover:bg-blue-100 group-hover:border-blue-200 active:scale-95"
+              className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 smooth-interaction shrink-0 flex items-center justify-center shadow-2xs group-hover:bg-blue-100 group-hover:border-blue-200 active:scale-95"
               aria-hidden="true"
               title="تحميل اللائحة"
             >

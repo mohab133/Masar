@@ -3,7 +3,8 @@ import { API_BASE_URL, MasarData, fetchMasarData, getFallbackData, getMasarApiEr
 import { readCachedMasarData, writeCachedMasarData } from './offlineCache';
 
 const REFRESH_THROTTLE_MS = 1000 * 60 * 3;
-const REQUEST_TIMEOUT_MS = 10000;
+const INITIAL_REQUEST_TIMEOUT_MS = 10000;
+const REFRESH_REQUEST_TIMEOUT_MS = 6000;
 const INITIAL_RETRIES = 3;
 
 export function useMasarData() {
@@ -25,7 +26,8 @@ export function useMasarData() {
     requestControllerRef.current?.abort();
     const controller = new AbortController();
     requestControllerRef.current = controller;
-    const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    const timeoutMs = isInitialLoadRef.current ? INITIAL_REQUEST_TIMEOUT_MS : REFRESH_REQUEST_TIMEOUT_MS;
+    const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
 
     const attemptCount = isInitialLoadRef.current ? INITIAL_RETRIES : 1;
     setIsRefreshing(true);

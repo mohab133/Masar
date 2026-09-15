@@ -5,8 +5,6 @@ import './index.css';
 import { initNativeApp } from './utils/nativePlugins';
 import { registerWebServiceWorker } from './utils/serviceWorker';
 
-// Masar uses in-app dialogs only. Prevent WebView-native JavaScript dialogs
-// from appearing above the app UI (especially after form/API failures).
 const nativeWindow = window as Window & {
   __masarDialogsBlocked?: boolean;
 };

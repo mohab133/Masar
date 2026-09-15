@@ -12,7 +12,7 @@ import { markNotificationsUnread } from './notificationCenter';
 const REGISTER_DELAY_MS = 800;
 // Calling FCM registration without Firebase configuration can terminate the
 // Android process immediately after notification permission is granted.
-const PUSH_NOTIFICATIONS_ENABLED = import.meta.env.VITE_ENABLE_PUSH_NOTIFICATIONS === 'true';
+const PUSH_NOTIFICATIONS_ENABLED = import.meta.env.VITE_ENABLE_PUSH_NOTIFICATIONS !== 'false';
 
 let initializationPromise: Promise<void> | null = null;
 let listenersRegistered = false;

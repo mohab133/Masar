@@ -56,7 +56,7 @@ const CourseFileCard: React.FC<CourseFileCardProps> = memo(({ file, idx, downloa
   return (
     <div
       onClick={(e) => file.url && onDownload(e, file)}
-      className={`bg-white border border-slate-200/90 ${getDynamicBorderClass(idx)} ${file.url ? 'hover:border-blue-300 cursor-pointer' : 'cursor-default'} rounded-2xl p-4 flex items-center justify-between gap-3 transition-all shadow-2xs group`}
+      className={`bg-white border border-slate-200/90 ${getDynamicBorderClass(idx)} ${file.url ? 'hover:border-blue-300 cursor-pointer' : 'cursor-default'} rounded-2xl p-4 flex items-center justify-between gap-3 smooth-interaction shadow-2xs group`}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 border border-blue-100/80 flex items-center justify-center shrink-0">
@@ -187,7 +187,7 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
               key={cat.id}
               type="button"
               onClick={() => setActiveTab(cat.id)}
-              className={`relative px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+              className={`relative px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold smooth-interaction shrink-0 flex items-center gap-1.5 ${
                 isSelected
                   ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50'

@@ -20,7 +20,7 @@ body {
   -webkit-tap-highlight-color: transparent;
   background: #ffffff;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow-x: clip;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
@@ -63,12 +63,18 @@ select,
 }
 
 .refresh-indicator-return {
-  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 140ms ease-out;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 120ms ease-out;
 }
 
-/* Lightweight page transition for primary tabs. Uses only opacity and transform. */
+.smooth-interaction {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Lightweight page transition for primary tabs. */
 .tab-page-enter {
-  animation: tab-page-enter 150ms ease-out both;
+  animation: tab-page-enter 170ms cubic-bezier(0.22, 1, 0.36, 1) both;
   will-change: opacity, transform;
 }
 

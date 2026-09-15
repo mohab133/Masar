@@ -33,6 +33,13 @@ public class MasarDownloaderPlugin extends Plugin {
             return;
         }
 
+        Uri sourceUri = Uri.parse(urlString);
+        String scheme = sourceUri.getScheme();
+        if (scheme == null || !(scheme.equalsIgnoreCase("https"))) {
+            call.reject("رابط الملف غير صالح");
+            return;
+        }
+
         if (!hasInternet()) {
             call.reject("لا يوجد اتصال بالإنترنت");
             return;

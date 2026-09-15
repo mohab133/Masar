@@ -33,7 +33,7 @@ export const Header: React.FC<HeaderProps> = memo(({ onOpenFeedback, onOpenNotif
             id="header-notifications-button"
             type="button"
             onClick={onOpenNotifications}
-            className="relative inline-flex items-center justify-center w-10 h-10 rounded-xl text-slate-600 bg-slate-50 hover:bg-slate-100 active:bg-slate-100 border border-slate-200/80 transition-all"
+            className="relative inline-flex items-center justify-center w-10 h-10 rounded-xl text-slate-600 bg-slate-50 hover:bg-slate-100 active:bg-slate-100 border border-slate-200/80 smooth-interaction"
             aria-label="فتح الإشعارات"
             title="الإشعارات"
           >
@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = memo(({ onOpenFeedback, onOpenNotif
           id="header-feedback-button"
           type="button"
           onClick={onOpenFeedback}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-blue-700 bg-blue-50/90 hover:bg-blue-100 active:bg-blue-100 border border-blue-200/80 transition-all shadow-2xs"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-blue-700 bg-blue-50/90 hover:bg-blue-100 active:bg-blue-100 border border-blue-200/80 smooth-interaction shadow-2xs"
           aria-label="إرسال ملاحظة"
         >
           <MessageSquarePlus size={14} className="text-blue-600" />
