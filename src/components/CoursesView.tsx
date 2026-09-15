@@ -15,8 +15,8 @@ interface CourseCardProps {
 }
 
 const getDepartmentLabel = (department?: Course['department'] | null) => {
-  if (department === 'computers') return 'قسم حاسبات';
-  if (department === 'control_communications') return 'قسم تحكم واتصالات';
+  if (department === 'computers') return 'حاسبات';
+  if (department === 'control_communications') return 'تحكم واتصالات';
   return 'عام';
 };
 
@@ -50,6 +50,8 @@ const CourseCard: React.FC<CourseCardProps> = memo(({ course, onSelect }) => {
           </h3>
           <span className="mt-1 inline-flex max-w-full items-center rounded-lg bg-slate-50 border border-slate-200/80 px-2 py-0.5 text-[11px] font-semibold text-slate-500 truncate">
             {getDepartmentLabel(course.department)}
+            <span aria-hidden="true" className="text-slate-300">•</span>
+            <span>{course.filesCount} {course.filesCount === 1 ? 'ملف' : 'ملفات'}</span>
           </span>
         </div>
 

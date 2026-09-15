@@ -21,6 +21,38 @@ export default function App() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(() => getHasUnreadNotifications());
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [showConnectionRestored, setShowConnectionRestored] = useState(false);
+  const connectionRestoreTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const handleOffline = () => {
+      if (connectionRestoreTimerRef.current !== null) {
+        window.clearTimeout(connectionRestoreTimerRef.current);
+        connectionRestoreTimerRef.current = null;
+      }
+      setIsOnline(false);
+      setShowConnectionRestored(false);
+    };
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowConnectionRestored(true);
+      if (connectionRestoreTimerRef.current !== null) window.clearTimeout(connectionRestoreTimerRef.current);
+      connectionRestoreTimerRef.current = window.setTimeout(() => {
+        setShowConnectionRestored(false);
+        connectionRestoreTimerRef.current = null;
+      }, 2600);
+    };
+
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+    return () => {
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleOnline);
+      if (connectionRestoreTimerRef.current !== null) window.clearTimeout(connectionRestoreTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     // Notification permission is optional and must not compete with the first data load.
@@ -207,6 +239,21 @@ export default function App() {
           }}
           hasUnreadNotifications={hasUnreadNotifications}
         />
+
+        {(!isOnline || showConnectionRestored) && (
+          <div
+            className={`relative z-50 mx-4 mt-2 rounded-xl border px-3.5 py-2.5 text-center text-xs font-bold shadow-sm smooth-interaction ${
+              isOnline
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-amber-50 text-amber-800 border-amber-200'
+            }`}
+            dir="rtl"
+            role="status"
+            aria-live="polite"
+          >
+            {isOnline ? 'تم استعادة الاتصال بالإنترنت' : 'أنت غير متصل بالإنترنت · يتم عرض آخر بيانات محفوظة'}
+          </div>
+        )}
 
         <main
           className="flex-1 px-4.5 pt-24 relative"

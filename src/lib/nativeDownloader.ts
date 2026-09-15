@@ -80,7 +80,7 @@ export async function downloadFile(
       cleanup();
     });
 
-    const resolvedMimeType = inferMimeType(fileName, mimeType);
+    const resolvedMimeType = inferMimeType(safeFileName, mimeType);
     const started = await MasarDownloader.download({
       url: safeUrl,
       fileName: safeFileName,
