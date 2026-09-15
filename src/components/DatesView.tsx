@@ -93,7 +93,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
   }, [download]);
 
   const sortedEvents = useMemo(() => {
-    return [...(events || [])].sort((a, b) => a.daysUntil - b.daysUntil);
+    return [...(events || [])].filter((event) => event.daysUntil >= 0).sort((a, b) => a.daysUntil - b.daysUntil);
   }, [events]);
 
   const filteredEvents = useMemo(() => {

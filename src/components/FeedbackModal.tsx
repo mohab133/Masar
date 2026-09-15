@@ -71,7 +71,12 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
       setIsSubmitted(true);
     } catch (err) {
       console.warn('Feedback send failed', err);
-      setErrorMessage('تعذر إرسال الملاحظة الآن. حاول مرة أخرى.');
+      const status = err && typeof err === 'object' && 'status' in err ? Number((err as { status?: unknown }).status) : 0;
+      if (status === 429) {
+        setErrorMessage('تم الوصول للحد المسموح من الملاحظات. حاول مرة أخرى لاحقًا.');
+      } else {
+        setErrorMessage('تعذر إرسال الملاحظة الآن. حاول مرة أخرى.');
+      }
     } finally {
       setIsSending(false);
     }

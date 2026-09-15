@@ -50,7 +50,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
   const dateTouchStartX = useRef<number | null>(null);
 
   const nearestDates = useMemo(() => {
-    return (upcomingDates || []).slice(0, 6);
+    return [...(upcomingDates || [])].filter((event) => event.daysUntil >= 0).sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 6);
   }, [upcomingDates]);
 
   const activeDate = nearestDates[currentDateIndex] || nearestDates[0];

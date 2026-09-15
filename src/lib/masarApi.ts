@@ -124,15 +124,23 @@ export async function submitFeedback(details: string, clientId?: string): Promis
 
   if (!response.ok) {
     let serverMessage = '';
+    let retryAfterSeconds = 0;
     try {
       const payload: unknown = await response.json();
-      if (payload && typeof payload === 'object' && 'error' in payload) {
-        const value = (payload as { error?: unknown }).error;
-        if (typeof value === 'string') serverMessage = value;
+      if (payload && typeof payload === 'object') {
+        if ('error' in payload && typeof (payload as { error?: unknown }).error === 'string') {
+          serverMessage = (payload as { error: string }).error;
+        }
+        if ('retryAfterSeconds' in payload && typeof (payload as { retryAfterSeconds?: unknown }).retryAfterSeconds === 'number') {
+          retryAfterSeconds = (payload as { retryAfterSeconds: number }).retryAfterSeconds;
+        }
       }
     } catch {
-      // Ignore non-JSON error bodies. The UI supplies the user-facing message.
+      // Ignore non-JSON error bodies.
     }
-    throw new Error(serverMessage || `Feedback request failed with ${response.status}`);
+    const error = new Error(serverMessage || `Feedback request failed with ${response.status}`) as Error & { status?: number; retryAfterSeconds?: number };
+    error.status = response.status;
+    error.retryAfterSeconds = retryAfterSeconds;
+    throw error;
   }
 }

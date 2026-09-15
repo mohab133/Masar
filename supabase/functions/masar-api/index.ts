@@ -63,7 +63,7 @@ function mapCourse(row: any, filesByCourse: Map<string, any[]>) {
     nameEn: row.name_en,
     nameAr: row.name_ar,
     instructor: row.instructor,
-    filesCount: files.length || row.files_count || 0,
+    filesCount: files.length > 0 ? files.length : 0,
     files,
     department: row.department ?? null,
     iconUrl: row.icon_url ?? null,
@@ -88,10 +88,21 @@ function mapOfficialSchedule(row: any) {
   };
 }
 
+function getCairoDate() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Cairo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 async function getBootstrap() {
   const queries = [
     ["announcements", supabase.from("announcements").select("*").eq("status", "active").order("created_at", { ascending: false })],
-    ["dates", supabase.from("dates").select("*").order("event_date", { ascending: true })],
+    ["dates", supabase.from("dates").select("*").gte("event_date", getCairoDate()).order("event_date", { ascending: true })],
     ["schedule", supabase.from("schedule").select("id,course,course_code,type,section_number,lecture_number,day_of_week,day_name_ar,start_time,end_time,location,instructor,notes").order("day_of_week", { ascending: true }).order("start_time", { ascending: true })],
     ["courses", supabase.from("courses").select("id,code,name_en,name_ar,instructor,files_count,department,icon_url").order("code", { ascending: true })],
     ["course_files", supabase.from("course_files").select("id,course_id,title,category,file_type,file_name,storage_path,file_size,file_size_bytes,total_pages,published_at,created_at").order("published_at", { ascending: false })],
@@ -104,7 +115,7 @@ async function getBootstrap() {
     const result = await query;
     if (result.error) {
       console.error("bootstrap query failed", { table: name, message: result.error.message, code: result.error.code, details: result.error.details, hint: result.error.hint });
-      throw new Error(`BOOTSTRAP_QUERY_FAILED:${name}:${result.error.message}`);
+      throw new Error(`BOOTSTRAP_QUERY_FAILED:${name}`);
     }
     console.log("bootstrap query ok", { table: name, rows: result.data?.length ?? 0, ms: Date.now() - startedAt });
     return result.data ?? [];
@@ -258,6 +269,41 @@ async function sendPush(title: string, body: string, data: Record<string, string
   return { sent, failed, skipped: false };
 }
 
+function getClientIp(req: Request) {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return req.headers.get("x-real-ip")?.trim() || "unknown";
+}
+
+async function rateLimitKey(value: string) {
+  return hashToken(`feedback-rate:${value}`);
+}
+
+async function consumeRateLimit(key: string, limit: number) {
+  const { data, error } = await supabase.rpc("consume_feedback_rate_limit", {
+    p_rate_key: await rateLimitKey(key),
+    p_limit: limit,
+    p_window_seconds: 3600,
+  });
+  if (error) {
+    console.error("feedback rate limit check failed", { code: error.code });
+    throw new Error("RATE_LIMIT_UNAVAILABLE");
+  }
+  const result = Array.isArray(data) ? data[0] : data;
+  return {
+    allowed: Boolean(result?.allowed),
+    retryAfterSeconds: Number(result?.retry_after_seconds ?? 0),
+  };
+}
+
+async function readJson(req: Request) {
+  try {
+    return await req.json();
+  } catch {
+    throw new Error("INVALID_JSON");
+  }
+}
+
 function isAuthorized(req: Request) {
   const provided = req.headers.get("apikey") ?? "";
   const keysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
@@ -294,18 +340,35 @@ Deno.serve(async (req) => {
     if (req.method === "GET" && path === "/api/bootstrap") return json(await getBootstrap());
 
     if (req.method === "POST" && path === "/api/feedback") {
-      const payload = await req.json();
+      const payload = await readJson(req);
+      if (!payload || typeof payload !== "object") return json({ error: "invalid_request" }, 400);
       const details = typeof payload.details === "string" ? payload.details.trim() : "";
-      if (!details) return json({ error: "details is required" }, 400);
-      if (details.length > 300) return json({ error: "details is too long" }, 400);
+      if (!details) return json({ error: "details_required" }, 400);
+      if (details.length > 300) return json({ error: "details_too_long" }, 400);
+
+      const clientId = typeof payload.clientId === "string" ? payload.clientId.trim().slice(0, 128) : "";
+      const clientLimit = clientId
+        ? await consumeRateLimit(`client:${clientId}`, 5)
+        : { allowed: true, retryAfterSeconds: 0 };
+      const ipLimit = await consumeRateLimit(`ip:${getClientIp(req)}`, 20);
+      if (!clientLimit.allowed || !ipLimit.allowed) {
+        const retryAfter = Math.max(clientLimit.retryAfterSeconds, ipLimit.retryAfterSeconds);
+        return new Response(JSON.stringify({ error: "rate_limit_exceeded", retryAfterSeconds: retryAfter }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(retryAfter) },
+        });
+      }
 
       const { data, error } = await supabase.from("feedback").insert({
         id: crypto.randomUUID(),
         type: "note",
-        course_or_section: typeof payload.courseOrSection === "string" ? payload.courseOrSection : null,
+        course_or_section: typeof payload.courseOrSection === "string" ? payload.courseOrSection.slice(0, 200) : null,
         details,
       }).select().single();
-      if (error) return json({ error: error.message }, 400);
+      if (error) {
+        console.error("feedback insert failed", { code: error.code });
+        return json({ error: "feedback_save_failed" }, 500);
+      }
       return json(data, 201);
     }
 
@@ -322,7 +385,7 @@ Deno.serve(async (req) => {
         active: true,
         updated_at: new Date().toISOString(),
       }, { onConflict: "token_hash" });
-      if (error) return json({ error: error.message }, 400);
+      if (error) { console.error("device token registration failed", { code: error.code }); return json({ error: "device_registration_failed" }, 500); }
       return json({ ok: true });
     }
 
@@ -332,13 +395,13 @@ Deno.serve(async (req) => {
       if (!token) return json({ error: "token is required" }, 400);
       const tokenHash = await hashToken(token);
       const { error } = await supabase.from("device_tokens").delete().eq("token_hash", tokenHash);
-      if (error) return json({ error: error.message }, 400);
+      if (error) { console.error("device token unregister failed", { code: error.code }); return json({ error: "device_unregister_failed" }, 500); }
       return json({ ok: true });
     }
 
     if (req.method === "POST" && (path === "/api/notifications/broadcast" || path === "/")) {
       if (!isAuthorized(req)) return json({ error: "Unauthorized" }, 401);
-      const payload = await req.json();
+      const payload = await readJson(req);
       const title = String(payload.title ?? "مسار");
       const body = String(payload.body ?? "");
       const data = payload.data && typeof payload.data === "object" ? payload.data : {};
@@ -350,9 +413,12 @@ Deno.serve(async (req) => {
     const message = error instanceof Error ? error.message : String(error);
     console.error("masar-api request failed", { path, method: req.method, message });
     if (message.startsWith("BOOTSTRAP_QUERY_FAILED:")) {
-      const [, table, ...rest] = message.split(":");
-      return json({ error: "BOOTSTRAP_QUERY_FAILED", table, message: rest.join(":") }, 500);
+      const [, table] = message.split(":");
+      return json({ error: "BOOTSTRAP_QUERY_FAILED", table }, 500);
     }
-    return json({ error: message }, 500);
+    if (message === "INVALID_JSON") return json({ error: "invalid_json" }, 400);
+    if (message === "RATE_LIMIT_UNAVAILABLE") return json({ error: "rate_limit_unavailable" }, 503);
+    console.error("masar-api internal error", { path, method: req.method, message });
+    return json({ error: "internal_server_error" }, 500);
   }
 });
