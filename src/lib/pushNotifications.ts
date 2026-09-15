@@ -10,9 +10,10 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { markNotificationsUnread, requestOpenNotifications } from './notificationCenter';
 
 const REGISTER_DELAY_MS = 800;
-// Calling FCM registration without Firebase configuration can terminate the
-// Android process immediately after notification permission is granted.
-const PUSH_NOTIFICATIONS_ENABLED = import.meta.env.VITE_ENABLE_PUSH_NOTIFICATIONS === 'true';
+// Firebase is configured in android/app/google-services.json. Keep registration
+// enabled by default; it can still be disabled explicitly for a build with
+// VITE_ENABLE_PUSH_NOTIFICATIONS=false.
+const PUSH_NOTIFICATIONS_ENABLED = import.meta.env.VITE_ENABLE_PUSH_NOTIFICATIONS !== 'false';
 
 let initializationPromise: Promise<void> | null = null;
 let listenersRegistered = false;
@@ -113,11 +114,8 @@ async function initializePushNotificationsInternal(): Promise<void> {
       // Channel creation is best-effort.
     }
 
-    // Permission can be requested safely even when Firebase is not configured.
-    // Native FCM registration is kept behind a separate flag because a missing
-    // google-services.json can terminate the Android process during register().
     if (!PUSH_NOTIFICATIONS_ENABLED) {
-      console.info('Masar: notification permission granted; FCM registration is disabled until Firebase is configured.');
+      console.info('Masar: FCM registration is disabled by build configuration.');
       return;
     }
 
