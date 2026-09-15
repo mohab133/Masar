@@ -37,6 +37,7 @@ export default function App() {
   const [pullDistance, setPullDistance] = useState(0);
   const pullDistanceRef = useRef(0);
   const pullFrameRef = useRef<number | null>(null);
+  const suppressClickRef = useRef(false);
 
   const getPageScrollTop = () => Math.max(
     window.scrollY || 0,
@@ -72,6 +73,7 @@ export default function App() {
     if (dy < 8) return;
 
     isPulling.current = true;
+    suppressClickRef.current = true;
     const distance = Math.min(72, Math.max(0, (dy - 8) * 0.52));
     pullDistanceRef.current = distance;
     if (pullFrameRef.current === null) {
@@ -94,6 +96,14 @@ export default function App() {
     }
     setPullDistance(0);
     if (shouldRefresh) void refresh(true);
+    else suppressClickRef.current = false;
+  };
+
+  const handleContentClickCapture = (e: React.MouseEvent<HTMLElement>) => {
+    if (!suppressClickRef.current) return;
+    e.preventDefault();
+    e.stopPropagation();
+    suppressClickRef.current = false;
   };
 
   const handleTabChange = (newTab: TabType) => {
@@ -205,7 +215,14 @@ export default function App() {
           onTouchMove={handlePullTouchMove}
           onTouchEnd={(e) => { handleTouchEnd(e); handlePullTouchEnd(); }}
           onTouchCancel={handlePullTouchEnd}
+          onClickCapture={handleContentClickCapture}
         >
+          {isRefreshing && (
+            <div
+              className="absolute inset-0 z-20 bg-transparent"
+              aria-hidden="true"
+            />
+          )}
           <div key={activeTab} className="w-full tab-page-enter" aria-live="polite">
               {activeTab === 'home' && (
                 <HomeView
