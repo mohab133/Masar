@@ -12,6 +12,8 @@ import { AllAnnouncementsModal } from './components/AllAnnouncementsModal';
 import { initializePushNotifications } from './lib/pushNotifications';
 import { clearNotificationsUnread, hasUnreadNotifications as getHasUnreadNotifications, subscribeToUnreadNotifications, subscribeToOpenNotificationsRequest } from './lib/notificationCenter';
 import { OfflineBanner } from './components/OfflineBanner';
+import { DownloadToast } from './components/DownloadToast';
+import { useDownload } from './lib/useDownload';
 
 const TAB_ORDER: TabType[] = ['home', 'schedule', 'courses', 'dates'];
 const GESTURE_EXCLUSION_SELECTOR = 'button, input, textarea, a, select, [data-no-swipe], .overflow-x-auto, [role="tablist"], [role="dialog"], #course-detail-view, .scrollable, .no-swipe';
@@ -25,6 +27,7 @@ const PULL_GESTURE_EXCLUSION_SELECTOR = 'input, textarea, a, select, [data-no-sw
 
 export default function App() {
   const { data, isLoading, isRefreshing, error, refresh } = useMasarData();
+  const { message: downloadMessage, error: downloadError, loading: downloadLoading } = useDownload();
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -354,6 +357,8 @@ export default function App() {
         </main>
 
         <BottomNav activeTab={activeTab} onChangeTab={handleTabChange} />
+
+        <DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
 
         <AllAnnouncementsModal
           isOpen={isNotificationsOpen}

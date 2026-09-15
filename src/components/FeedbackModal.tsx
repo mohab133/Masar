@@ -89,7 +89,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
       <div
         id="feedback-modal-overlay"
         data-no-swipe="true"
-        className={`fixed inset-0 z-50 w-screen min-h-[100dvh] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] p-4 transition-opacity duration-150 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed inset-0 z-50 w-screen min-h-[100dvh] flex items-center justify-center bg-slate-900/40 p-4 transition-opacity duration-150 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
         dir="rtl"
         onClick={onClose}
       >

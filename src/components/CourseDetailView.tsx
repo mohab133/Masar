@@ -11,7 +11,6 @@ import {
 import { Course, CourseFile, FileCategory } from '../types';
 import { getDynamicBorderClass } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
-import { DownloadToast } from './DownloadToast';
 import { useDownload } from '../lib/useDownload';
 import { DownloadButton } from './DownloadButton';
 
@@ -91,7 +90,7 @@ CourseFileCard.displayName = 'CourseFileCard';
 export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course, onBack }) => {
   const [activeTab, setActiveTab] = useState<CategoryTab>('slides');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const { message: downloadMessage, error: downloadError, loading: downloadLoading, download } = useDownload();
+  const { download } = useDownload();
   const files = useMemo(() => course.files || [], [course.files]);
 
   // Count files per category
@@ -140,8 +139,6 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
       className="space-y-4 pb-28 pt-1"
       dir="rtl"
     >
-
-      <DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
 
       {/* Clean Course Header without duplication */}
       <div className="flex items-center gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">

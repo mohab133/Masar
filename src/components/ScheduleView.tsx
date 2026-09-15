@@ -3,7 +3,6 @@ import { MapPin, Clock, FileImage, Filter } from 'lucide-react';
 import { ScheduleEvent, ScheduleType, OfficialScheduleDocument } from '../types';
 import { getArabicCourseName, getCourseIconMeta } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
-import { DownloadToast } from './DownloadToast';
 import { useDownload } from '../lib/useDownload';
 import { DownloadButton } from './DownloadButton';
 
@@ -93,7 +92,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
   const [selectedDay, setSelectedDay] = useState<number>(0);
 
   // Student's chosen section
-  const { message: downloadMessage, error: downloadError, loading: downloadLoading, download } = useDownload();
+  const { download } = useDownload();
 
   const handleOfficialDownload = useCallback(async (doc: OfficialScheduleDocument) => {
     await download(doc.fileUrl, doc.downloadFileName || 'official-schedule.jpg', 'image/jpeg');
@@ -129,7 +128,6 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
 
   return (
     <div id="schedule-screen-view" className="space-y-4 pb-24 pt-1" dir="rtl">
-      <DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
 
       {/* Schedule Image Button */}
       <div className="bg-white border border-slate-200/90 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-2xs">

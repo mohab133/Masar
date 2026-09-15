@@ -3,7 +3,6 @@ import { Calendar, MapPin, Clock, Info, X } from 'lucide-react';
 import { AcademicEvent, OfficialScheduleDocument } from '../types';
 import { getArabicCourseName, getCourseIconMeta, formatDeadline } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
-import { DownloadToast } from './DownloadToast';
 import { useDownload } from '../lib/useDownload';
 import { DownloadButton } from './DownloadButton';
 
@@ -80,7 +79,7 @@ AcademicEventCard.displayName = 'AcademicEventCard';
 
 export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSchedules }) => {
   const [filter, setFilter] = useState<FilterCategory>('assignments');
-  const { message: downloadMessage, error: downloadError, loading: downloadLoading, download } = useDownload();
+  const { download } = useDownload();
   const [selectedEventForDetails, setSelectedEventForDetails] = useState<AcademicEvent | null>(null);
   const [displayedEvent, setDisplayedEvent] = useState<AcademicEvent | null>(null);
   const [isDetailsMounted, setIsDetailsMounted] = useState(false);
@@ -128,7 +127,6 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
 
   return (
     <div id="dates-screen-view" className="space-y-4 pb-24 pt-1" dir="rtl">
-      <DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
       {/* Filter Tabs: تسليمات | كويزات | جداول الامتحانات */}
       <div
         data-no-swipe="true"

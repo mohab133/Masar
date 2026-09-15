@@ -13,7 +13,6 @@ import { AcademicEvent, AppAsset } from '../types';
 import { ConfirmModal } from './ConfirmModal';
 import { formatDeadline } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
-import { DownloadToast } from './DownloadToast';
 import { useDownload } from '../lib/useDownload';
 
 interface HomeViewProps {
@@ -28,7 +27,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
   appAssets,
 }) => {
   // Announcements Carousel State
-  const { message: downloadMessage, error: downloadError, loading: downloadLoading, download } = useDownload();
+  const { download } = useDownload();
 
   // Confirm Modal State for links & downloads
   const [confirmState, setConfirmState] = useState<{
@@ -90,7 +89,6 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 
   return (
     <div id="home-screen-view" className="space-y-5 pb-24 pt-1" dir="rtl">
-      <DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
       {/* SECTION 2: UPCOMING DEADLINES / DATES (أقرب المواعيد والتسليمات - بنفس شكل التنبيهات) */}
       {nearestDates.length > 0 && activeDate ? (
         <section id="home-upcoming-dates-section" aria-label="أقرب التسليمات والمواعيد">

@@ -5,7 +5,6 @@ import { getDynamicBorderClass } from '../lib/courseIcons';
 import { ConfirmModal } from './ConfirmModal';
 import { useDownload } from '../lib/useDownload';
 import { isAnnouncementNew } from '../lib/announcementUtils';
-import { DownloadToast } from './DownloadToast';
 
 interface AllAnnouncementsModalProps {
   isOpen: boolean;
@@ -18,7 +17,7 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
   onClose,
   announcements,
 }) => {
-  const { message: downloadMessage, error: downloadError, loading: downloadLoading, download } = useDownload();
+  const { download } = useDownload();
   const [isMounted, setIsMounted] = useState(isOpen);
 
   useEffect(() => {
@@ -50,7 +49,7 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
         <div
           id="all-announcements-modal"
           data-no-swipe="true"
-          className={`overlay-fade fixed inset-0 z-50 w-screen min-h-[100dvh] flex items-center justify-center bg-slate-900/40 backdrop-blur-[1px] p-4 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+          className={`overlay-fade fixed inset-0 z-50 w-screen min-h-[100dvh] flex items-center justify-center bg-slate-900/40 p-4 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
           dir="rtl"
           onClick={onClose}
         >
@@ -147,7 +146,6 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
                 </div>
               )}
             </div>
-            <DownloadToast variant="inline" message={downloadMessage} error={downloadError} loading={downloadLoading} />
           </div>
         </div>
       )}
