@@ -5,6 +5,7 @@ import { getDynamicBorderClass } from '../lib/courseIcons';
 import { ConfirmModal } from './ConfirmModal';
 import { useDownload } from '../lib/useDownload';
 import { isAnnouncementNew } from '../lib/announcementUtils';
+import { useEdgeStretch } from '../lib/useEdgeStretch';
 
 interface AllAnnouncementsModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
 }) => {
   const { download } = useDownload();
   const [isMounted, setIsMounted] = useState(isOpen);
+  const { scrollRef, contentStyle, handlers: edgeHandlers } = useEdgeStretch<HTMLDivElement>();
 
   useEffect(() => {
     if (isOpen) {
@@ -79,72 +81,74 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
             </div>
 
             {/* List of active announcements */}
-            <div className="p-4 overflow-y-auto">
-              {announcements.length === 0 ? (
-                <div className="min-h-[220px] flex flex-col items-center justify-center text-center px-6 py-8">
-                  <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 mb-4">
-                    <Bell size={26} />
-                  </div>
-                  <h4 className="text-base font-bold text-slate-800">لا توجد إشعارات</h4>
-                  <p className="text-sm text-slate-500 mt-1.5 leading-6">ستظهر هنا الإشعارات والإعلانات الجديدة عند وصولها</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {announcements.map((ann, idx) => (
-                    <div
-                      key={ann.id}
-                      className={`p-4 rounded-xl border border-slate-200/80 ${getDynamicBorderClass(idx)} bg-white hover:border-blue-200 transition-colors`}
-                    >
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
-                          <Tag size={12} />
-                          {ann.courseRef || 'عام'}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          {isAnnouncementNew(ann) && (
-                            <span className="text-xs font-black text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
-                              جديد
-                            </span>
-                          )}
-                          <span className="text-xs text-slate-500 flex items-center gap-1">
-                            <Calendar size={12} />
-                            {ann.date}
-                          </span>
-                        </div>
-                      </div>
-                      <h4 className="text-sm font-bold text-slate-900 mb-1 leading-snug break-words text-right" dir="auto">{ann.title || 'تنبيه'}</h4>
-                      <p className="text-base text-slate-700 leading-8 break-words text-right" dir="auto">{ann.content}</p>
-                      {(ann.linkUrl || ann.attachmentUrl) && (
-                        <div className="mt-3 pt-3 border-t border-slate-100 flex gap-2 flex-wrap">
-                          {ann.linkUrl && (
-                            <button type="button" onClick={() => setConfirmState({
-                                isOpen: true,
-                                title: 'فتح الرابط',
-                                message: 'سيتم فتح الرابط خارج التطبيق. هل تريد المتابعة؟',
-                                type: 'link',
-                                onConfirm: () => window.open(ann.linkUrl!, '_blank', 'noopener,noreferrer'),
-                              })} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-100 text-xs font-bold">
-                              <ExternalLink size={14} /> عرض الرابط
-                            </button>
-                          )}
-                          {ann.attachmentUrl && (
-                            <button
-                              type="button"
-                              onClick={() => void download(ann.attachmentUrl, ann.attachmentName || 'attachment')}
-                              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 text-xs font-bold smooth-interaction hover:bg-blue-100 hover:border-blue-200 active:scale-[0.98]"
-                            >
-                              <Download size={15} strokeWidth={2.2} /> تحميل الملف
-                            </button>
-                          )}
-                        </div>
-                      )}
-                      <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-end text-xs">
-                        <span className="text-slate-500">{ann.timeAgo}</span>
-                      </div>
+            <div ref={scrollRef} {...edgeHandlers} className="p-4 overflow-y-auto">
+              <div style={contentStyle}>
+                {announcements.length === 0 ? (
+                  <div className="min-h-[220px] flex flex-col items-center justify-center text-center px-6 py-8">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 mb-4">
+                      <Bell size={26} />
                     </div>
-                  ))}
-                </div>
-              )}
+                    <h4 className="text-base font-bold text-slate-800">لا توجد إشعارات</h4>
+                    <p className="text-sm text-slate-500 mt-1.5 leading-6">ستظهر هنا الإشعارات والإعلانات الجديدة عند وصولها</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {announcements.map((ann, idx) => (
+                      <div
+                        key={ann.id}
+                        className={`p-4 rounded-xl border border-slate-200/80 ${getDynamicBorderClass(idx)} bg-white hover:border-blue-200 transition-colors`}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
+                            <Tag size={12} />
+                            {ann.courseRef || 'عام'}
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            {isAnnouncementNew(ann) && (
+                              <span className="text-xs font-black text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                                جديد
+                              </span>
+                            )}
+                            <span className="text-xs text-slate-500 flex items-center gap-1">
+                              <Calendar size={12} />
+                              {ann.date}
+                            </span>
+                          </div>
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900 mb-1 leading-snug break-words text-right" dir="auto">{ann.title || 'تنبيه'}</h4>
+                        <p className="text-base text-slate-700 leading-8 break-words text-right" dir="auto">{ann.content}</p>
+                        {(ann.linkUrl || ann.attachmentUrl) && (
+                          <div className="mt-3 pt-3 border-t border-slate-100 flex gap-2 flex-wrap">
+                            {ann.linkUrl && (
+                              <button type="button" onClick={() => setConfirmState({
+                                  isOpen: true,
+                                  title: 'فتح الرابط',
+                                  message: 'سيتم فتح الرابط خارج التطبيق. هل تريد المتابعة؟',
+                                  type: 'link',
+                                  onConfirm: () => window.open(ann.linkUrl!, '_blank', 'noopener,noreferrer'),
+                                })} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-100 text-xs font-bold">
+                                <ExternalLink size={14} /> عرض الرابط
+                              </button>
+                            )}
+                            {ann.attachmentUrl && (
+                              <button
+                                type="button"
+                                onClick={() => void download(ann.attachmentUrl, ann.attachmentName || 'attachment')}
+                                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 text-xs font-bold smooth-interaction hover:bg-blue-100 hover:border-blue-200 active:scale-[0.98]"
+                              >
+                                <Download size={15} strokeWidth={2.2} /> تحميل الملف
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-end text-xs">
+                          <span className="text-slate-500">{ann.timeAgo}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

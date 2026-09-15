@@ -22,7 +22,7 @@ export const Header: React.FC<HeaderProps> = memo(({ onOpenFeedback, onOpenNotif
             <span className="text-2xl font-black text-slate-900 tracking-tight">
               مَسَارْ
             </span>
-            <span className="text-xs font-bold text-slate-400 tracking-wide">
+            <span className="text-xs font-bold text-slate-500 tracking-wide">
               دليلك الأكاديمي
             </span>
           </div>

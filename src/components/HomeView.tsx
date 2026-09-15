@@ -187,11 +187,11 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 
       {/* SECTION 3: UNIVERSITY PLATFORMS & OFFICIAL BYLAW */}
       <section id="home-platforms-section" aria-label="المنصات الجامعية واللوائح">
-        <div className="flex items-center justify-between mb-2.5 px-1">
+        <div className="app-section-title flex items-center justify-between px-1">
           <span className="text-sm font-bold text-slate-700">المنصات الجامعية واللوائح الرسمية</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {/* منصة ابن الهيثم */}
           <button
             type="button"
@@ -206,13 +206,13 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                   window.open('https://stdch.menofia.education/static/index.html', '_blank', 'noopener,noreferrer'),
               })
             }
-            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-teal-500 rounded-2xl hover:border-teal-300 hover:shadow-xs smooth-interaction text-right w-full cursor-pointer"
+            className="group flex min-h-[6.5rem] flex-col items-center justify-center gap-2 p-3 bg-white border border-slate-200/90 border-r-4 border-r-teal-500 rounded-2xl hover:border-teal-300 hover:shadow-xs smooth-interaction text-center w-full cursor-pointer"
           >
-            <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="flex min-w-0 w-full flex-col items-center gap-2">
               <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-700 shrink-0 group-hover:scale-105 transition-transform">
                 <GraduationCap size={22} />
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 w-full">
                 <h4 className="text-sm font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
                   منصة ابن الهيثم
                 </h4>
@@ -221,7 +221,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                 </p>
               </div>
             </div>
-            <div className="p-1.5 text-slate-400 group-hover:text-teal-600 transition-colors shrink-0 mr-2">
+            <div className="p-1 text-slate-400 group-hover:text-teal-600 transition-colors shrink-0">
               <ExternalLink size={18} />
             </div>
           </button>
@@ -240,13 +240,13 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                   window.open('https://menofia.education/login/index.php', '_blank', 'noopener,noreferrer'),
               })
             }
-            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-indigo-500 rounded-2xl hover:border-indigo-300 hover:shadow-xs smooth-interaction text-right w-full cursor-pointer"
+            className="group flex min-h-[6.5rem] flex-col items-center justify-center gap-2 p-3 bg-white border border-slate-200/90 border-r-4 border-r-indigo-500 rounded-2xl hover:border-indigo-300 hover:shadow-xs smooth-interaction text-center w-full cursor-pointer"
           >
-            <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="flex min-w-0 w-full flex-col items-center gap-2">
               <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 shrink-0 group-hover:scale-105 transition-transform">
                 <BookOpen size={22} />
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 w-full">
                 <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
                   منصة الكتب الجامعية
                 </h4>
@@ -255,7 +255,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                 </p>
               </div>
             </div>
-            <div className="p-1.5 text-slate-400 group-hover:text-indigo-600 transition-colors shrink-0 mr-2">
+            <div className="p-1 text-slate-400 group-hover:text-indigo-600 transition-colors shrink-0">
               <ExternalLink size={18} />
             </div>
           </button>
@@ -269,7 +269,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                 type="button"
                 onClick={handleBylawDownload}
                 disabled={!bylaw?.fileUrl}
-                className={`group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-blue-500 rounded-2xl hover:border-blue-300 hover:shadow-xs smooth-interaction text-right w-full sm:col-span-2 ${bylaw?.fileUrl ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                className={`group col-span-2 flex items-center justify-between gap-3 p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-blue-500 rounded-2xl hover:border-blue-300 hover:shadow-xs smooth-interaction text-right w-full ${bylaw?.fileUrl ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                 aria-label="تحميل لائحة هندسة منوف"
               >
             <div className="flex items-center gap-3 min-w-0 flex-1">

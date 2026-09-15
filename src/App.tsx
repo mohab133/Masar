@@ -1,12 +1,12 @@
-import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { TabType } from './types';
 import { useMasarData } from './lib/useMasarData';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { HomeView } from './components/HomeView';
-const ScheduleView = lazy(() => import('./components/ScheduleView').then((module) => ({ default: module.ScheduleView })));
-const CoursesView = lazy(() => import('./components/CoursesView').then((module) => ({ default: module.CoursesView })));
-const DatesView = lazy(() => import('./components/DatesView').then((module) => ({ default: module.DatesView })));
+import { ScheduleView } from './components/ScheduleView';
+import { CoursesView } from './components/CoursesView';
+import { DatesView } from './components/DatesView';
 import { FeedbackModal } from './components/FeedbackModal';
 import { AllAnnouncementsModal } from './components/AllAnnouncementsModal';
 import { initializePushNotifications } from './lib/pushNotifications';
@@ -14,6 +14,7 @@ import { clearNotificationsUnread, hasUnreadNotifications as getHasUnreadNotific
 import { OfflineBanner } from './components/OfflineBanner';
 import { DownloadToast } from './components/DownloadToast';
 import { useDownload } from './lib/useDownload';
+import { elasticProgress, elasticScaleFor, ELASTIC_ENGAGE_THRESHOLD, ELASTIC_SNAP_MS } from './lib/elasticEdge';
 
 const TAB_ORDER: TabType[] = ['home', 'schedule', 'courses', 'dates'];
 const GESTURE_EXCLUSION_SELECTOR = 'button, input, textarea, a, select, [data-no-swipe], .overflow-x-auto, [role="tablist"], [role="dialog"], #course-detail-view, .scrollable, .no-swipe';
@@ -66,11 +67,86 @@ export default function App() {
   const isHorizontalDragging = useRef(false);
   const [isSnappingBack, setIsSnappingBack] = useState(false);
 
+  // Elastic "give" for the card content when the page itself is pulled past its
+  // top or bottom edge — shares its physics with the notifications list, see
+  // lib/elasticEdge.ts and lib/useEdgeStretch.ts.
+  const edgeStretchStartY = useRef<number | null>(null);
+  const edgeStretchActive = useRef<'top' | 'bottom' | null>(null);
+  const edgeStretchRaf = useRef<number | null>(null);
+  const edgeStretchTarget = useRef(0);
+  const [cardStretch, setCardStretch] = useState(0); // signed: positive = top edge, negative = bottom edge
+  const [isCardSnapping, setIsCardSnapping] = useState(false);
+
   const getPageScrollTop = () => Math.max(
     window.scrollY || 0,
     document.documentElement.scrollTop || 0,
     document.body.scrollTop || 0,
   );
+
+  const getPageScrollBottomGap = () => {
+    const doc = document.documentElement;
+    const scrollBottom = getPageScrollTop() + window.innerHeight;
+    return doc.scrollHeight - scrollBottom;
+  };
+
+  const springBackCardStretch = () => {
+    if (edgeStretchRaf.current !== null) {
+      window.cancelAnimationFrame(edgeStretchRaf.current);
+      edgeStretchRaf.current = null;
+    }
+    setIsCardSnapping(true);
+    setCardStretch(0);
+    window.setTimeout(() => setIsCardSnapping(false), ELASTIC_SNAP_MS);
+  };
+
+  const handleEdgeStretchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (target?.closest(PULL_GESTURE_EXCLUSION_SELECTOR)) {
+      edgeStretchStartY.current = null;
+      edgeStretchActive.current = null;
+      return;
+    }
+    edgeStretchStartY.current = e.touches[0].clientY;
+    edgeStretchActive.current = null;
+    setIsCardSnapping(false);
+  };
+
+  const handleEdgeStretchMove = (e: React.TouchEvent) => {
+    if (edgeStretchStartY.current === null) return;
+    const dy = e.touches[0].clientY - edgeStretchStartY.current;
+    const atTop = getPageScrollTop() <= 2;
+    const atBottom = getPageScrollBottomGap() <= 2;
+
+    if (!edgeStretchActive.current) {
+      if (Math.abs(dy) < ELASTIC_ENGAGE_THRESHOLD) return;
+      if (dy > 0 && atTop) edgeStretchActive.current = 'top';
+      else if (dy < 0 && atBottom) edgeStretchActive.current = 'bottom';
+      else return;
+    }
+
+    const stillAtEdge = edgeStretchActive.current === 'top' ? (atTop && dy > 0) : (atBottom && dy < 0);
+    if (!stillAtEdge) {
+      edgeStretchActive.current = null;
+      if (cardStretch !== 0) springBackCardStretch();
+      return;
+    }
+
+    const sign = edgeStretchActive.current === 'top' ? 1 : -1;
+    edgeStretchTarget.current = elasticProgress(dy) * sign;
+    if (edgeStretchRaf.current === null) {
+      edgeStretchRaf.current = window.requestAnimationFrame(() => {
+        edgeStretchRaf.current = null;
+        setCardStretch(edgeStretchTarget.current);
+      });
+    }
+  };
+
+  const handleEdgeStretchEnd = () => {
+    edgeStretchStartY.current = null;
+    const wasActive = edgeStretchActive.current !== null;
+    edgeStretchActive.current = null;
+    if (wasActive) springBackCardStretch();
+  };
 
   const handlePullTouchStart = (e: React.TouchEvent) => {
     const target = e.target as HTMLElement | null;
@@ -286,7 +362,7 @@ export default function App() {
           <div className="absolute inset-0 z-30 bg-slate-50 flex flex-col items-center justify-center px-8 text-center" dir="rtl">
             <div className="w-10 h-10 rounded-full border-2 border-slate-200 border-t-blue-600 animate-spin" />
             <p className="mt-4 text-sm font-semibold text-slate-700">جارٍ تحميل بيانات التطبيق...</p>
-            <p className="mt-1 text-xs text-slate-400">يتم الاتصال بالخادم، لحظة واحدة</p>
+            <p className="mt-1 text-xs text-slate-500">يتم الاتصال بالخادم، لحظة واحدة</p>
           </div>
         )}
 
@@ -312,10 +388,10 @@ export default function App() {
         <main
           className="flex-1 px-4 md:px-6 pt-24 relative"
           style={{ touchAction: 'pan-y', overscrollBehaviorY: 'contain' }}
-          onTouchStart={(e) => { handleTouchStart(e); handlePullTouchStart(e); }}
-          onTouchMove={(e) => { handlePullTouchMove(e); handleSwipeTouchMove(e); }}
-          onTouchEnd={(e) => { handleTouchEnd(e); handlePullTouchEnd(); }}
-          onTouchCancel={(e) => { handleSwipeTouchCancel(); handlePullTouchEnd(); }}
+          onTouchStart={(e) => { handleTouchStart(e); handlePullTouchStart(e); handleEdgeStretchStart(e); }}
+          onTouchMove={(e) => { handlePullTouchMove(e); handleSwipeTouchMove(e); handleEdgeStretchMove(e); }}
+          onTouchEnd={(e) => { handleTouchEnd(e); handlePullTouchEnd(); handleEdgeStretchEnd(); }}
+          onTouchCancel={(e) => { handleSwipeTouchCancel(); handlePullTouchEnd(); handleEdgeStretchEnd(); }}
           onClickCapture={handleContentClickCapture}
         >
           <OfflineBanner />
@@ -325,13 +401,15 @@ export default function App() {
               aria-hidden="true"
             />
           )}
-          <Suspense fallback={<div className="flex min-h-40 items-center justify-center text-sm font-semibold text-slate-400" dir="rtl">جارٍ فتح الصفحة...</div>}>
-            <div
-              key={activeTab}
-              className={`w-full ${swipeDirection === 'forward' ? 'tab-slide-forward-enter' : 'tab-slide-backward-enter'} ${isSnappingBack ? 'transition-transform duration-200 ease-out' : ''}`}
-              style={{ transform: `translate3d(${dragOffset}px, 0, 0)` }}
-              aria-live="polite"
-            >
+          <div
+            key={activeTab}
+            className={`w-full ${swipeDirection === 'forward' ? 'tab-slide-forward-enter' : 'tab-slide-backward-enter'} ${(isSnappingBack || isCardSnapping) ? 'transition-transform duration-[220ms] ease-out' : ''}`}
+            style={{
+              transform: `translate3d(${dragOffset}px, 0, 0) scale(${elasticScaleFor(Math.abs(cardStretch))})`,
+              transformOrigin: cardStretch >= 0 ? 'top center' : 'bottom center',
+            }}
+            aria-live="polite"
+          >
               {activeTab === 'home' && (
                 <HomeView
                   upcomingDates={data.dates}
@@ -354,8 +432,7 @@ export default function App() {
               {activeTab === 'dates' && (
                 <DatesView events={data.dates} officialSchedules={data.officialSchedules} />
               )}
-            </div>
-          </Suspense>
+          </div>
         </main>
 
         <BottomNav activeTab={activeTab} onChangeTab={handleTabChange} />

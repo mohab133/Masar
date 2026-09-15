@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar, MapPin, Clock, Info, X } from 'lucide-react';
 import { AcademicEvent, OfficialScheduleDocument } from '../types';
 import { getArabicCourseName, getCourseIconMeta, formatDeadline } from '../lib/courseIcons';
@@ -261,7 +262,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
 
       {/* Task Details Modal */}
       
-        {isDetailsMounted && (
+        {isDetailsMounted && typeof document !== 'undefined' && createPortal(
           <div
             className={`overlay-fade fixed inset-0 z-50 w-screen min-h-[100dvh] bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center p-4 ${selectedEventForDetails ? 'opacity-100' : 'opacity-0'}`}
             onClick={() => setSelectedEventForDetails(null)}
@@ -333,9 +334,9 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
               </div>
 
             </div>
-          </div>
+          </div>,
+          document.body
         )}
-      
     </div>
   );
 });

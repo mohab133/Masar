@@ -164,6 +164,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
                     <textarea
                       ref={textareaRef}
                       id="feedback-details"
+                      className={`feedback-textarea w-full min-h-16 p-3 text-sm leading-6 rounded-xl border bg-slate-50/50 resize-none overflow-y-auto text-slate-800 placeholder:text-slate-400 focus:outline-hidden transition-colors ${isOverLimit ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'}`}
                       rows={2}
                       value={details}
                       onChange={(e) => {
@@ -180,12 +181,18 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
                           }
                         }
                       }}
+                      onContextMenu={(e) => e.preventDefault()}
+                      onSelect={(e) => {
+                        const el = e.currentTarget;
+                        if (el.selectionStart !== el.selectionEnd) {
+                          el.setSelectionRange(el.selectionEnd, el.selectionEnd);
+                        }
+                      }}
                       placeholder="اكتب ملاحظتك هنا..."
-                      className={`w-full min-h-16 p-3 text-sm leading-6 rounded-xl border bg-slate-50/50 resize-none overflow-y-auto text-slate-800 placeholder:text-slate-400 select-text focus:outline-hidden transition-colors ${isOverLimit ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'}`}
-                      style={{ WebkitUserSelect: 'text', userSelect: 'text', WebkitTouchCallout: 'default', touchAction: 'auto' }}
+                      aria-label="نص الملاحظة"
                       required
                     />
-                    <div className={`mt-1.5 text-left text-[11px] font-medium ${details.length >= MAX_FEEDBACK_LENGTH ? 'text-red-600' : 'text-slate-400'}`} dir="ltr">
+                    <div className={`mt-1.5 text-left text-[11px] font-medium ${details.length >= MAX_FEEDBACK_LENGTH ? 'text-red-600' : 'text-slate-500'}`} dir="ltr">
                       {details.length} / {MAX_FEEDBACK_LENGTH}
                     </div>
                   </div>

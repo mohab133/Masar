@@ -9,7 +9,7 @@ interface DownloadButtonProps {
 }
 
 export const DownloadButton: React.FC<DownloadButtonProps> = memo(({ available, downloading = false, onClick, label = 'تحميل الملف' }) => !available ? (
-  <span className="text-xs font-semibold text-slate-400 whitespace-nowrap">غير متاح حاليًا</span>
+  <span className="text-xs font-semibold text-slate-500 whitespace-nowrap">غير متاح حاليًا</span>
 ) : (
   <button
     type="button"

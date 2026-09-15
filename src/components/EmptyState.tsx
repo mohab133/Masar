@@ -24,7 +24,7 @@ export const EmptyState: React.FC<EmptyStateProps> = memo(({ title, description,
         <Icon size={21} />
       </div>
       <p className="font-bold text-slate-800 text-sm">{title}</p>
-      {description && <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">{description}</p>}
+      {description && <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">{description}</p>}
     </div>
   );
 });

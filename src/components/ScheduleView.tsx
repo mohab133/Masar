@@ -130,7 +130,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
     <div id="schedule-screen-view" className="app-screen" dir="rtl">
 
       {/* Schedule Image Button */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-2xs">
+      <div className="app-card bg-white border border-slate-200/90 rounded-2xl flex items-center justify-between gap-3 shadow-2xs">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/80">
             <FileImage size={18} />
@@ -150,7 +150,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
           return doc ? (
             <DownloadButton available={Boolean(doc.fileUrl)} onClick={() => void handleOfficialDownload(doc)} label="تحميل الجدول الرسمي" />
           ) : (
-            <span className="text-xs font-semibold text-slate-400 whitespace-nowrap">غير متاح حاليًا</span>
+            <span className="text-xs font-semibold text-slate-500 whitespace-nowrap">غير متاح حاليًا</span>
           );
         })()}
       </div>
