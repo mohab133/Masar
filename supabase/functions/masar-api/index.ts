@@ -357,6 +357,8 @@ async function readJson(req: Request) {
 
 function isAuthorized(req: Request) {
   const provided = req.headers.get("apikey") ?? "";
+  const broadcastKey = Deno.env.get("MASAR_BROADCAST_KEY") ?? "";
+  if (broadcastKey && provided === broadcastKey) return true;
   const keysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
   if (keysRaw) {
     try {
