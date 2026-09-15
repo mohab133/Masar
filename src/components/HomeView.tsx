@@ -17,9 +17,9 @@ import { useDownload } from '../lib/useDownload';
 
 function getTimeGreeting(openedAt: Date): string {
   const hour = openedAt.getHours();
-  if (hour >= 5 && hour < 12) return 'صباح الخير يا هندسة ☀️';
-  if (hour >= 12 && hour < 17) return 'مساء الخير يا هندسة 🌤️';
-  return 'مساء الخير يا هندسة 🌙';
+  if (hour >= 5 && hour < 12) return 'صباح الخير يا باشمهندس ☀️';
+  if (hour >= 12 && hour < 17) return 'نهارك سعيد يا باشمهندس 🌤️';
+  return 'مساء الخير يا باشمهندس 🌙';
 }
 
 interface HomeViewProps {
