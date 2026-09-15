@@ -34,6 +34,7 @@ select,
   -webkit-user-select: text;
   user-select: text;
   -webkit-touch-callout: default;
+  touch-action: manipulation;
 }
 
 #root {
