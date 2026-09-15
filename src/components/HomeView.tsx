@@ -15,6 +15,13 @@ import { formatDeadline } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
 import { useDownload } from '../lib/useDownload';
 
+function getTimeGreeting(openedAt: Date): string {
+  const hour = openedAt.getHours();
+  if (hour >= 5 && hour < 12) return 'Good morning, Engineer';
+  if (hour >= 12 && hour < 17) return 'Good afternoon, Engineer';
+  return 'Good evening, Engineer';
+}
+
 interface HomeViewProps {
   upcomingDates: AcademicEvent[];
   onNavigateToDates: () => void;
@@ -28,6 +35,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 }) => {
   // Announcements Carousel State
   const { download } = useDownload();
+  const [timeGreeting] = useState(() => getTimeGreeting(new Date()));
 
   // Confirm Modal State for links & downloads
   const [confirmState, setConfirmState] = useState<{
@@ -89,6 +97,9 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 
   return (
     <div id="home-screen-view" className="space-y-5 pb-24 pt-1" dir="rtl">
+      <p className="px-1 pt-1 text-sm font-bold text-slate-500" dir="ltr" aria-label="ترحيب حسب وقت فتح التطبيق">
+        {timeGreeting}
+      </p>
       {/* SECTION 2: UPCOMING DEADLINES / DATES (أقرب المواعيد والتسليمات - بنفس شكل التنبيهات) */}
       {nearestDates.length > 0 && activeDate ? (
         <section id="home-upcoming-dates-section" aria-label="أقرب التسليمات والمواعيد">
