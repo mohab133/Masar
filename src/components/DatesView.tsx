@@ -268,25 +268,25 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className={`modal-card-pop bg-white border border-slate-200 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-xl overflow-hidden ${selectedEventForDetails ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.98] opacity-0'}`}
+              className={`modal-card-pop bg-white border border-slate-200/80 rounded-[1.75rem] max-w-md w-full p-5 sm:p-6 space-y-5 shadow-2xl overflow-hidden ${selectedEventForDetails ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.98] opacity-0'}`}
               dir="rtl"
             >
-              <div className="relative flex items-center justify-between border-b border-slate-100 pb-3 pl-10">
-                <div className="flex items-center gap-2.5">
+              <div className="relative flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                <div className="flex items-start gap-3 min-w-0">
                   {displayedEvent && (() => {
                     const meta = getCourseIconMeta(displayedEvent.course);
                     const Icon = meta.Icon;
                     return (
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-100 text-slate-700 border border-slate-200">
+                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${meta.bgClass}`}>
                         <Icon size={18} />
                       </div>
                     );
                   })()}
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900">
+                  <div className="min-w-0 pt-0.5">
+                    <h3 className="text-lg font-black text-slate-950 leading-tight break-words">
                       {displayedEvent && getArabicCourseName(displayedEvent.course)}
                     </h3>
-                    <span className="text-xs text-slate-500 font-medium">
+                    <span className="inline-flex mt-1 text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-2 py-0.5 font-bold">
                       {displayedEvent?.typeLabelAr}
                     </span>
                   </div>
@@ -295,35 +295,36 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
                 <button
                   type="button"
                   onClick={() => setSelectedEventForDetails(null)}
-                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors cursor-pointer"
+                  aria-label="إغلاق التفاصيل"
+                  className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors cursor-pointer shrink-0"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <div className="space-y-3.5">
-                <div>
-                  <span className="text-xs text-blue-600 font-semibold block mb-1">تفاصيل التكليف والمعلومات</span>
-                  <h4 className="text-base font-bold text-slate-900 leading-snug">
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <span className="text-xs text-slate-500 font-bold block">تفاصيل الموعد</span>
+                  <h4 className="text-xl font-black text-slate-950 leading-snug break-words">
                     {displayedEvent?.eventName}
                   </h4>
                 </div>
 
-                <div className="border border-slate-200 rounded-xl p-4 bg-white space-y-3 text-xs sm:text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-sm">
                   {displayedEvent?.location && (
-                    <div className="flex items-start gap-2">
-                      <MapPin size={16} className="text-rose-500 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-slate-500 font-semibold">المكان</p>
-                        <p className="font-bold text-slate-900 mt-0.5">{displayedEvent.location}</p>
+                    <div className="flex items-start gap-2.5 rounded-2xl bg-slate-50 border border-slate-100 p-3">
+                      <MapPin size={17} className="text-rose-500 mt-0.5 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-slate-500 font-bold">المكان</p>
+                        <p className="font-bold text-slate-900 mt-0.5 break-words">{displayedEvent.location}</p>
                       </div>
                     </div>
                   )}
                   {displayedEvent?.time && (
-                    <div className="flex items-start gap-2">
+                    <div className="flex items-start gap-2.5 rounded-2xl bg-slate-50 border border-slate-100 p-3">
                       <Clock size={16} className="text-blue-600 mt-0.5 shrink-0" />
                       <div>
-                        <p className="text-slate-500 font-semibold">الوقت</p>
+                        <p className="text-xs text-slate-500 font-bold">الوقت</p>
                         <p className="font-bold text-slate-900 mt-0.5">{displayedEvent.time}</p>
                       </div>
                     </div>

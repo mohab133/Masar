@@ -100,7 +100,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
               onClick={onNavigateToDates}
               className="text-sm font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 transition-colors"
             >
-              <span>عرض كل المواعيد</span>
+              <span>عرض الكل</span>
               <ArrowLeft size={14} />
             </button>
           </div>
