@@ -12,6 +12,9 @@ export const ELASTIC_RESISTANCE = 0.55;
 /** Max extra scale at a full pull — kept small so long lists never look distorted. */
 export const ELASTIC_MAX_SCALE = 0.014;
 
+/** Maximum visible page translation at full pull, kept subtle and reversible. */
+export const ELASTIC_MAX_OFFSET = 38;
+
 /** Spring-back duration/easing, matching the rest of the app's motion language. */
 export const ELASTIC_SNAP_MS = 220;
 export const ELASTIC_SNAP_EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
@@ -31,4 +34,9 @@ export function elasticProgress(rawDelta: number): number {
 /** Progress (0..1) -> a CSS scale() value for the stretched content. */
 export function elasticScaleFor(progress: number): number {
   return 1 + Math.min(Math.max(progress, 0), 1) * ELASTIC_MAX_SCALE;
+}
+
+/** Progress (0..1) -> a small vertical page translation in pixels. */
+export function elasticOffsetFor(progress: number): number {
+  return Math.min(Math.max(progress, 0), 1) * ELASTIC_MAX_OFFSET;
 }

@@ -14,7 +14,7 @@ import { clearNotificationsUnread, hasUnreadNotifications as getHasUnreadNotific
 import { OfflineBanner } from './components/OfflineBanner';
 import { DownloadToast } from './components/DownloadToast';
 import { useDownload } from './lib/useDownload';
-import { elasticProgress, elasticScaleFor, ELASTIC_ENGAGE_THRESHOLD, ELASTIC_SNAP_MS } from './lib/elasticEdge';
+import { elasticProgress, elasticOffsetFor, elasticScaleFor, ELASTIC_ENGAGE_THRESHOLD, ELASTIC_SNAP_MS } from './lib/elasticEdge';
 
 const TAB_ORDER: TabType[] = ['home', 'schedule', 'courses', 'dates'];
 const GESTURE_EXCLUSION_SELECTOR = 'button, input, textarea, a, select, [data-no-swipe], .overflow-x-auto, [role="tablist"], [role="dialog"], #course-detail-view, .scrollable, .no-swipe';
@@ -71,6 +71,7 @@ export default function App() {
   // top or bottom edge — shares its physics with the notifications list, see
   // lib/elasticEdge.ts and lib/useEdgeStretch.ts.
   const edgeStretchStartY = useRef<number | null>(null);
+  const edgeStretchStartX = useRef<number | null>(null);
   const edgeStretchActive = useRef<'top' | 'bottom' | null>(null);
   const edgeStretchRaf = useRef<number | null>(null);
   const edgeStretchTarget = useRef(0);
@@ -82,12 +83,6 @@ export default function App() {
     document.documentElement.scrollTop || 0,
     document.body.scrollTop || 0,
   );
-
-  const getPageScrollBottomGap = () => {
-    const doc = document.documentElement;
-    const scrollBottom = getPageScrollTop() + window.innerHeight;
-    return doc.scrollHeight - scrollBottom;
-  };
 
   const springBackCardStretch = () => {
     if (edgeStretchRaf.current !== null) {
@@ -103,33 +98,31 @@ export default function App() {
     const target = e.target as HTMLElement | null;
     if (target?.closest(PULL_GESTURE_EXCLUSION_SELECTOR)) {
       edgeStretchStartY.current = null;
+      edgeStretchStartX.current = null;
       edgeStretchActive.current = null;
       return;
     }
     edgeStretchStartY.current = e.touches[0].clientY;
+    edgeStretchStartX.current = e.touches[0].clientX;
     edgeStretchActive.current = null;
     setIsCardSnapping(false);
   };
 
   const handleEdgeStretchMove = (e: React.TouchEvent) => {
-    if (edgeStretchStartY.current === null) return;
+    if (edgeStretchStartY.current === null || edgeStretchStartX.current === null) return;
     const dy = e.touches[0].clientY - edgeStretchStartY.current;
-    const atTop = getPageScrollTop() <= 2;
-    const atBottom = getPageScrollBottomGap() <= 2;
+    const dx = e.touches[0].clientX - edgeStretchStartX.current;
+
+    // Page-level vertical gesture: native scrolling continues while the whole
+    // active page gives a small rubber-band response and springs back on release.
+    if (Math.abs(dy) < ELASTIC_ENGAGE_THRESHOLD || Math.abs(dx) > Math.abs(dy)) return;
 
     if (!edgeStretchActive.current) {
-      if (Math.abs(dy) < ELASTIC_ENGAGE_THRESHOLD) return;
-      if (dy > 0 && atTop) edgeStretchActive.current = 'top';
-      else if (dy < 0 && atBottom) edgeStretchActive.current = 'bottom';
-      else return;
+      edgeStretchActive.current = dy > 0 ? 'top' : 'bottom';
     }
 
-    const stillAtEdge = edgeStretchActive.current === 'top' ? (atTop && dy > 0) : (atBottom && dy < 0);
-    if (!stillAtEdge) {
-      edgeStretchActive.current = null;
-      if (cardStretch !== 0) springBackCardStretch();
-      return;
-    }
+    const sameDirection = edgeStretchActive.current === 'top' ? dy > 0 : dy < 0;
+    if (!sameDirection) return;
 
     const sign = edgeStretchActive.current === 'top' ? 1 : -1;
     edgeStretchTarget.current = elasticProgress(dy) * sign;
@@ -143,6 +136,7 @@ export default function App() {
 
   const handleEdgeStretchEnd = () => {
     edgeStretchStartY.current = null;
+    edgeStretchStartX.current = null;
     const wasActive = edgeStretchActive.current !== null;
     edgeStretchActive.current = null;
     if (wasActive) springBackCardStretch();
@@ -405,7 +399,7 @@ export default function App() {
             key={activeTab}
             className={`w-full ${swipeDirection === 'forward' ? 'tab-slide-forward-enter' : 'tab-slide-backward-enter'} ${(isSnappingBack || isCardSnapping) ? 'transition-transform duration-[220ms] ease-out' : ''}`}
             style={{
-              transform: `translate3d(${dragOffset}px, 0, 0) scale(${elasticScaleFor(Math.abs(cardStretch))})`,
+              transform: `translate3d(${dragOffset}px, ${Math.sign(cardStretch) * elasticOffsetFor(Math.abs(cardStretch))}px, 0) scale(${elasticScaleFor(Math.abs(cardStretch))})`,
               transformOrigin: cardStretch >= 0 ? 'top center' : 'bottom center',
             }}
             aria-live="polite"
