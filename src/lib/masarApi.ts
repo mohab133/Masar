@@ -83,7 +83,7 @@ export async function fetchMasarData(signal?: AbortSignal): Promise<MasarData> {
     response = await fetch(`${API_BASE_URL}/api/bootstrap?refresh=${Date.now()}`, {
       signal,
       cache: 'no-store',
-      headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' },
+      headers: { Accept: 'application/json' },
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {

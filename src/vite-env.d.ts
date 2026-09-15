@@ -3,7 +3,6 @@
 interface ImportMetaEnv {
   readonly VITE_API_BASE_URL?: string;
   readonly VITE_ENABLE_PUSH_NOTIFICATIONS?: string;
-  readonly VITE_ENABLE_PUSH_REGISTRATION?: string;
 }
 
 interface ImportMeta {
