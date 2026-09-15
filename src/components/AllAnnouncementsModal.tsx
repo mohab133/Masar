@@ -105,7 +105,7 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
                           </span>
                           <div className="flex items-center gap-1.5">
                             {isAnnouncementNew(ann) && (
-                              <span className="text-xs font-black text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                              <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
                                 جديد
                               </span>
                             )}

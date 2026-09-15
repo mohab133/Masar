@@ -152,7 +152,7 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = memo(({ course,
         </button>
 
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm sm:text-base font-extrabold text-slate-900 leading-[1.35] tracking-tight break-words">
+          <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-[1.35] tracking-tight break-words">
             {course.nameAr || course.nameEn}
           </h2>
           {course.nameAr && (

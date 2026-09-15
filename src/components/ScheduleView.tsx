@@ -166,10 +166,10 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
           type="button"
           id="schedule-tab-lectures"
           onClick={() => setScheduleType('lecture')}
-          className={`flex-1 py-2 text-xs font-bold rounded-xl smooth-interaction relative z-10 ${
+          className={`flex-1 py-2 text-xs font-semibold rounded-xl smooth-interaction relative z-10 ${
             scheduleType === 'lecture'
-              ? 'text-blue-700 font-black'
-              : 'text-slate-600 hover:text-slate-900 font-bold'
+              ? 'text-blue-700 font-semibold'
+              : 'text-slate-600 hover:text-slate-900 font-medium'
           }`}
         >
           {scheduleType === 'lecture' && (
@@ -184,10 +184,10 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
           type="button"
           id="schedule-tab-sections"
           onClick={() => setScheduleType('section')}
-          className={`flex-1 py-2 text-xs font-bold rounded-xl smooth-interaction relative z-10 ${
+          className={`flex-1 py-2 text-xs font-semibold rounded-xl smooth-interaction relative z-10 ${
             scheduleType === 'section'
-              ? 'text-blue-700 font-black'
-              : 'text-slate-600 hover:text-slate-900 font-bold'
+              ? 'text-blue-700 font-semibold'
+              : 'text-slate-600 hover:text-slate-900 font-medium'
           }`}
         >
           {scheduleType === 'section' && (
@@ -216,7 +216,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
               <button
                 type="button"
                 onClick={() => handleSectionChange('all')}
-                className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-bold smooth-interaction ${
+                className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-medium smooth-interaction ${
                   selectedSection === 'all'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -231,7 +231,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
                     key={secNum}
                     type="button"
                     onClick={() => handleSectionChange(String(secNum))}
-                    className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-bold smooth-interaction ${
+                    className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-medium smooth-interaction ${
                       isSelected
                         ? 'bg-blue-600 text-white shadow-xs'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -263,8 +263,8 @@ export const ScheduleView: React.FC<ScheduleViewProps> = memo(({
               onClick={() => setSelectedDay(day.id)}
               className={`flex-1 py-2 px-1 rounded-xl text-center text-xs smooth-interaction relative ${
                 isSelected
-                  ? 'text-white font-bold shadow-xs'
-                  : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 font-bold'
+                  ? 'text-white font-semibold shadow-xs'
+                  : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 font-medium'
               }`}
             >
               {isSelected && (

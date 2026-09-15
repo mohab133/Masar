@@ -54,7 +54,7 @@ export const BottomNav: React.FC<BottomNavProps> = memo(({ activeTab, onChangeTa
 
               <span
                 className={`text-xs tracking-tight mt-0.5 whitespace-nowrap transition-colors duration-150 relative z-10 ${
-                  isActive ? 'font-black text-blue-700' : 'font-medium text-slate-500'
+                  isActive ? 'font-semibold text-blue-700' : 'font-medium text-slate-500'
                 }`}
               >
                 {tab.label}

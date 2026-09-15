@@ -138,10 +138,10 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
         <button
           type="button"
           onClick={() => setFilter('assignments')}
-          className={`flex-1 py-2 text-sm font-bold rounded-xl smooth-interaction relative ${
+          className={`flex-1 py-2 text-sm font-semibold rounded-xl smooth-interaction relative ${
             filter === 'assignments'
-              ? 'text-blue-700 font-black'
-              : 'text-slate-600 hover:text-slate-900 font-bold'
+              ? 'text-blue-700 font-semibold'
+              : 'text-slate-600 hover:text-slate-900 font-medium'
           }`}
         >
           {filter === 'assignments' && (
@@ -155,10 +155,10 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
         <button
           type="button"
           onClick={() => setFilter('quizzes')}
-          className={`flex-1 py-2 text-sm font-bold rounded-xl smooth-interaction relative ${
+          className={`flex-1 py-2 text-sm font-semibold rounded-xl smooth-interaction relative ${
             filter === 'quizzes'
-              ? 'text-blue-700 font-black'
-              : 'text-slate-600 hover:text-slate-900 font-bold'
+              ? 'text-blue-700 font-semibold'
+              : 'text-slate-600 hover:text-slate-900 font-medium'
           }`}
         >
           {filter === 'quizzes' && (
@@ -172,10 +172,10 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
         <button
           type="button"
           onClick={() => setFilter('exam_schedules')}
-          className={`flex-1 py-2 text-sm font-bold rounded-xl smooth-interaction relative ${
+          className={`flex-1 py-2 text-sm font-semibold rounded-xl smooth-interaction relative ${
             filter === 'exam_schedules'
-              ? 'text-blue-700 font-black'
-              : 'text-slate-600 hover:text-slate-900 font-bold'
+              ? 'text-blue-700 font-semibold'
+              : 'text-slate-600 hover:text-slate-900 font-medium'
           }`}
         >
           {filter === 'exam_schedules' && (
@@ -284,7 +284,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
                     );
                   })()}
                   <div className="min-w-0 pt-0.5">
-                    <h3 className="text-lg font-black text-slate-950 leading-tight break-words">
+                    <h3 className="text-lg font-bold text-slate-950 leading-tight break-words">
                       {displayedEvent && getArabicCourseName(displayedEvent.course)}
                     </h3>
                     <span className="inline-flex mt-1 text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-2 py-0.5 font-bold">
@@ -306,7 +306,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
               <div className="space-y-4">
                 <div className="space-y-1">
                   <span className="text-xs text-slate-500 font-bold block">تفاصيل الموعد</span>
-                  <h4 className="text-xl font-black text-slate-950 leading-snug break-words">
+                    <h4 className="text-xl font-bold text-slate-950 leading-snug break-words">
                     {displayedEvent?.eventName}
                   </h4>
                 </div>

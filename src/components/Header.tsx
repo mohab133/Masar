@@ -20,10 +20,10 @@ export const Header: React.FC<HeaderProps> = memo(({ onOpenFeedback, onOpenNotif
         <div className="flex items-center gap-3">
           <MasarLogo size={46} />
           <div className="flex flex-col -space-y-0.5">
-            <span className="text-2xl font-black text-slate-900 tracking-tight">
+            <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
               مَسَارْ
             </span>
-            <span className="text-xs font-bold text-slate-500 tracking-wide">
+            <span className="text-xs font-medium text-slate-500 tracking-wide">
               دليلك الأكاديمي
             </span>
           </div>
@@ -51,7 +51,7 @@ export const Header: React.FC<HeaderProps> = memo(({ onOpenFeedback, onOpenNotif
           id="header-feedback-button"
           type="button"
           onClick={onOpenFeedback}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-blue-700 bg-blue-50/90 hover:bg-blue-100 active:bg-blue-100 border border-blue-200/80 smooth-interaction shadow-2xs"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-blue-600 bg-blue-50/90 hover:bg-blue-100 active:bg-blue-100 border border-blue-200/80 smooth-interaction shadow-2xs"
           aria-label="إرسال ملاحظة"
         >
           <MessageSquarePlus size={14} className="text-blue-600" />
