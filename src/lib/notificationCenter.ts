@@ -1,5 +1,6 @@
 const UNREAD_KEY = 'masar_notifications_unread';
 const EVENT_NAME = 'masar:notifications-unread-changed';
+const OPEN_REQUEST_EVENT = 'masar:open-notifications-requested';
 
 function canUseStorage() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
@@ -35,4 +36,18 @@ export function subscribeToUnreadNotifications(listener: (unread: boolean) => vo
     window.removeEventListener(EVENT_NAME, handleChange);
     window.removeEventListener('storage', handleChange);
   };
+}
+
+// Lets a tapped push notification tell the running app to open the
+// notifications modal directly, instead of just lighting up the bell badge.
+export function requestOpenNotifications(): void {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(OPEN_REQUEST_EVENT));
+  }
+}
+
+export function subscribeToOpenNotificationsRequest(listener: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener(OPEN_REQUEST_EVENT, listener);
+  return () => window.removeEventListener(OPEN_REQUEST_EVENT, listener);
 }

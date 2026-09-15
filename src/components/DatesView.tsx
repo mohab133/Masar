@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, memo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, memo } from 'react';
 import { Calendar, MapPin, Clock, Info, X } from 'lucide-react';
 import { AcademicEvent, OfficialScheduleDocument } from '../types';
 import { getArabicCourseName, getCourseIconMeta, formatDeadline } from '../lib/courseIcons';
@@ -82,6 +82,21 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
   const [filter, setFilter] = useState<FilterCategory>('assignments');
   const { message: downloadMessage, error: downloadError, loading: downloadLoading, download } = useDownload();
   const [selectedEventForDetails, setSelectedEventForDetails] = useState<AcademicEvent | null>(null);
+  const [displayedEvent, setDisplayedEvent] = useState<AcademicEvent | null>(null);
+  const [isDetailsMounted, setIsDetailsMounted] = useState(false);
+
+  useEffect(() => {
+    if (selectedEventForDetails) {
+      setDisplayedEvent(selectedEventForDetails);
+      setIsDetailsMounted(true);
+    } else if (isDetailsMounted) {
+      const timer = window.setTimeout(() => {
+        setIsDetailsMounted(false);
+        setDisplayedEvent(null);
+      }, 160);
+      return () => window.clearTimeout(timer);
+    }
+  }, [selectedEventForDetails, isDetailsMounted]);
 
 
   const midtermDoc = useMemo(() => officialSchedules.find((d) => d.type === 'midterm'), [officialSchedules]);
@@ -248,20 +263,20 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
 
       {/* Task Details Modal */}
       
-        {selectedEventForDetails && (
+        {isDetailsMounted && (
           <div
-            className="fixed inset-0 z-50 w-screen min-h-[100dvh] bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center p-4"
+            className={`overlay-fade fixed inset-0 z-50 w-screen min-h-[100dvh] bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center p-4 ${selectedEventForDetails ? 'opacity-100' : 'opacity-0'}`}
             onClick={() => setSelectedEventForDetails(null)}
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-xl overflow-hidden"
+              className={`modal-card-pop bg-white border border-slate-200 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-xl overflow-hidden ${selectedEventForDetails ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.98] opacity-0'}`}
               dir="rtl"
             >
               <div className="relative flex items-center justify-between border-b border-slate-100 pb-3 pl-10">
                 <div className="flex items-center gap-2.5">
-                  {(() => {
-                    const meta = getCourseIconMeta(selectedEventForDetails.course);
+                  {displayedEvent && (() => {
+                    const meta = getCourseIconMeta(displayedEvent.course);
                     const Icon = meta.Icon;
                     return (
                       <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-100 text-slate-700 border border-slate-200">
@@ -271,10 +286,10 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
                   })()}
                   <div>
                     <h3 className="text-base font-bold text-slate-900">
-                      {getArabicCourseName(selectedEventForDetails.course)}
+                      {displayedEvent && getArabicCourseName(displayedEvent.course)}
                     </h3>
                     <span className="text-xs text-slate-500 font-medium">
-                      {selectedEventForDetails.typeLabelAr}
+                      {displayedEvent?.typeLabelAr}
                     </span>
                   </div>
                 </div>
@@ -292,26 +307,26 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
                 <div>
                   <span className="text-xs text-blue-600 font-semibold block mb-1">تفاصيل التكليف والمعلومات</span>
                   <h4 className="text-base font-bold text-slate-900 leading-snug">
-                    {selectedEventForDetails.eventName}
+                    {displayedEvent?.eventName}
                   </h4>
                 </div>
 
                 <div className="border border-slate-200 rounded-xl p-4 bg-white space-y-3 text-xs sm:text-sm">
-                  {selectedEventForDetails.location && (
+                  {displayedEvent?.location && (
                     <div className="flex items-start gap-2">
                       <MapPin size={16} className="text-rose-500 mt-0.5 shrink-0" />
                       <div>
                         <p className="text-slate-500 font-semibold">المكان</p>
-                        <p className="font-bold text-slate-900 mt-0.5">{selectedEventForDetails.location}</p>
+                        <p className="font-bold text-slate-900 mt-0.5">{displayedEvent.location}</p>
                       </div>
                     </div>
                   )}
-                  {selectedEventForDetails.time && (
+                  {displayedEvent?.time && (
                     <div className="flex items-start gap-2">
                       <Clock size={16} className="text-blue-600 mt-0.5 shrink-0" />
                       <div>
                         <p className="text-slate-500 font-semibold">الوقت</p>
-                        <p className="font-bold text-slate-900 mt-0.5">{selectedEventForDetails.time}</p>
+                        <p className="font-bold text-slate-900 mt-0.5">{displayedEvent.time}</p>
                       </div>
                     </div>
                   )}

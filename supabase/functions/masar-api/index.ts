@@ -275,6 +275,15 @@ function getClientIp(req: Request) {
   return req.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
+// Strips control characters and angle brackets so stored feedback can never
+// carry markup/HTML into any admin view that renders it later.
+function sanitizeFeedbackText(input: string): string {
+  return input
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+    .replace(/[<>]/g, "")
+    .trim();
+}
+
 async function rateLimitKey(value: string) {
   return hashToken(`feedback-rate:${value}`);
 }
@@ -342,7 +351,7 @@ Deno.serve(async (req) => {
     if (req.method === "POST" && path === "/api/feedback") {
       const payload = await readJson(req);
       if (!payload || typeof payload !== "object") return json({ error: "invalid_request" }, 400);
-      const details = typeof payload.details === "string" ? payload.details.trim() : "";
+      const details = typeof payload.details === "string" ? sanitizeFeedbackText(payload.details) : "";
       if (!details) return json({ error: "details_required" }, 400);
       if (details.length > 300) return json({ error: "details_too_long" }, 400);
 

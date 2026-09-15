@@ -20,6 +20,14 @@ const getDepartmentLabel = (department?: Course['department'] | null) => {
   return 'عام';
 };
 
+const formatFilesCount = (count: number) => {
+  if (count <= 0) return 'لا يوجد ملفات';
+  if (count === 1) return 'ملف واحد';
+  if (count === 2) return 'ملفان';
+  if (count <= 10) return `${count} ملفات`;
+  return `${count} ملفًا`;
+};
+
 const CourseCard: React.FC<CourseCardProps> = memo(({ course, onSelect }) => {
   const meta = getCourseIconMeta(course.nameEn || course.nameAr || '');
   const Icon = meta.Icon;
@@ -48,10 +56,13 @@ const CourseCard: React.FC<CourseCardProps> = memo(({ course, onSelect }) => {
           <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors leading-snug truncate" dir="auto">
             {course.nameAr || course.nameEn}
           </h3>
-          <span className="mt-1 inline-flex max-w-full items-center rounded-lg bg-slate-50 border border-slate-200/80 px-2 py-0.5 text-[11px] font-semibold text-slate-500 truncate">
-            {getDepartmentLabel(course.department)}
-            <span aria-hidden="true" className="text-slate-300">•</span>
-            <span>{course.filesCount} {course.filesCount === 1 ? 'ملف' : 'ملفات'}</span>
+          <span className="mt-1 inline-flex max-w-full items-center gap-1.5 flex-wrap">
+            <span className="inline-flex items-center rounded-lg bg-slate-50 border border-slate-200/80 px-2 py-0.5 text-[11px] font-semibold text-slate-500 truncate">
+              {getDepartmentLabel(course.department)}
+            </span>
+            <span className="inline-flex items-center rounded-lg bg-slate-50 border border-slate-200/80 px-2 py-0.5 text-[11px] font-semibold text-slate-500 truncate">
+              {formatFilesCount(course.filesCount)}
+            </span>
           </span>
         </div>
 
@@ -69,21 +80,17 @@ export const CoursesView: React.FC<CoursesViewProps> = memo(({ courses }) => {
 
   if (selectedCourse) {
     return (
-      
-        <div
-          key="course-detail"
-        >
-          <CourseDetailView
-            course={selectedCourse}
-            onBack={() => setSelectedCourse(null)}
-          />
-        </div>
-      
+      <div key="course-detail" className="page-push-enter">
+        <CourseDetailView
+          course={selectedCourse}
+          onBack={() => setSelectedCourse(null)}
+        />
+      </div>
     );
   }
 
   return (
-    <div id="courses-screen-view" className="space-y-3 pb-24 pt-1" dir="rtl">
+    <div id="courses-screen-view" className="page-pop-enter space-y-3 pb-24 pt-1" dir="rtl">
       {/* Screen Title */}
       <div className="flex items-center justify-between px-1">
         <h2 className="text-base font-bold text-slate-800 tracking-wide">

@@ -20,19 +20,6 @@ export function useMasarData() {
 
   const refresh = useCallback(async (force = false) => {
     const now = Date.now();
-
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      const offlineCache = readCachedMasarData();
-      if (offlineCache) {
-        setData(offlineCache.data);
-        setError(null);
-      } else if (!isInitialLoadRef.current) {
-        setError('لا يوجد اتصال بالإنترنت حاليًا.');
-      }
-      setIsLoading(false);
-      setIsRefreshing(false);
-      return false;
-    }
     if (!force && now - lastRefreshAttemptRef.current < REFRESH_THROTTLE_MS) return false;
     lastRefreshAttemptRef.current = now;
 

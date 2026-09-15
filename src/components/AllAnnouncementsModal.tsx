@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { X, Bell, Calendar, Tag, ExternalLink, Download } from 'lucide-react';
 import { Announcement } from '../types';
 import { getDynamicBorderClass } from '../lib/courseIcons';
@@ -19,6 +19,17 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
   announcements,
 }) => {
   const { message: downloadMessage, error: downloadError, loading: downloadLoading, download } = useDownload();
+  const [isMounted, setIsMounted] = useState(isOpen);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsMounted(true);
+    } else if (isMounted) {
+      const timer = window.setTimeout(() => setIsMounted(false), 160);
+      return () => window.clearTimeout(timer);
+    }
+  }, [isOpen, isMounted]);
+
   const [confirmState, setConfirmState] = useState<{
     isOpen: boolean;
     title: string;
@@ -35,18 +46,17 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
 
   return (
     <>
-      <DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
-      {isOpen && (
+      {isMounted && (
         <div
           id="all-announcements-modal"
           data-no-swipe="true"
-          className="fixed inset-0 z-50 w-screen min-h-[100dvh] flex items-center justify-center bg-slate-900/40 backdrop-blur-[1px] p-4"
+          className={`overlay-fade fixed inset-0 z-50 w-screen min-h-[100dvh] flex items-center justify-center bg-slate-900/40 backdrop-blur-[1px] p-4 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
           dir="rtl"
           onClick={onClose}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]"
+            className={`modal-card-pop relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh] ${isOpen ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.98] opacity-0'}`}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
@@ -137,6 +147,7 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
                 </div>
               )}
             </div>
+            <DownloadToast variant="inline" message={downloadMessage} error={downloadError} loading={downloadLoading} />
           </div>
         </div>
       )}

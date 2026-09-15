@@ -10,10 +10,18 @@ import { DatesView } from './components/DatesView';
 import { FeedbackModal } from './components/FeedbackModal';
 import { AllAnnouncementsModal } from './components/AllAnnouncementsModal';
 import { initializePushNotifications } from './lib/pushNotifications';
-import { clearNotificationsUnread, hasUnreadNotifications as getHasUnreadNotifications, subscribeToUnreadNotifications } from './lib/notificationCenter';
+import { clearNotificationsUnread, hasUnreadNotifications as getHasUnreadNotifications, subscribeToUnreadNotifications, subscribeToOpenNotificationsRequest } from './lib/notificationCenter';
+import { OfflineBanner } from './components/OfflineBanner';
 
 const TAB_ORDER: TabType[] = ['home', 'schedule', 'courses', 'dates'];
 const GESTURE_EXCLUSION_SELECTOR = 'button, input, textarea, a, select, [data-no-swipe], .overflow-x-auto, [role="tablist"], [role="dialog"], #course-detail-view, .scrollable, .no-swipe';
+// Buttons are excluded from horizontal tab-swipe, but NOT from the pull-to-refresh
+// gesture: whole sections (like the platforms/bylaw cards) are plain <button>s, so
+// excluding "button" here made pulling down from that area do nothing. A real drag
+// is still safely told apart from a tap by the existing distance threshold below,
+// and handleContentClickCapture already suppresses the click that would otherwise
+// fire on the button once a drag is detected.
+const PULL_GESTURE_EXCLUSION_SELECTOR = 'input, textarea, a, select, [data-no-swipe], .overflow-x-auto, [role="tablist"], [role="dialog"], #course-detail-view, .scrollable, .no-swipe';
 
 export default function App() {
   const { data, isLoading, isRefreshing, error, refresh } = useMasarData();
@@ -21,44 +29,19 @@ export default function App() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(() => getHasUnreadNotifications());
-  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
-  const [showConnectionRestored, setShowConnectionRestored] = useState(false);
-  const connectionRestoreTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    const handleOffline = () => {
-      if (connectionRestoreTimerRef.current !== null) {
-        window.clearTimeout(connectionRestoreTimerRef.current);
-        connectionRestoreTimerRef.current = null;
-      }
-      setIsOnline(false);
-      setShowConnectionRestored(false);
-    };
-
-    const handleOnline = () => {
-      setIsOnline(true);
-      setShowConnectionRestored(true);
-      if (connectionRestoreTimerRef.current !== null) window.clearTimeout(connectionRestoreTimerRef.current);
-      connectionRestoreTimerRef.current = window.setTimeout(() => {
-        setShowConnectionRestored(false);
-        connectionRestoreTimerRef.current = null;
-      }, 2600);
-    };
-
-    window.addEventListener('offline', handleOffline);
-    window.addEventListener('online', handleOnline);
-    return () => {
-      window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('online', handleOnline);
-      if (connectionRestoreTimerRef.current !== null) window.clearTimeout(connectionRestoreTimerRef.current);
-    };
-  }, []);
 
   useEffect(() => {
     // Notification permission is optional and must not compete with the first data load.
     if (!isLoading) void initializePushNotifications();
     return subscribeToUnreadNotifications(setHasUnreadNotifications);
   }, [isLoading]);
+
+  useEffect(() => {
+    return subscribeToOpenNotificationsRequest(() => {
+      clearNotificationsUnread();
+      setIsNotificationsOpen(true);
+    });
+  }, []);
 
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -71,6 +54,15 @@ export default function App() {
   const pullFrameRef = useRef<number | null>(null);
   const suppressClickRef = useRef(false);
 
+  // Live horizontal tracking for the tab swipe, so the page visibly follows the
+  // finger instead of only reacting once the gesture ends.
+  const [swipeDirection, setSwipeDirection] = useState<'forward' | 'backward'>('forward');
+  const [dragOffset, setDragOffset] = useState(0);
+  const dragOffsetTargetRef = useRef(0);
+  const dragFrameRef = useRef<number | null>(null);
+  const isHorizontalDragging = useRef(false);
+  const [isSnappingBack, setIsSnappingBack] = useState(false);
+
   const getPageScrollTop = () => Math.max(
     window.scrollY || 0,
     document.documentElement.scrollTop || 0,
@@ -81,7 +73,7 @@ export default function App() {
     const target = e.target as HTMLElement | null;
     if (
       getPageScrollTop() > 2 ||
-      target?.closest(GESTURE_EXCLUSION_SELECTOR)
+      target?.closest(PULL_GESTURE_EXCLUSION_SELECTOR)
     ) {
       pullStartY.current = null;
       pullStartX.current = null;
@@ -140,6 +132,9 @@ export default function App() {
 
   const handleTabChange = (newTab: TabType) => {
     if (newTab === activeTab) return;
+    const currentIndex = TAB_ORDER.indexOf(activeTab);
+    const newIndex = TAB_ORDER.indexOf(newTab);
+    setSwipeDirection(newIndex > currentIndex ? 'forward' : 'backward');
     setActiveTab(newTab);
   };
 
@@ -156,6 +151,44 @@ export default function App() {
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
     isSwiping.current = true;
+    isHorizontalDragging.current = false;
+    setIsSnappingBack(false);
+  };
+
+  // Tracks the finger during a horizontal swipe and moves the current page
+  // with it in real time (with light rubber-band resistance at the first/last tab).
+  const handleSwipeTouchMove = (e: React.TouchEvent) => {
+    if (!isSwiping.current || touchStartX.current === null || touchStartY.current === null) return;
+    if (isPulling.current || isRefreshing) return;
+
+    const dx = e.touches[0].clientX - touchStartX.current;
+    const dy = e.touches[0].clientY - touchStartY.current;
+
+    if (!isHorizontalDragging.current) {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      if (Math.abs(dy) > Math.abs(dx) * 1.2) {
+        // Vertical intent — leave it to native scrolling.
+        isSwiping.current = false;
+        return;
+      }
+      isHorizontalDragging.current = true;
+    }
+
+    const currentIndex = TAB_ORDER.indexOf(activeTab);
+    const atForwardEdge = currentIndex === TAB_ORDER.length - 1;
+    const atBackwardEdge = currentIndex === 0;
+    let offset = dx;
+    if ((dx > 0 && atForwardEdge) || (dx < 0 && atBackwardEdge)) {
+      offset = dx * 0.35;
+    }
+    offset = Math.max(-110, Math.min(110, offset));
+    dragOffsetTargetRef.current = offset;
+    if (dragFrameRef.current === null) {
+      dragFrameRef.current = window.requestAnimationFrame(() => {
+        dragFrameRef.current = null;
+        setDragOffset(dragOffsetTargetRef.current);
+      });
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
@@ -169,18 +202,51 @@ export default function App() {
     touchStartY.current = null;
     isSwiping.current = false;
 
+    const wasDragging = isHorizontalDragging.current;
+    isHorizontalDragging.current = false;
+    if (wasDragging && dragFrameRef.current !== null) {
+      window.cancelAnimationFrame(dragFrameRef.current);
+      dragFrameRef.current = null;
+    }
+
     if (Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
       const currentIndex = TAB_ORDER.indexOf(activeTab);
 
       if (deltaX > 0) {
         if (currentIndex < TAB_ORDER.length - 1) {
+          setDragOffset(0);
           handleTabChange(TAB_ORDER[currentIndex + 1]);
+          return;
         }
       } else {
         if (currentIndex > 0) {
+          setDragOffset(0);
           handleTabChange(TAB_ORDER[currentIndex - 1]);
+          return;
         }
       }
+    }
+
+    if (wasDragging) {
+      setIsSnappingBack(true);
+      setDragOffset(0);
+      window.setTimeout(() => setIsSnappingBack(false), 200);
+    }
+  };
+
+  const handleSwipeTouchCancel = () => {
+    touchStartX.current = null;
+    touchStartY.current = null;
+    isSwiping.current = false;
+    if (isHorizontalDragging.current) {
+      isHorizontalDragging.current = false;
+      if (dragFrameRef.current !== null) {
+        window.cancelAnimationFrame(dragFrameRef.current);
+        dragFrameRef.current = null;
+      }
+      setIsSnappingBack(true);
+      setDragOffset(0);
+      window.setTimeout(() => setIsSnappingBack(false), 200);
     }
   };
 
@@ -240,37 +306,28 @@ export default function App() {
           hasUnreadNotifications={hasUnreadNotifications}
         />
 
-        {(!isOnline || showConnectionRestored) && (
-          <div
-            className={`relative z-50 mx-4 mt-2 rounded-xl border px-3.5 py-2.5 text-center text-xs font-bold shadow-sm smooth-interaction ${
-              isOnline
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : 'bg-amber-50 text-amber-800 border-amber-200'
-            }`}
-            dir="rtl"
-            role="status"
-            aria-live="polite"
-          >
-            {isOnline ? 'تم استعادة الاتصال بالإنترنت' : 'أنت غير متصل بالإنترنت · يتم عرض آخر بيانات محفوظة'}
-          </div>
-        )}
-
         <main
           className="flex-1 px-4.5 pt-24 relative"
           style={{ touchAction: 'pan-y', overscrollBehaviorY: 'contain' }}
           onTouchStart={(e) => { handleTouchStart(e); handlePullTouchStart(e); }}
-          onTouchMove={handlePullTouchMove}
+          onTouchMove={(e) => { handlePullTouchMove(e); handleSwipeTouchMove(e); }}
           onTouchEnd={(e) => { handleTouchEnd(e); handlePullTouchEnd(); }}
-          onTouchCancel={handlePullTouchEnd}
+          onTouchCancel={(e) => { handleSwipeTouchCancel(); handlePullTouchEnd(); }}
           onClickCapture={handleContentClickCapture}
         >
+          <OfflineBanner />
           {isRefreshing && (
             <div
               className="absolute inset-0 z-20 bg-transparent"
               aria-hidden="true"
             />
           )}
-          <div key={activeTab} className="w-full tab-page-enter" aria-live="polite">
+          <div
+            key={activeTab}
+            className={`w-full ${swipeDirection === 'forward' ? 'tab-slide-forward-enter' : 'tab-slide-backward-enter'} ${isSnappingBack ? 'transition-transform duration-200 ease-out' : ''}`}
+            style={{ transform: `translate3d(${dragOffset}px, 0, 0)` }}
+            aria-live="polite"
+          >
               {activeTab === 'home' && (
                 <HomeView
                   upcomingDates={data.dates}

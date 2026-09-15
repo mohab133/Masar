@@ -1,4 +1,4 @@
-import React, { memo, useEffect } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Download, ExternalLink, HelpCircle, X } from 'lucide-react';
 
@@ -23,6 +23,17 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = memo(({
   onConfirm,
   onClose,
 }) => {
+  const [isMounted, setIsMounted] = useState(isOpen);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsMounted(true);
+    } else if (isMounted) {
+      const timer = window.setTimeout(() => setIsMounted(false), 160);
+      return () => window.clearTimeout(timer);
+    }
+  }, [isOpen, isMounted]);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -34,7 +45,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = memo(({
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isMounted) return null;
 
   const defaultConfirmText =
     type === 'download' ? 'تحميل الملف' :
@@ -55,7 +66,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = memo(({
   const modal = (
     <div
       data-no-swipe="true"
-      className="fixed inset-0 z-[100] flex items-center justify-center w-screen h-[100dvh] bg-slate-950/35 backdrop-blur-[1px] p-4 sm:p-5"
+      className={`overlay-fade fixed inset-0 z-[100] flex items-center justify-center w-screen h-[100dvh] bg-slate-950/35 backdrop-blur-[1px] p-4 sm:p-5 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
       dir="rtl"
       role="presentation"
       onMouseDown={(event) => {
@@ -69,7 +80,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = memo(({
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-modal-title"
-        className="relative w-full max-w-[25rem] overflow-hidden rounded-[1.55rem] border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.22)]"
+        className={`modal-card-pop relative w-full max-w-[25rem] overflow-hidden rounded-[1.55rem] border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.22)] ${isOpen ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.98] opacity-0'}`}
         onMouseDown={(event) => event.stopPropagation()}
         onTouchStart={(event) => event.stopPropagation()}
       >

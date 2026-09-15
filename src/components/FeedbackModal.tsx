@@ -160,7 +160,6 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
                       }}
                       placeholder="اكتب ملاحظتك هنا..."
                       className={`w-full min-h-16 p-3 text-sm leading-6 rounded-xl border bg-slate-50/50 resize-none overflow-y-auto text-slate-800 placeholder:text-slate-400 focus:outline-hidden transition-colors ${isOverLimit ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'}`}
-                      autoFocus
                       required
                     />
                     <div className={`mt-1.5 text-left text-[11px] font-medium ${details.length >= MAX_FEEDBACK_LENGTH ? 'text-red-600' : 'text-slate-400'}`} dir="ltr">
