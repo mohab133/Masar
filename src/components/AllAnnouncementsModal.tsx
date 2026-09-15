@@ -5,7 +5,7 @@ import { getDynamicBorderClass } from '../lib/courseIcons';
 import { ConfirmModal } from './ConfirmModal';
 import { useDownload } from '../lib/useDownload';
 import { isAnnouncementNew } from '../lib/announcementUtils';
-import { useEdgeStretch } from '../lib/useEdgeStretch';
+import { useListPull } from '../lib/useListPull';
 
 interface AllAnnouncementsModalProps {
   isOpen: boolean;
@@ -20,7 +20,7 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
 }) => {
   const { download } = useDownload();
   const [isMounted, setIsMounted] = useState(isOpen);
-  const { scrollRef, contentStyle, handlers: edgeHandlers } = useEdgeStretch<HTMLDivElement>();
+  const { handlers: listPullHandlers, contentStyle: listPullStyle } = useListPull<HTMLDivElement>();
 
   useEffect(() => {
     if (isOpen) {
@@ -81,8 +81,8 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
             </div>
 
             {/* List of active announcements */}
-            <div ref={scrollRef} {...edgeHandlers} className="p-4 overflow-y-auto">
-              <div style={contentStyle}>
+            <div {...listPullHandlers} className="p-4 overflow-y-auto">
+              <div style={listPullStyle}>
                 {announcements.length === 0 ? (
                   <div className="min-h-[220px] flex flex-col items-center justify-center text-center px-6 py-8">
                     <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 mb-4">

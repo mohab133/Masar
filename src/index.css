@@ -50,10 +50,10 @@ select,
 }
 
 .feedback-textarea {
-  -webkit-user-select: text !important;
-  user-select: text !important;
-  -webkit-touch-callout: default !important;
-  touch-action: auto;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  touch-action: manipulation;
 }
 
 #root {

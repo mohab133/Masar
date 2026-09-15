@@ -67,9 +67,7 @@ export default function App() {
   const isHorizontalDragging = useRef(false);
   const [isSnappingBack, setIsSnappingBack] = useState(false);
 
-  // Elastic "give" for the card content when the page itself is pulled past its
-  // top or bottom edge — shares its physics with the notifications list, see
-  // lib/elasticEdge.ts and lib/useEdgeStretch.ts.
+  // Elastic "give" for the active page while the user pulls vertically.
   const edgeStretchStartY = useRef<number | null>(null);
   const edgeStretchStartX = useRef<number | null>(null);
   const edgeStretchActive = useRef<'top' | 'bottom' | null>(null);
