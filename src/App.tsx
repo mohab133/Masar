@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { TabType } from './types';
 import { useMasarData } from './lib/useMasarData';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { HomeView } from './components/HomeView';
-import { ScheduleView } from './components/ScheduleView';
-import { CoursesView } from './components/CoursesView';
-import { DatesView } from './components/DatesView';
+const ScheduleView = lazy(() => import('./components/ScheduleView').then((module) => ({ default: module.ScheduleView })));
+const CoursesView = lazy(() => import('./components/CoursesView').then((module) => ({ default: module.CoursesView })));
+const DatesView = lazy(() => import('./components/DatesView').then((module) => ({ default: module.DatesView })));
 import { FeedbackModal } from './components/FeedbackModal';
 import { AllAnnouncementsModal } from './components/AllAnnouncementsModal';
 import { initializePushNotifications } from './lib/pushNotifications';
@@ -325,12 +325,13 @@ export default function App() {
               aria-hidden="true"
             />
           )}
-          <div
-            key={activeTab}
-            className={`w-full ${swipeDirection === 'forward' ? 'tab-slide-forward-enter' : 'tab-slide-backward-enter'} ${isSnappingBack ? 'transition-transform duration-200 ease-out' : ''}`}
-            style={{ transform: `translate3d(${dragOffset}px, 0, 0)` }}
-            aria-live="polite"
-          >
+          <Suspense fallback={<div className="flex min-h-40 items-center justify-center text-sm font-semibold text-slate-400" dir="rtl">جارٍ فتح الصفحة...</div>}>
+            <div
+              key={activeTab}
+              className={`w-full ${swipeDirection === 'forward' ? 'tab-slide-forward-enter' : 'tab-slide-backward-enter'} ${isSnappingBack ? 'transition-transform duration-200 ease-out' : ''}`}
+              style={{ transform: `translate3d(${dragOffset}px, 0, 0)` }}
+              aria-live="polite"
+            >
               {activeTab === 'home' && (
                 <HomeView
                   upcomingDates={data.dates}
@@ -353,7 +354,8 @@ export default function App() {
               {activeTab === 'dates' && (
                 <DatesView events={data.dates} officialSchedules={data.officialSchedules} />
               )}
-          </div>
+            </div>
+          </Suspense>
         </main>
 
         <BottomNav activeTab={activeTab} onChangeTab={handleTabChange} />

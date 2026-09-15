@@ -18,6 +18,8 @@ export const MasarLogo: React.FC<MasarLogoProps> = memo(({
         width={size}
         height={size}
         alt="Masar"
+        decoding="async"
+        fetchPriority="high"
         className="shrink-0 object-contain select-none"
         draggable={false}
       />
