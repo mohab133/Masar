@@ -29,7 +29,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
       setIsSubmitted(false);
       setDetails('');
     } else if (isMounted) {
-      const timer = window.setTimeout(() => setIsMounted(false), 160);
+      const timer = window.setTimeout(() => setIsMounted(false), 220);
       return () => window.clearTimeout(timer);
     }
   }, [isOpen, isMounted]);
@@ -89,14 +89,14 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
       <div
         id="feedback-modal-overlay"
         data-no-swipe="true"
-        className={`fixed inset-0 z-50 w-screen min-h-[100dvh] flex items-center justify-center bg-slate-900/40 p-4 transition-opacity duration-150 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+        className={`overlay-fade fixed inset-0 z-50 w-screen min-h-[100dvh] flex items-center justify-center bg-slate-900/40 p-4 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
         dir="rtl"
         onClick={onClose}
       >
         <div
           id="feedback-modal-card"
           onClick={(e) => e.stopPropagation()}
-          className={`w-full max-w-sm bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col transform transition-transform duration-150 ease-out ${isOpen ? 'translate-y-0 scale-100' : 'translate-y-2 scale-[0.98]'}`}
+          className={`modal-card-pop w-full max-w-sm bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col ${isOpen ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.985] opacity-0'}`}
           >
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">

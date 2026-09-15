@@ -21,7 +21,7 @@ export const DownloadToast: React.FC<DownloadToastProps> = memo(({ message, erro
         loading ? 'bg-blue-50 text-blue-800 border-blue-200' : error ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
       }`}>
         {loading ? <LoaderCircle size={20} className="shrink-0 animate-spin" /> : error ? <AlertCircle size={20} className="shrink-0" /> : <CheckCircle2 size={20} className="shrink-0" />}
-        <span>{message}</span>
+        <span className="min-w-0 truncate text-center">{message}</span>
       </div>
     </div>
   );

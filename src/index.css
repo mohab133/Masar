@@ -140,13 +140,17 @@ select,
   }
 }
 
-/* Shared overlay/card entrance+exit used by every modal, so they all feel consistent. */
+/* Shared modal motion. Uses the same easing family as page navigation and only animates compositor-friendly properties. */
 .overlay-fade {
-  transition: opacity 160ms ease-out;
+  transition: opacity 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
 }
 
 .modal-card-pop {
-  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), opacity 160ms ease-out;
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -171,41 +175,19 @@ main {
   backface-visibility: hidden;
 }
 
-/* Lightweight compositor-friendly modal motion. Opacity and transform only avoid layout work. */
-.overlay-fade {
-  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity;
-}
-
-.modal-card-pop {
-  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms cubic-bezier(0.22, 1, 0.36, 1);
-  transform-origin: center;
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-}
-
-#feedback-modal-overlay {
-  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity;
-}
-
-#feedback-modal-card {
-  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-}
 
 .download-toast {
-  animation: download-toast-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  will-change: transform, opacity;
+  will-change: opacity;
 }
 
 .download-toast-card {
+  animation: download-toast-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
   transform: translateZ(0);
   backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
 @keyframes download-toast-in {
-  from { opacity: 0; transform: translate3d(-50%, 10px, 0) scale(0.98); }
-  to { opacity: 1; transform: translate3d(-50%, 0, 0) scale(1); }
+  from { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.98); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }

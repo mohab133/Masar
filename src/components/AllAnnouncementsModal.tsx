@@ -24,7 +24,7 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
     if (isOpen) {
       setIsMounted(true);
     } else if (isMounted) {
-      const timer = window.setTimeout(() => setIsMounted(false), 160);
+      const timer = window.setTimeout(() => setIsMounted(false), 220);
       return () => window.clearTimeout(timer);
     }
   }, [isOpen, isMounted]);
@@ -55,7 +55,7 @@ export const AllAnnouncementsModal: React.FC<AllAnnouncementsModalProps> = memo(
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`modal-card-pop relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh] ${isOpen ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.98] opacity-0'}`}
+            className={`modal-card-pop relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh] ${isOpen ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.985] opacity-0'}`}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">

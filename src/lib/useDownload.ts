@@ -40,6 +40,8 @@ export function useDownload() {
   const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   const download = useCallback(async (url: string | null | undefined, fileName: string, mimeType = 'application/octet-stream') => {
+    if (state.loading) return false;
+
     const safeUrl = sanitizeHttpUrl(url);
     if (!safeUrl) {
       emit({ message: 'الملف غير متاح حاليًا', error: true, loading: false });

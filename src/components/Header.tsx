@@ -14,7 +14,7 @@ export const Header: React.FC<HeaderProps> = memo(({ onOpenFeedback, onOpenNotif
       id="app-main-header"
       className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md px-4.5 pt-safe-top pb-3 border-b border-slate-200/60 shadow-[0_2px_10px_rgba(15,23,42,0.03)]"
     >
-      <div className="max-w-md mx-auto flex items-center justify-between">
+      <div className="max-w-md md:max-w-3xl mx-auto flex items-center justify-between">
         {/* Brand identity: Logo & Name enlarged per request */}
         <div className="flex items-center gap-3">
           <MasarLogo size={48} />

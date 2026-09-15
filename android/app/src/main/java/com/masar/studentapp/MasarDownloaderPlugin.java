@@ -87,8 +87,19 @@ public class MasarDownloaderPlugin extends Plugin {
             if (manager == null) return;
 
             Cursor cursor = null;
+            final long monitorDeadline = System.currentTimeMillis() + (2L * 60L * 60L * 1000L);
             try {
                 while (true) {
+                    if (System.currentTimeMillis() >= monitorDeadline) {
+                        JSObject result = new JSObject();
+                        result.put("success", false);
+                        result.put("downloadId", downloadId);
+                        result.put("fileName", fallbackFileName);
+                        result.put("error", "استغرق التنزيل وقتًا طويلًا جدًا، تحقق من الإشعارات أو حاول مرة أخرى");
+                        getActivity().runOnUiThread(() -> notifyListeners("downloadComplete", result));
+                        return;
+                    }
+
                     cursor = manager.query(new DownloadManager.Query().setFilterById(downloadId));
                     if (cursor == null || !cursor.moveToFirst()) {
                         return;

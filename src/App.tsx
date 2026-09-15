@@ -256,7 +256,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-100 flex justify-center text-slate-900 selection:bg-slate-200">
       <div
-        className="w-full max-w-md min-h-screen bg-slate-50 flex flex-col shadow-sm relative"
+        className="w-full max-w-md md:max-w-3xl min-h-screen bg-slate-50 flex flex-col shadow-sm relative"
         style={{ overflowX: 'clip' }}
       >
         {(pullDistance > 0 || isRefreshing) && !isLoading && (
@@ -310,7 +310,7 @@ export default function App() {
         />
 
         <main
-          className="flex-1 px-4.5 pt-24 relative"
+          className="flex-1 px-4.5 md:px-8 pt-24 relative"
           style={{ touchAction: 'pan-y', overscrollBehaviorY: 'contain' }}
           onTouchStart={(e) => { handleTouchStart(e); handlePullTouchStart(e); }}
           onTouchMove={(e) => { handlePullTouchMove(e); handleSwipeTouchMove(e); }}
