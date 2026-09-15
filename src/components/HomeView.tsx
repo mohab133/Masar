@@ -17,9 +17,9 @@ import { useDownload } from '../lib/useDownload';
 
 function getTimeGreeting(openedAt: Date): string {
   const hour = openedAt.getHours();
-  if (hour >= 5 && hour < 12) return 'Good morning, Engineer';
-  if (hour >= 12 && hour < 17) return 'Good afternoon, Engineer';
-  return 'Good evening, Engineer';
+  if (hour >= 5 && hour < 12) return 'صباح الخير يا هندسة ☀️';
+  if (hour >= 12 && hour < 17) return 'مساء الخير يا هندسة 🌤️';
+  return 'مساء الخير يا هندسة 🌙';
 }
 
 interface HomeViewProps {
@@ -97,7 +97,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 
   return (
     <div id="home-screen-view" className="space-y-5 pb-24 pt-1" dir="rtl">
-      <p className="px-1 pt-1 text-sm font-bold text-slate-500" dir="ltr" aria-label="ترحيب حسب وقت فتح التطبيق">
+      <p className="px-1 pt-2 pb-1 text-xl sm:text-2xl font-black text-slate-900 leading-tight" dir="rtl" aria-label="ترحيب حسب وقت فتح التطبيق">
         {timeGreeting}
       </p>
       {/* SECTION 2: UPCOMING DEADLINES / DATES (أقرب المواعيد والتسليمات - بنفس شكل التنبيهات) */}
