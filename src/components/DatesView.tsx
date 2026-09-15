@@ -66,7 +66,7 @@ const AcademicEventCard: React.FC<AcademicEventCardProps> = memo(({ item, onOpen
         <button
           type="button"
           onClick={() => onOpenDetails(item)}
-          className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-2.5 py-1 rounded-xl smooth-interaction cursor-pointer shadow-2xs shrink-0"
+          className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50/70 hover:bg-blue-100/80 border border-blue-100 px-2.5 py-1 rounded-xl smooth-interaction cursor-pointer shrink-0"
         >
           <Info size={13} />
           <span>اعرف المزيد</span>
