@@ -269,7 +269,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className={`modal-card-pop bg-white border border-slate-200/80 rounded-[1.75rem] max-w-md w-full p-5 space-y-4 shadow-2xl overflow-hidden ${selectedEventForDetails ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.98] opacity-0'}`}
+              className={`modal-card-pop bg-white border border-slate-200/80 rounded-[1.4rem] max-w-[22rem] w-full p-4 space-y-3 shadow-xl overflow-hidden ${selectedEventForDetails ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.98] opacity-0'}`}
               dir="rtl"
             >
               <div className="relative flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
@@ -278,16 +278,16 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
                     const meta = getCourseIconMeta(displayedEvent.course);
                     const Icon = meta.Icon;
                     return (
-                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${meta.bgClass}`}>
-                        <Icon size={18} />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${meta.bgClass}`}>
+                        <Icon size={17} />
                       </div>
                     );
                   })()}
                   <div className="min-w-0 pt-0.5">
-                    <h3 className="text-lg font-bold text-slate-950 leading-tight break-words">
+                    <h3 className="text-base font-semibold text-slate-950 leading-tight break-words">
                       {displayedEvent && getArabicCourseName(displayedEvent.course)}
                     </h3>
-                    <span className="inline-flex mt-1 text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-2 py-0.5 font-bold">
+                    <span className="inline-flex mt-1 text-[11px] text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-2 py-0.5 font-medium">
                       {displayedEvent?.typeLabelAr}
                     </span>
                   </div>
@@ -297,7 +297,7 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
                   type="button"
                   onClick={() => setSelectedEventForDetails(null)}
                   aria-label="إغلاق التفاصيل"
-                  className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors cursor-pointer shrink-0"
+                  className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors cursor-pointer shrink-0"
                 >
                   <X size={18} />
                 </button>
@@ -305,28 +305,28 @@ export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSched
 
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <span className="text-xs text-slate-500 font-bold block">تفاصيل الموعد</span>
-                    <h4 className="text-xl font-bold text-slate-950 leading-snug break-words">
+                  <span className="text-[11px] text-slate-500 font-medium block">تفاصيل الموعد</span>
+                    <h4 className="text-base font-semibold text-slate-950 leading-snug break-words">
                     {displayedEvent?.eventName}
                   </h4>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-sm">
                   {displayedEvent?.location && (
-                    <div className="flex items-start gap-2.5 rounded-2xl bg-slate-50 border border-slate-100 p-3">
+                    <div className="flex items-start gap-2 rounded-xl bg-slate-50 border border-slate-100 p-2.5">
                       <MapPin size={17} className="text-rose-500 mt-0.5 shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-xs text-slate-500 font-bold">المكان</p>
-                        <p className="font-bold text-slate-900 mt-0.5 break-words">{displayedEvent.location}</p>
+                        <p className="text-[11px] text-slate-500 font-medium">المكان</p>
+                        <p className="text-sm font-semibold text-slate-900 mt-0.5 break-words">{displayedEvent.location}</p>
                       </div>
                     </div>
                   )}
                   {displayedEvent?.time && (
-                    <div className="flex items-start gap-2.5 rounded-2xl bg-slate-50 border border-slate-100 p-3">
+                    <div className="flex items-start gap-2 rounded-xl bg-slate-50 border border-slate-100 p-2.5">
                       <Clock size={16} className="text-blue-600 mt-0.5 shrink-0" />
                       <div>
-                        <p className="text-xs text-slate-500 font-bold">الوقت</p>
-                        <p className="font-bold text-slate-900 mt-0.5">{displayedEvent.time}</p>
+                        <p className="text-[11px] text-slate-500 font-medium">الوقت</p>
+                        <p className="text-sm font-semibold text-slate-900 mt-0.5">{displayedEvent.time}</p>
                       </div>
                     </div>
                   )}

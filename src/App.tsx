@@ -379,7 +379,7 @@ export default function App() {
 
         <main
           className="flex-1 px-4 md:px-6 relative"
-          style={{ paddingTop: '8rem', touchAction: 'pan-y', overscrollBehaviorY: 'contain' }}
+          style={{ paddingTop: '7rem', touchAction: 'pan-y', overscrollBehaviorY: 'contain' }}
           onTouchStart={(e) => { handleTouchStart(e); handlePullTouchStart(e); handleEdgeStretchStart(e); }}
           onTouchMove={(e) => { handlePullTouchMove(e); handleSwipeTouchMove(e); handleEdgeStretchMove(e); }}
           onTouchEnd={(e) => { handleTouchEnd(e); handlePullTouchEnd(); handleEdgeStretchEnd(); }}
