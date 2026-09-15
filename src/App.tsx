@@ -26,7 +26,7 @@ const GESTURE_EXCLUSION_SELECTOR = 'button, input, textarea, a, select, [data-no
 const PULL_GESTURE_EXCLUSION_SELECTOR = 'input, textarea, a, select, [data-no-swipe], .overflow-x-auto, [role="tablist"], [role="dialog"], #course-detail-view, .scrollable, .no-swipe';
 
 export default function App() {
-  const { data, isLoading, isRefreshing, error, refresh } = useMasarData();
+  const { data, isLoading, isRefreshing, error, refresh, lastSyncAt } = useMasarData();
   const { message: downloadMessage, error: downloadError, loading: downloadLoading } = useDownload();
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -334,6 +334,8 @@ export default function App() {
               {activeTab === 'home' && (
                 <HomeView
                   upcomingDates={data.dates}
+                  scheduleEvents={data.schedule}
+                  lastSyncAt={lastSyncAt}
                   onNavigateToDates={() => handleTabChange('dates')}
                   appAssets={data.appAssets}
                 />

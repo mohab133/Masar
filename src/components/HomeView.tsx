@@ -9,33 +9,46 @@ import {
   FileText,
   Download,
 } from 'lucide-react';
-import { AcademicEvent, AppAsset } from '../types';
+import { AcademicEvent, AppAsset, ScheduleEvent } from '../types';
 import { ConfirmModal } from './ConfirmModal';
 import { formatDeadline } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
 import { useDownload } from '../lib/useDownload';
 
-function getTimeGreeting(openedAt: Date): string {
-  const hour = openedAt.getHours();
-  if (hour >= 5 && hour < 12) return 'صباح الخير يا باشمهندس ☀️';
-  if (hour >= 12 && hour < 17) return 'نهارك سعيد يا باشمهندس 🌤️';
-  return 'مساء الخير يا باشمهندس 🌙';
+function formatToday(): string {
+  return new Intl.DateTimeFormat('ar-EG', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(new Date());
+}
+
+function formatSyncTime(timestamp: number | null): string | null {
+  if (!timestamp) return null;
+  const minutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60000));
+  if (minutes < 1) return 'آخر مزامنة الآن';
+  if (minutes === 1) return 'آخر مزامنة منذ دقيقة';
+  if (minutes < 60) return `آخر مزامنة منذ ${minutes} دقائق`;
+  return `آخر مزامنة ${new Intl.DateTimeFormat('ar-EG', { hour: 'numeric', minute: '2-digit' }).format(timestamp)}`;
 }
 
 interface HomeViewProps {
   upcomingDates: AcademicEvent[];
+  scheduleEvents: ScheduleEvent[];
+  lastSyncAt: number | null;
   onNavigateToDates: () => void;
   appAssets: AppAsset[];
 }
 
 export const HomeView: React.FC<HomeViewProps> = memo(({
   upcomingDates,
+  scheduleEvents,
+  lastSyncAt,
   onNavigateToDates,
   appAssets,
 }) => {
   // Announcements Carousel State
   const { download } = useDownload();
-  const [timeGreeting] = useState(() => getTimeGreeting(new Date()));
 
   // Confirm Modal State for links & downloads
   const [confirmState, setConfirmState] = useState<{
@@ -61,6 +74,11 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
   }, [upcomingDates]);
 
   const activeDate = nearestDates[currentDateIndex] || nearestDates[0];
+  const todaySchedule = useMemo(
+    () => (scheduleEvents || []).filter((event) => event.dayOfWeek === new Date().getDay()),
+    [scheduleEvents],
+  );
+  const syncLabel = formatSyncTime(lastSyncAt);
 
   // Upcoming Dates navigation
   const prevDate = useCallback(() => {
@@ -97,9 +115,30 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 
   return (
     <div id="home-screen-view" className="space-y-5 pb-24 pt-1" dir="rtl">
-      <p className="px-1 pt-2 pb-1 text-xl sm:text-2xl font-black text-slate-900 leading-tight" dir="rtl" aria-label="ترحيب حسب وقت فتح التطبيق">
-        {timeGreeting}
-      </p>
+      <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-2xs" aria-label="ملخص اليوم">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div>
+            <p className="text-xs font-bold text-slate-500">اليوم</p>
+            <p className="mt-0.5 text-base font-black text-slate-900">{formatToday()}</p>
+          </div>
+          <Calendar size={22} className="text-blue-600" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 pt-3">
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-slate-500">محاضرات اليوم</p>
+            <p className="mt-1 truncate text-sm font-black text-slate-900">
+              {todaySchedule.length ? `${todaySchedule.length} محاضرات` : 'لا توجد محاضرات اليوم'}
+            </p>
+          </div>
+          <div className="min-w-0 border-r border-slate-100 pr-3">
+            <p className="text-xs font-bold text-slate-500">أقرب موعد</p>
+            <p className="mt-1 truncate text-sm font-black text-slate-900">
+              {activeDate ? activeDate.remainingTimeAr : 'لا توجد مواعيد قريبة'}
+            </p>
+          </div>
+        </div>
+        {syncLabel && <p className="mt-3 text-[11px] font-semibold text-slate-400">{syncLabel}</p>}
+      </section>
       {/* SECTION 2: UPCOMING DEADLINES / DATES (أقرب المواعيد والتسليمات - بنفس شكل التنبيهات) */}
       {nearestDates.length > 0 && activeDate ? (
         <section id="home-upcoming-dates-section" aria-label="أقرب التسليمات والمواعيد">

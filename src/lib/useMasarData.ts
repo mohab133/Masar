@@ -10,6 +10,7 @@ const INITIAL_RETRIES = 3;
 export function useMasarData() {
   const cached = readCachedMasarData();
   const [data, setData] = useState<MasarData>(cached?.data || getFallbackData());
+  const [lastSyncAt, setLastSyncAt] = useState<number | null>(cached?.savedAt ?? null);
   const [isLoading, setIsLoading] = useState(Boolean(API_BASE_URL) && !cached);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +43,7 @@ export function useMasarData() {
           if (controller.signal.aborted) return false;
 
           setData(nextData);
-          writeCachedMasarData(nextData);
+          setLastSyncAt(writeCachedMasarData(nextData));
           setError(null);
           return true;
         } catch (requestError) {
@@ -92,5 +93,5 @@ export function useMasarData() {
     };
   }, [refresh]);
 
-  return { data, isLoading, isRefreshing, error, refresh };
+  return { data, isLoading, isRefreshing, error, refresh, lastSyncAt };
 }
