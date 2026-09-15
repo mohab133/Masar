@@ -99,6 +99,42 @@ function getCairoDate() {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
+const EVENT_TYPE_LABELS_AR: Record<string, string> = {
+  assignment: "تسليم",
+  submission: "تسليم",
+  quiz: "كويز",
+  project: "مشروع",
+  lab: "تقييم عملي",
+  midterm: "ميدتيرم",
+  final: "فاينال",
+};
+
+function getDaysUntil(eventDate: string) {
+  const today = getCairoDate();
+  const todayUtc = Date.parse(`${today}T00:00:00Z`);
+  const eventUtc = Date.parse(`${eventDate}T00:00:00Z`);
+  if (!Number.isFinite(todayUtc) || !Number.isFinite(eventUtc)) return 0;
+  return Math.round((eventUtc - todayUtc) / 86_400_000);
+}
+
+function getDisplayDateAr(eventDate: string) {
+  const parsed = new Date(`${eventDate}T12:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return eventDate;
+  return new Intl.DateTimeFormat("ar-EG", {
+    timeZone: "Africa/Cairo",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(parsed);
+}
+
+function getRemainingTimeAr(daysUntil: number) {
+  if (daysUntil <= 0) return daysUntil === 0 ? "اليوم" : "انتهى";
+  if (daysUntil === 1) return "غدًا";
+  if (daysUntil === 2) return "بعد يومين";
+  return `بعد ${daysUntil} أيام`;
+}
+
 async function getBootstrap() {
   const queries = [
     ["announcements", supabase.from("announcements").select("*").eq("status", "active").order("created_at", { ascending: false })],
@@ -143,19 +179,25 @@ async function getBootstrap() {
         : null,
       attachmentName: row.attachment_name ?? null,
     })),
-    dates: datesData.map((row: any) => ({
-      id: row.id,
-      type: row.type,
-      typeLabelAr: row.type_label_ar,
-      course: row.course,
-      eventName: row.event_name,
-      date: row.event_date,
-      displayDateAr: row.display_date_ar,
-      time: row.event_time ?? undefined,
-      remainingTimeAr: row.remaining_time_ar,
-      daysUntil: row.days_until,
-      location: row.location ?? undefined,
-    })),
+    dates: datesData.map((row: any) => {
+      const date = String(row.event_date ?? "");
+      const daysUntil = getDaysUntil(date);
+      return {
+        id: row.id,
+        type: row.type,
+        typeLabelAr: row.type_label_ar ?? EVENT_TYPE_LABELS_AR[row.type] ?? "موعد",
+        course: row.course,
+        eventName: row.event_name,
+        date,
+        displayDateAr: row.display_date_ar ?? getDisplayDateAr(date),
+        time: row.event_time ?? undefined,
+        remainingTimeAr: row.remaining_time_ar ?? getRemainingTimeAr(daysUntil),
+        daysUntil: typeof row.days_until === "number" && Number.isFinite(row.days_until)
+          ? row.days_until
+          : daysUntil,
+        location: row.location ?? undefined,
+      };
+    }),
     schedule: scheduleData.map(mapSchedule),
     courses: coursesData.map((row: any) => mapCourse(row, filesByCourse)),
     officialSchedules: officialData.map(mapOfficialSchedule),
