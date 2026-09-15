@@ -4,6 +4,7 @@ import { Course } from '../types';
 import { CourseDetailView } from './CourseDetailView';
 import { getCourseIconMeta } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
+import { useCardPull } from '../lib/useCardPull';
 
 interface CoursesViewProps {
   courses: Course[];
@@ -31,10 +32,13 @@ const formatFilesCount = (count: number) => {
 const CourseCard: React.FC<CourseCardProps> = memo(({ course, onSelect }) => {
   const meta = getCourseIconMeta(course.nameEn || course.nameAr || '');
   const Icon = meta.Icon;
+  const { handlers, style } = useCardPull();
 
   return (
     <div
       onClick={() => onSelect(course)}
+      {...handlers}
+      style={style}
       className={`bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl px-3.5 py-3 cursor-pointer hover:border-blue-300 smooth-interaction shadow-2xs group`}
     >
       <div className="flex items-center gap-3 min-w-0">

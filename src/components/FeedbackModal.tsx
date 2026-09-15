@@ -181,13 +181,6 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = memo(({ isOpen, onClo
                           }
                         }
                       }}
-                      onContextMenu={(e) => e.preventDefault()}
-                      onSelect={(e) => {
-                        const el = e.currentTarget;
-                        if (el.selectionStart !== el.selectionEnd) {
-                          el.setSelectionRange(el.selectionEnd, el.selectionEnd);
-                        }
-                      }}
                       placeholder="اكتب ملاحظتك هنا..."
                       aria-label="نص الملاحظة"
                       required
