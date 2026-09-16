@@ -13,11 +13,12 @@ import { AcademicEvent, AppAsset } from '../types';
 import { ConfirmModal } from './ConfirmModal';
 import { formatDeadline } from '../lib/courseIcons';
 import { EmptyState } from './EmptyState';
+import { DownloadToast } from './DownloadToast';
 import { useDownload } from '../lib/useDownload';
 
 interface HomeViewProps {
   upcomingDates: AcademicEvent[];
-  onNavigateToDates: () => void;
+  onNavigateToDates: (eventId?: string) => void;
   appAssets: AppAsset[];
 }
 
@@ -27,7 +28,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
   appAssets,
 }) => {
   // Announcements Carousel State
-  const { download } = useDownload();
+  const { message: downloadMessage, error: downloadError, loading: downloadLoading, download } = useDownload();
 
   // Confirm Modal State for links & downloads
   const [confirmState, setConfirmState] = useState<{
@@ -88,7 +89,8 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
   }, [appAssets, download]);
 
   return (
-    <div id="home-screen-view" className="app-screen" dir="rtl">
+    <div id="home-screen-view" className="space-y-5 pb-24 pt-1" dir="rtl">
+      <DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
       {/* SECTION 2: UPCOMING DEADLINES / DATES (أقرب المواعيد والتسليمات - بنفس شكل التنبيهات) */}
       {nearestDates.length > 0 && activeDate ? (
         <section id="home-upcoming-dates-section" aria-label="أقرب التسليمات والمواعيد">
@@ -100,16 +102,19 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
               onClick={onNavigateToDates}
               className="text-sm font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 transition-colors"
             >
-              <span>عرض الكل</span>
+              <span>عرض كل المواعيد</span>
               <ArrowLeft size={14} />
             </button>
           </div>
 
-          <div
+          <button
+            type="button"
+            aria-label={`فتح تفاصيل ${activeDate.eventName} في صفحة المواعيد`}
+            onClick={() => onNavigateToDates(activeDate.id)}
             id="dates-carousel-card"
             onTouchStart={handleDateTouchStart}
             onTouchEnd={handleDateTouchEnd}
-            className="app-card bg-white border border-slate-200/90 border-r-4 border-r-blue-600 rounded-2xl shadow-2xs smooth-interaction relative overflow-hidden"
+            className="bg-white border border-slate-200/90 border-r-4 border-r-blue-600 rounded-2xl p-4 sm:p-5 shadow-2xs transition-all relative overflow-hidden"
           >
             
               <div
@@ -166,7 +171,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                     key={idx}
                     type="button"
                     onClick={() => setCurrentDateIndex(idx)}
-                    className={`h-1.5 rounded-full smooth-interaction cursor-pointer ${
+                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
                       idx === currentDateIndex ? 'w-5 bg-blue-600' : 'w-1.5 bg-slate-200'
                     }`}
                     aria-label={`موعد ${idx + 1}`}
@@ -174,7 +179,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                 ))}
               </div>
             )}
-          </div>
+          </button>
         </section>
       ) : (
         <section id="home-upcoming-dates-section" aria-label="أقرب التسليمات والمواعيد">
@@ -187,11 +192,11 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 
       {/* SECTION 3: UNIVERSITY PLATFORMS & OFFICIAL BYLAW */}
       <section id="home-platforms-section" aria-label="المنصات الجامعية واللوائح">
-        <div className="app-section-title flex items-center justify-between px-1">
+        <div className="flex items-center justify-between mb-2.5 px-1">
           <span className="text-sm font-bold text-slate-700">المنصات الجامعية واللوائح الرسمية</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {/* منصة ابن الهيثم */}
           <button
             type="button"
@@ -206,13 +211,13 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                   window.open('https://stdch.menofia.education/static/index.html', '_blank', 'noopener,noreferrer'),
               })
             }
-            className="group flex min-h-[6.5rem] flex-col items-center justify-center gap-2 p-3 bg-white border border-slate-200/90 border-r-4 border-r-teal-500 rounded-2xl hover:border-teal-300 hover:shadow-xs smooth-interaction text-center w-full cursor-pointer"
+            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-teal-500 rounded-2xl hover:border-teal-300 hover:shadow-xs transition-all text-right w-full cursor-pointer"
           >
-            <div className="flex min-w-0 w-full flex-col items-center gap-2">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-700 shrink-0 group-hover:scale-105 transition-transform">
                 <GraduationCap size={22} />
               </div>
-              <div className="min-w-0 w-full">
+              <div className="min-w-0 flex-1">
                 <h4 className="text-sm font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
                   منصة ابن الهيثم
                 </h4>
@@ -221,7 +226,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                 </p>
               </div>
             </div>
-            <div className="p-1 text-slate-400 group-hover:text-teal-600 transition-colors shrink-0">
+            <div className="p-1.5 text-slate-400 group-hover:text-teal-600 transition-colors shrink-0 mr-2">
               <ExternalLink size={18} />
             </div>
           </button>
@@ -240,13 +245,13 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                   window.open('https://menofia.education/login/index.php', '_blank', 'noopener,noreferrer'),
               })
             }
-            className="group flex min-h-[6.5rem] flex-col items-center justify-center gap-2 p-3 bg-white border border-slate-200/90 border-r-4 border-r-indigo-500 rounded-2xl hover:border-indigo-300 hover:shadow-xs smooth-interaction text-center w-full cursor-pointer"
+            className="group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-indigo-500 rounded-2xl hover:border-indigo-300 hover:shadow-xs transition-all text-right w-full cursor-pointer"
           >
-            <div className="flex min-w-0 w-full flex-col items-center gap-2">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 shrink-0 group-hover:scale-105 transition-transform">
                 <BookOpen size={22} />
               </div>
-              <div className="min-w-0 w-full">
+              <div className="min-w-0 flex-1">
                 <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
                   منصة الكتب الجامعية
                 </h4>
@@ -255,7 +260,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                 </p>
               </div>
             </div>
-            <div className="p-1 text-slate-400 group-hover:text-indigo-600 transition-colors shrink-0">
+            <div className="p-1.5 text-slate-400 group-hover:text-indigo-600 transition-colors shrink-0 mr-2">
               <ExternalLink size={18} />
             </div>
           </button>
@@ -269,7 +274,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                 type="button"
                 onClick={handleBylawDownload}
                 disabled={!bylaw?.fileUrl}
-                className={`group col-span-2 flex items-center justify-between gap-3 p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-blue-500 rounded-2xl hover:border-blue-300 hover:shadow-xs smooth-interaction text-right w-full ${bylaw?.fileUrl ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                className={`group flex items-center justify-between p-3.5 bg-white border border-slate-200/90 border-r-4 border-r-blue-500 rounded-2xl hover:border-blue-300 hover:shadow-xs transition-all text-right w-full sm:col-span-2 ${bylaw?.fileUrl ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                 aria-label="تحميل لائحة هندسة منوف"
               >
             <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -292,7 +297,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
             </div>
 
             <span
-              className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 smooth-interaction shrink-0 flex items-center justify-center shadow-2xs group-hover:bg-blue-100 group-hover:border-blue-200 active:scale-95"
+              className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 transition-all duration-200 shrink-0 flex items-center justify-center shadow-2xs group-hover:bg-blue-100 group-hover:border-blue-200 active:scale-95"
               aria-hidden="true"
               title="تحميل اللائحة"
             >

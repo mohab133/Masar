@@ -1,344 +1,87 @@
-import React, { useState, useMemo, useCallback, useEffect, memo } from 'react';
-import { createPortal } from 'react-dom';
-import { Calendar, MapPin, Clock, Info, X } from 'lucide-react';
-import { AcademicEvent, OfficialScheduleDocument } from '../types';
+import React, { memo, useEffect, useMemo, useState } from 'react';
+import { Calendar, ChevronDown, Clock, ExternalLink, FileImage, Info, MapPin } from 'lucide-react';
+import type { AcademicEvent, OfficialScheduleDocument } from '../types';
 import { getArabicCourseName, getCourseIconMeta, formatDeadline } from '../lib/courseIcons';
+import { getEventTypeLabel, getLegacyDetails, safeExternalUrl } from '../lib/eventDetails';
 import { EmptyState } from './EmptyState';
+import { DownloadToast } from './DownloadToast';
 import { useDownload } from '../lib/useDownload';
 import { DownloadButton } from './DownloadButton';
 
 interface DatesViewProps {
   events: AcademicEvent[];
   officialSchedules: OfficialScheduleDocument[];
+  pendingEventId?: string | null;
+  onPendingEventHandled?: () => void;
 }
 
 type FilterCategory = 'assignments' | 'quizzes' | 'exam_schedules';
 
-interface AcademicEventCardProps {
-  item: AcademicEvent;
-  onOpenDetails: (item: AcademicEvent) => void;
+function DetailRow({ label, value, url }: { label: string; value?: string; url?: string }) {
+  if (!value) return null;
+  const safeUrl = safeExternalUrl(url);
+  return <div className="flex items-start gap-2 text-xs sm:text-sm"><Info size={15} className="text-blue-600 mt-0.5 shrink-0" /><div><p className="text-slate-500 font-semibold">{label}</p>{safeUrl ? <a href={safeUrl} target="_blank" rel="noreferrer" className="font-bold text-blue-700 underline underline-offset-2 break-all">{value}</a> : <p className="font-bold text-slate-900 mt-0.5 whitespace-pre-wrap break-words">{value}</p>}</div></div>;
 }
 
-const AcademicEventCard: React.FC<AcademicEventCardProps> = memo(({ item, onOpenDetails }) => {
+const AcademicEventCard = memo(({ item, expanded, onToggle }: { item: AcademicEvent; expanded: boolean; onToggle: () => void }) => {
   const meta = getCourseIconMeta(item.course);
   const Icon = meta.Icon;
-
-  return (
-    <div
-      className={`app-card bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl hover:border-blue-300 transition-colors shadow-2xs space-y-3`}
-    >
-      {/* Header: Course Logo Icon + Arabic Course Name & Remaining Time Badge */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${meta.bgClass}`}>
-            <Icon size={18} />
-          </div>
-          <span className="text-xs font-bold text-slate-800 break-words" dir="auto">
-            {getArabicCourseName(item.course)}
-          </span>
-        </div>
-
-        <span
-          className={`shrink-0 text-xs px-2.5 py-1 rounded-xl border font-bold ${meta.badgeClass}`}
-        >
-          {item.remainingTimeAr}
-        </span>
-      </div>
-
-      {/* Event Name */}
-      <h3 className="text-base font-bold text-slate-900 leading-snug break-words text-right" dir="auto">
-        {item.eventName}
-      </h3>
-
-      {/* Footer: Date / Time + "اعرف المزيد" Button on same line */}
-      <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 text-xs text-slate-500">
-        <div className="flex items-center gap-1.5 font-medium min-w-0 flex-1 truncate">
-          <Calendar size={13} className="text-slate-400 shrink-0" />
-          <span className="truncate">{formatDeadline(item.date, item.displayDateAr)}</span>
-          {item.time && (
-            <span className="inline-flex items-center gap-1 shrink-0">
-              • <Clock size={13} className="text-slate-400" />
-              {item.time}
-            </span>
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={() => onOpenDetails(item)}
-          className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50/70 hover:bg-blue-100/80 border border-blue-100 px-2.5 py-1 rounded-xl smooth-interaction cursor-pointer shrink-0"
-        >
-          <Info size={13} />
-          <span>اعرف المزيد</span>
-        </button>
-      </div>
+  const details = item.details ?? getLegacyDetails(item);
+  const panelId = `event-details-${item.id}`;
+  return <article className={`bg-white border border-slate-200/90 ${meta.borderRightClass} rounded-2xl p-4 hover:border-blue-300 transition-colors shadow-2xs space-y-3`}>
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2.5 min-w-0 flex-1"><div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${meta.bgClass}`}><Icon size={18} /></div><span className="text-xs font-bold text-slate-800 break-words" dir="auto">{getArabicCourseName(item.course)}</span></div>
+      <span className={`shrink-0 text-xs px-2.5 py-1 rounded-xl border font-bold ${meta.badgeClass}`}>{item.remainingTimeAr}</span>
     </div>
-  );
+    <h3 className="text-base font-bold text-slate-900 leading-snug break-words text-right" dir="auto">{item.eventName}</h3>
+    <div className="flex items-center gap-2 text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded-xl px-2.5 py-1.5 w-fit"><Calendar size={13} />{getEventTypeLabel(item)}</div>
+    <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 text-xs text-slate-500"><div className="flex items-center gap-1.5 font-medium min-w-0 flex-1"><Calendar size={13} className="text-slate-400 shrink-0" /><span className="truncate">{formatDeadline(item.date, item.displayDateAr)}</span>{item.time && <span className="inline-flex items-center gap-1 shrink-0">• <Clock size={13} />{item.time}</span>}</div><button type="button" aria-expanded={expanded} aria-controls={panelId} onClick={onToggle} className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-2.5 py-1 rounded-xl transition-all shrink-0"><span>{expanded ? 'إخفاء التفاصيل' : 'اعرف المزيد'}</span><ChevronDown size={14} className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} /></button></div>
+    <div id={panelId} className={`grid transition-[grid-template-rows,opacity] duration-250 ease-out ${expanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}><div className="overflow-hidden"><div className="border-t border-slate-100 pt-3 space-y-3 text-right">
+      {!details && <p className="text-xs text-slate-500">لا توجد تفاصيل إضافية لهذا الموعد حاليًا.</p>}
+      {details?.steps && details.steps.length > 0 && <div><p className="text-xs text-slate-500 font-semibold mb-1">الخطوات</p><ol className="list-decimal list-inside space-y-1 text-xs sm:text-sm font-medium text-slate-800">{details.steps.map((step, index) => <li key={`${item.id}-step-${index}`}>{step}</li>)}</ol></div>}
+      <DetailRow label="مكان التسليم" value={details?.submissionLocation} />
+      <DetailRow label="رابط التسليم" value={details?.submissionUrl} url={details?.submissionUrl} />
+      <DetailRow label="مكان الكويز أو الاختبار" value={details?.quizLocation} />
+      <DetailRow label="رابط الكويز أو الاختبار" value={details?.quizUrl} url={details?.quizUrl} />
+      <DetailRow label="ملاحظات الموعد" value={details?.deadlineNote} />
+      <DetailRow label="التعليمات" value={details?.instructions} />
+      <DetailRow label="ملاحظات إضافية" value={details?.notes} />
+    </div></div></div>
+  </article>;
 });
-
 AcademicEventCard.displayName = 'AcademicEventCard';
 
-export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSchedules }) => {
+export const DatesView: React.FC<DatesViewProps> = memo(({ events, officialSchedules, pendingEventId, onPendingEventHandled }) => {
   const [filter, setFilter] = useState<FilterCategory>('assignments');
-  const { download } = useDownload();
-  const [selectedEventForDetails, setSelectedEventForDetails] = useState<AcademicEvent | null>(null);
-  const [displayedEvent, setDisplayedEvent] = useState<AcademicEvent | null>(null);
-  const [isDetailsMounted, setIsDetailsMounted] = useState(false);
-
-  useEffect(() => {
-    if (selectedEventForDetails) {
-      setDisplayedEvent(selectedEventForDetails);
-      setIsDetailsMounted(true);
-    } else if (isDetailsMounted) {
-      const timer = window.setTimeout(() => {
-        setIsDetailsMounted(false);
-        setDisplayedEvent(null);
-      }, 160);
-      return () => window.clearTimeout(timer);
-    }
-  }, [selectedEventForDetails, isDetailsMounted]);
-
-
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const { message: downloadMessage, error: downloadError, loading: downloadLoading, download } = useDownload();
   const midtermDoc = useMemo(() => officialSchedules.find((d) => d.type === 'midterm'), [officialSchedules]);
   const finalDoc = useMemo(() => officialSchedules.find((d) => d.type === 'final'), [officialSchedules]);
+  const sortedEvents = useMemo(() => [...(events || [])].filter((event) => event.daysUntil >= 0).sort((a, b) => a.daysUntil - b.daysUntil), [events]);
+  const filteredEvents = useMemo(() => sortedEvents.filter((ev) => filter === 'assignments' ? ['assignment', 'submission', 'project'].includes(ev.type) : filter === 'quizzes' ? ['quiz', 'lab'].includes(ev.type) : ['midterm', 'final'].includes(ev.type)), [sortedEvents, filter]);
 
-  const handleOpenDoc = useCallback(async (doc: OfficialScheduleDocument) => {
-    const mimeType = doc.type === 'lectures_sections' ? 'image/jpeg' : 'application/pdf';
-    await download(doc.fileUrl, doc.downloadFileName || 'exam-schedule.pdf', mimeType);
-  }, [download]);
+  useEffect(() => {
+    if (!pendingEventId) return;
+    const event = sortedEvents.find((item) => item.id === pendingEventId);
+    if (!event) { onPendingEventHandled?.(); return; }
+    setFilter(['midterm', 'final'].includes(event.type) ? 'exam_schedules' : ['quiz', 'lab'].includes(event.type) ? 'quizzes' : 'assignments');
+    setExpandedIds((current) => new Set(current).add(event.id));
+    window.setTimeout(() => document.getElementById(`event-details-${event.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 40);
+    onPendingEventHandled?.();
+  }, [pendingEventId, sortedEvents, onPendingEventHandled]);
 
-  const sortedEvents = useMemo(() => {
-    return [...(events || [])].filter((event) => event.daysUntil >= 0).sort((a, b) => a.daysUntil - b.daysUntil);
-  }, [events]);
+  const toggle = (id: string) => setExpandedIds((current) => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  const handleOpenDoc = async (doc: OfficialScheduleDocument) => download(doc.fileUrl, doc.downloadFileName || 'exam-schedule.pdf', doc.type === 'lectures_sections' ? 'image/jpeg' : 'application/pdf');
+  const renderEvents = filteredEvents.map((item) => <AcademicEventCard key={item.id} item={item} expanded={expandedIds.has(item.id)} onToggle={() => toggle(item.id)} />);
 
-  const filteredEvents = useMemo(() => {
-    return sortedEvents.filter((ev) => {
-      if (filter === 'assignments') {
-        return ['assignment', 'submission', 'project'].includes(ev.type);
-      }
-      if (filter === 'quizzes') {
-        return ['quiz', 'lab'].includes(ev.type);
-      }
-      if (filter === 'exam_schedules') {
-        return ['midterm', 'final'].includes(ev.type);
-      }
-      return false;
-    });
-  }, [sortedEvents, filter]);
-
-  return (
-    <div id="dates-screen-view" className="app-screen" dir="rtl">
-      {/* Filter Tabs: تسليمات | كويزات | جداول الامتحانات */}
-      <div
-        data-no-swipe="true"
-        onTouchStart={(e) => e.stopPropagation()}
-        onTouchEnd={(e) => e.stopPropagation()}
-        className="flex items-center gap-1.5 p-1.5 bg-slate-200/80 rounded-2xl relative select-none"
-      >
-        <button
-          type="button"
-          onClick={() => setFilter('assignments')}
-          className={`flex-1 py-2 text-sm font-semibold rounded-xl smooth-interaction relative ${
-            filter === 'assignments'
-              ? 'text-blue-700 font-semibold'
-              : 'text-slate-600 hover:text-slate-900 font-medium'
-          }`}
-        >
-          {filter === 'assignments' && (
-            <div
-              className="absolute inset-0 bg-white rounded-xl shadow-xs"
-            />
-          )}
-          <span className="relative z-10">تسليمات</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setFilter('quizzes')}
-          className={`flex-1 py-2 text-sm font-semibold rounded-xl smooth-interaction relative ${
-            filter === 'quizzes'
-              ? 'text-blue-700 font-semibold'
-              : 'text-slate-600 hover:text-slate-900 font-medium'
-          }`}
-        >
-          {filter === 'quizzes' && (
-            <div
-              className="absolute inset-0 bg-white rounded-xl shadow-xs"
-            />
-          )}
-          <span className="relative z-10">كويزات</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setFilter('exam_schedules')}
-          className={`flex-1 py-2 text-sm font-semibold rounded-xl smooth-interaction relative ${
-            filter === 'exam_schedules'
-              ? 'text-blue-700 font-semibold'
-              : 'text-slate-600 hover:text-slate-900 font-medium'
-          }`}
-        >
-          {filter === 'exam_schedules' && (
-            <div
-              className="absolute inset-0 bg-white rounded-xl shadow-xs"
-            />
-          )}
-          <span className="relative z-10">جداول الامتحانات</span>
-        </button>
-      </div>
-
-      {/* Main Content: Tasks List when on Assignments / Quizzes */}
-      {filter !== 'exam_schedules' && (
-        <div className="app-list">
-          {filteredEvents.map((item) => (
-            <AcademicEventCard
-              key={item.id}
-              item={item}
-              onOpenDetails={setSelectedEventForDetails}
-            />
-          ))}
-
-          {filteredEvents.length === 0 && (
-            <EmptyState
-              icon="tasks"
-              title={filter === 'assignments' ? 'لا توجد تسليمات حاليًا' : 'لا توجد كويزات أو تقييمات حاليًا'}
-              description="ستظهر المواعيد هنا فور نشرها"
-            />
-          )}
-        </div>
-      )}
-
-      {/* Exam Schedules Tab (جداول الامتحانات) */}
-      {filter === 'exam_schedules' && (
-        <div className="app-list">
-          {filteredEvents.length > 0 && (
-            <div className="app-list">
-              {filteredEvents.map((item) => (
-                <AcademicEventCard
-                  key={item.id}
-                  item={item}
-                  onOpenDetails={setSelectedEventForDetails}
-                />
-              ))}
-            </div>
-          )}
-          {/* Midterm Schedule Card: يظهر فقط بعد نشر الجدول */}
-          {midtermDoc?.fileUrl && (
-            <div className="bg-white border border-slate-200/90 border-r-4 border-r-amber-500 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-2xs">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-base font-bold text-slate-900">جدول الميدتيرم</span>
-                  {midtermDoc.approvedDate && <span className="text-xs bg-amber-50 text-amber-800 font-bold px-2 py-0.5 rounded-md border border-amber-200/70">{midtermDoc.approvedDate}</span>}
-                </div>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">مواعيد وقاعات الامتحانات الرسمية المعتمدة</p>
-              </div>
-              <DownloadButton available onClick={() => void handleOpenDoc(midtermDoc)} label="تحميل جدول الميدتيرم" />
-            </div>
-          )}
-
-          {/* Final Schedule Card: يظهر فقط بعد نشر الجدول */}
-          {finalDoc?.fileUrl && (
-            <div className="bg-white border border-slate-200/90 border-r-4 border-r-purple-500 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-2xs">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-base font-bold text-slate-900">جدول الفاينال</span>
-                  {finalDoc.approvedDate && <span className="text-xs bg-purple-50 text-purple-800 font-bold px-2 py-0.5 rounded-md border border-purple-200/70">{finalDoc.approvedDate}</span>}
-                </div>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">مواعيد وقاعات الامتحانات الرسمية المعتمدة</p>
-              </div>
-              <DownloadButton available onClick={() => void handleOpenDoc(finalDoc)} label="تحميل جدول الفاينال" />
-            </div>
-          )}
-
-          {filteredEvents.length === 0 && !midtermDoc?.fileUrl && !finalDoc?.fileUrl && (
-            <EmptyState
-              icon="calendar"
-              title="لا توجد جداول امتحانات حاليًا"
-              description="ستظهر جداول الميدتيرم والفاينال هنا فور نشرها"
-            />
-          )}
-        </div>
-      )}
-
-      {/* Task Details Modal */}
-      
-        {isDetailsMounted && typeof document !== 'undefined' && createPortal(
-          <div
-            className={`overlay-fade fixed inset-0 z-50 w-screen min-h-[100dvh] bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center p-4 ${selectedEventForDetails ? 'opacity-100' : 'opacity-0'}`}
-            onClick={() => setSelectedEventForDetails(null)}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className={`modal-card-pop bg-white border border-slate-200/80 rounded-[1.4rem] max-w-[22rem] w-full p-4 space-y-3 shadow-xl overflow-hidden ${selectedEventForDetails ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.98] opacity-0'}`}
-              dir="rtl"
-            >
-              <div className="relative flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
-                <div className="flex items-start gap-3 min-w-0">
-                  {displayedEvent && (() => {
-                    const meta = getCourseIconMeta(displayedEvent.course);
-                    const Icon = meta.Icon;
-                    return (
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${meta.bgClass}`}>
-                        <Icon size={17} />
-                      </div>
-                    );
-                  })()}
-                  <div className="min-w-0 pt-0.5">
-                    <h3 className="text-base font-semibold text-slate-950 leading-tight break-words">
-                      {displayedEvent && getArabicCourseName(displayedEvent.course)}
-                    </h3>
-                    <span className="inline-flex mt-1 text-[11px] text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-2 py-0.5 font-medium">
-                      {displayedEvent?.typeLabelAr}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedEventForDetails(null)}
-                  aria-label="إغلاق التفاصيل"
-                  className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors cursor-pointer shrink-0"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <span className="text-[11px] text-slate-500 font-medium block">تفاصيل الموعد</span>
-                    <h4 className="text-base font-semibold text-slate-950 leading-snug break-words">
-                    {displayedEvent?.eventName}
-                  </h4>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-sm">
-                  {displayedEvent?.location && (
-                    <div className="flex items-start gap-2 rounded-xl bg-slate-50 border border-slate-100 p-2.5">
-                      <MapPin size={17} className="text-rose-500 mt-0.5 shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-[11px] text-slate-500 font-medium">المكان</p>
-                        <p className="text-sm font-semibold text-slate-900 mt-0.5 break-words">{displayedEvent.location}</p>
-                      </div>
-                    </div>
-                  )}
-                  {displayedEvent?.time && (
-                    <div className="flex items-start gap-2 rounded-xl bg-slate-50 border border-slate-100 p-2.5">
-                      <Clock size={16} className="text-blue-600 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-[11px] text-slate-500 font-medium">الوقت</p>
-                        <p className="text-sm font-semibold text-slate-900 mt-0.5">{displayedEvent.time}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-            </div>
-          </div>,
-          document.body
-        )}
-    </div>
-  );
+  return <div id="dates-screen-view" className="space-y-4 pb-24 pt-1" dir="rtl"><DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
+    <div data-no-swipe="true" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()} className="flex items-center gap-1.5 p-1.5 bg-slate-200/80 rounded-2xl relative select-none">{([['assignments', 'تسليمات'], ['quizzes', 'كويزات'], ['exam_schedules', 'جداول الامتحانات']] as const).map(([id, label]) => <button key={id} type="button" onClick={() => setFilter(id)} className={`flex-1 py-2 text-sm font-bold rounded-xl transition-all relative ${filter === id ? 'text-blue-700 font-black bg-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>{label}</button>)}</div>
+    {filter !== 'exam_schedules' && <div className="space-y-3">{renderEvents}{filteredEvents.length === 0 && <EmptyState icon="tasks" title={filter === 'assignments' ? 'لا توجد تسليمات حاليًا' : 'لا توجد كويزات أو تقييمات حاليًا'} description="ستظهر المواعيد هنا فور نشرها" />}</div>}
+    {filter === 'exam_schedules' && <div className="space-y-3">{renderEvents}{midtermDoc?.fileUrl && <OfficialCard title="جدول الميدتيرم" description="مواعيد وقاعات الامتحانات الرسمية المعتمدة" doc={midtermDoc} onDownload={handleOpenDoc} color="amber" />}{finalDoc?.fileUrl && <OfficialCard title="جدول الفاينال" description="مواعيد وقاعات الامتحانات الرسمية المعتمدة" doc={finalDoc} onDownload={handleOpenDoc} color="purple" />}{filteredEvents.length === 0 && !midtermDoc?.fileUrl && !finalDoc?.fileUrl && <EmptyState icon="calendar" title="لا توجد جداول امتحانات حاليًا" description="ستظهر جداول الميدتيرم والفاينال هنا فور نشرها" />}</div>}
+  </div>;
 });
 
+function OfficialCard({ title, description, doc, onDownload, color }: { title: string; description: string; doc: OfficialScheduleDocument; onDownload: (doc: OfficialScheduleDocument) => Promise<void>; color: 'amber' | 'purple' }) {
+  return <div className={`bg-white border border-slate-200/90 border-r-4 border-r-${color}-500 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-2xs`}><div className="min-w-0"><div className="flex items-center gap-2 flex-wrap"><span className="text-base font-bold text-slate-900">{title}</span>{doc.approvedDate && <span className="text-xs bg-slate-50 text-slate-700 font-bold px-2 py-0.5 rounded-md border border-slate-200">{doc.approvedDate}</span>}</div><p className="text-xs sm:text-sm text-slate-500 mt-1">{description}</p></div><DownloadButton available onClick={() => void onDownload(doc)} label={`تحميل ${title}`} /></div>;
+}
 DatesView.displayName = 'DatesView';

@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, cache-control, pragma",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
@@ -99,42 +99,6 @@ function getCairoDate() {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
-const EVENT_TYPE_LABELS_AR: Record<string, string> = {
-  assignment: "تسليم",
-  submission: "تسليم",
-  quiz: "كويز",
-  project: "مشروع",
-  lab: "تقييم عملي",
-  midterm: "ميدتيرم",
-  final: "فاينال",
-};
-
-function getDaysUntil(eventDate: string) {
-  const today = getCairoDate();
-  const todayUtc = Date.parse(`${today}T00:00:00Z`);
-  const eventUtc = Date.parse(`${eventDate}T00:00:00Z`);
-  if (!Number.isFinite(todayUtc) || !Number.isFinite(eventUtc)) return 0;
-  return Math.round((eventUtc - todayUtc) / 86_400_000);
-}
-
-function getDisplayDateAr(eventDate: string) {
-  const parsed = new Date(`${eventDate}T12:00:00Z`);
-  if (Number.isNaN(parsed.getTime())) return eventDate;
-  return new Intl.DateTimeFormat("ar-EG", {
-    timeZone: "Africa/Cairo",
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(parsed);
-}
-
-function getRemainingTimeAr(daysUntil: number) {
-  if (daysUntil <= 0) return daysUntil === 0 ? "اليوم" : "انتهى";
-  if (daysUntil === 1) return "غدًا";
-  if (daysUntil === 2) return "بعد يومين";
-  return `بعد ${daysUntil} أيام`;
-}
-
 async function getBootstrap() {
   const queries = [
     ["announcements", supabase.from("announcements").select("*").eq("status", "active").order("created_at", { ascending: false })],
@@ -179,25 +143,20 @@ async function getBootstrap() {
         : null,
       attachmentName: row.attachment_name ?? null,
     })),
-    dates: datesData.map((row: any) => {
-      const date = String(row.event_date ?? "");
-      const daysUntil = getDaysUntil(date);
-      return {
-        id: row.id,
-        type: row.type,
-        typeLabelAr: row.type_label_ar ?? EVENT_TYPE_LABELS_AR[row.type] ?? "موعد",
-        course: row.course,
-        eventName: row.event_name,
-        date,
-        displayDateAr: row.display_date_ar ?? getDisplayDateAr(date),
-        time: row.event_time ?? undefined,
-        remainingTimeAr: row.remaining_time_ar ?? getRemainingTimeAr(daysUntil),
-        daysUntil: typeof row.days_until === "number" && Number.isFinite(row.days_until)
-          ? row.days_until
-          : daysUntil,
-        location: row.location ?? undefined,
-      };
-    }),
+    dates: datesData.map((row: any) => ({
+      id: row.id,
+      type: row.event_type ?? row.type ?? "other",
+      typeLabelAr: row.type_label_ar ?? "موعد مهم",
+      course: row.course,
+      eventName: row.event_name,
+      date: row.event_date,
+      displayDateAr: row.display_date_ar,
+      time: row.event_time ?? undefined,
+      remainingTimeAr: row.remaining_time_ar,
+      daysUntil: row.days_until,
+      location: row.location ?? undefined,
+      details: row.details ?? null,
+    })),
     schedule: scheduleData.map(mapSchedule),
     courses: coursesData.map((row: any) => mapCourse(row, filesByCourse)),
     officialSchedules: officialData.map(mapOfficialSchedule),
@@ -317,15 +276,6 @@ function getClientIp(req: Request) {
   return req.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
-// Strips control characters and angle brackets so stored feedback can never
-// carry markup/HTML into any admin view that renders it later.
-function sanitizeFeedbackText(input: string): string {
-  return input
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
-    .replace(/[<>]/g, "")
-    .trim();
-}
-
 async function rateLimitKey(value: string) {
   return hashToken(`feedback-rate:${value}`);
 }
@@ -357,8 +307,6 @@ async function readJson(req: Request) {
 
 function isAuthorized(req: Request) {
   const provided = req.headers.get("apikey") ?? "";
-  const broadcastKey = Deno.env.get("MASAR_BROADCAST_KEY") ?? "";
-  if (broadcastKey && provided === broadcastKey) return true;
   const keysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
   if (keysRaw) {
     try {
@@ -395,7 +343,7 @@ Deno.serve(async (req) => {
     if (req.method === "POST" && path === "/api/feedback") {
       const payload = await readJson(req);
       if (!payload || typeof payload !== "object") return json({ error: "invalid_request" }, 400);
-      const details = typeof payload.details === "string" ? sanitizeFeedbackText(payload.details) : "";
+      const details = typeof payload.details === "string" ? payload.details.trim() : "";
       if (!details) return json({ error: "details_required" }, 400);
       if (details.length > 300) return json({ error: "details_too_long" }, 400);
 

@@ -26,7 +26,7 @@ export interface ScheduleEvent {
   type: ScheduleType;
   sectionNumber?: number | null;
   lectureNumber?: number | null;
-  dayOfWeek: number; // 0: Sunday, 1: Monday, 2: Tuesday, 3: Wednesday, 4: Thursday
+  dayOfWeek: number;
   dayNameAr: string;
   startTime: string;
   endTime: string;
@@ -35,17 +35,7 @@ export interface ScheduleEvent {
   notes?: string | null;
 }
 
-export type FileCategory = 
-  | 'slides'
-  | 'sheets'
-  | 'solutions'
-  | 'summaries'
-  | 'exams'
-  | 'lectures'
-  | 'sections'
-  | 'reviews'
-  | 'solved_questions'
-  | 'other';
+export type FileCategory = 'slides' | 'sheets' | 'solutions' | 'summaries' | 'exams' | 'lectures' | 'sections' | 'reviews' | 'solved_questions' | 'other';
 
 export interface CourseFile {
   id: string;
@@ -70,14 +60,18 @@ export interface Course {
   iconUrl?: string | null;
 }
 
-export type AcademicEventType = 
-  | 'assignment'
-  | 'submission'
-  | 'quiz'
-  | 'project'
-  | 'lab'
-  | 'midterm'
-  | 'final';
+export type AcademicEventType = 'assignment' | 'submission' | 'quiz' | 'project' | 'lab' | 'midterm' | 'final' | 'lecture' | 'registration_start' | 'registration_end' | 'result_release' | 'meeting' | 'other';
+
+export interface AcademicEventDetails {
+  steps?: string[];
+  submissionLocation?: string;
+  submissionUrl?: string;
+  quizLocation?: string;
+  quizUrl?: string;
+  deadlineNote?: string;
+  instructions?: string;
+  notes?: string;
+}
 
 export interface AcademicEvent {
   id: string;
@@ -85,12 +79,13 @@ export interface AcademicEvent {
   typeLabelAr: string;
   course: string;
   eventName: string;
-  date: string; // e.g. "2026-09-15"
-  displayDateAr: string; // e.g. "الثلاثاء 15 سبتمبر"
-  time?: string; // e.g. "11:59 م" or "10:00 ص"
-  remainingTimeAr: string; // e.g. "بعد 3 أيام"
+  date: string;
+  displayDateAr: string;
+  time?: string;
+  remainingTimeAr: string;
   daysUntil: number;
   location?: string;
+  details?: AcademicEventDetails | null;
 }
 
 export type FeedbackType = 'error' | 'suggestion' | 'note';
@@ -117,4 +112,3 @@ export interface OfficialScheduleDocument {
   downloadFileName: string;
   fileUrl?: string | null;
 }
-

@@ -40,6 +40,7 @@ export default function App() {
   const [updateDownloaded, setUpdateDownloaded] = useState(false);
   const [updateCompleted, setUpdateCompleted] = useState(false);
   const [updateError, setUpdateError] = useState('');
+  const [pendingEventId, setPendingEventId] = useState<string | null>(null);
 
   useEffect(() => {
     // Notification permission is optional and must not compete with the first data load.
@@ -454,7 +455,7 @@ export default function App() {
               {activeTab === 'home' && (
                 <HomeView
                   upcomingDates={data.dates}
-                  onNavigateToDates={() => handleTabChange('dates')}
+                  onNavigateToDates={(eventId) => { setPendingEventId(eventId ?? null); handleTabChange('dates'); }}
                   appAssets={data.appAssets}
                 />
               )}
@@ -471,7 +472,7 @@ export default function App() {
               )}
 
               {activeTab === 'dates' && (
-                <DatesView events={data.dates} officialSchedules={data.officialSchedules} />
+                <DatesView events={data.dates} officialSchedules={data.officialSchedules} pendingEventId={pendingEventId} onPendingEventHandled={() => setPendingEventId(null)} />
               )}
           </div>
         </main>
