@@ -3,6 +3,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 
 const RELEASES_URL = 'https://api.github.com/repos/mohab133/Masar/releases/latest';
 const DISMISSED_TAG_KEY = 'masar-dismissed-update-tag';
+const PENDING_UPDATE_TAG_KEY = 'masar-pending-update-tag';
 
 export interface AvailableUpdate {
   tag: string;
@@ -66,4 +67,17 @@ export async function checkForAppUpdate(): Promise<AvailableUpdate | null> {
 
 export function dismissAppUpdate(tag: string) {
   localStorage.setItem(DISMISSED_TAG_KEY, tag);
+}
+
+export function markUpdateDownloadComplete(tag: string) {
+  localStorage.setItem(PENDING_UPDATE_TAG_KEY, tag);
+}
+
+export async function hasCompletedPendingUpdate() {
+  const pendingTag = localStorage.getItem(PENDING_UPDATE_TAG_KEY);
+  if (!pendingTag) return false;
+  const appInfo = await CapacitorApp.getInfo();
+  if (isNewer(pendingTag, appInfo.version)) return false;
+  localStorage.removeItem(PENDING_UPDATE_TAG_KEY);
+  return true;
 }

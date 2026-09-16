@@ -15,7 +15,7 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { DownloadToast } from './components/DownloadToast';
 import { useDownload } from './lib/useDownload';
 import { downloadFile } from './lib/nativeDownloader';
-import { checkForAppUpdate, dismissAppUpdate, type AvailableUpdate } from './lib/appUpdate';
+import { checkForAppUpdate, dismissAppUpdate, hasCompletedPendingUpdate, markUpdateDownloadComplete, type AvailableUpdate } from './lib/appUpdate';
 import { elasticProgress, elasticOffsetFor, elasticScaleFor, ELASTIC_ENGAGE_THRESHOLD, ELASTIC_SNAP_MS } from './lib/elasticEdge';
 
 const TAB_ORDER: TabType[] = ['home', 'schedule', 'courses', 'dates'];
@@ -37,6 +37,8 @@ export default function App() {
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(() => getHasUnreadNotifications());
   const [availableUpdate, setAvailableUpdate] = useState<AvailableUpdate | null>(null);
   const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
+  const [updateDownloaded, setUpdateDownloaded] = useState(false);
+  const [updateCompleted, setUpdateCompleted] = useState(false);
   const [updateError, setUpdateError] = useState('');
 
   useEffect(() => {
@@ -54,7 +56,10 @@ export default function App() {
 
   useEffect(() => {
     if (isLoading) return;
-    void checkForAppUpdate().then(setAvailableUpdate);
+    void Promise.all([checkForAppUpdate(), hasCompletedPendingUpdate()]).then(([update, completed]) => {
+      setAvailableUpdate(update);
+      setUpdateCompleted(completed);
+    });
   }, [isLoading]);
 
   const handleUpdateLater = () => {
@@ -66,19 +71,28 @@ export default function App() {
   const handleUpdateNow = async () => {
     if (!availableUpdate || isDownloadingUpdate) return;
     setIsDownloadingUpdate(true);
+    setUpdateDownloaded(false);
     setUpdateError('');
     try {
       await downloadFile(
         availableUpdate.downloadUrl,
         availableUpdate.assetName,
         'application/vnd.android.package-archive',
+        undefined,
+        (result) => {
+          setIsDownloadingUpdate(false);
+          if (result.success) {
+            markUpdateDownloadComplete(availableUpdate.tag);
+            dismissAppUpdate(availableUpdate.tag);
+            setUpdateDownloaded(true);
+          } else {
+            setUpdateError(result.error || 'فشل تنزيل التحديث');
+          }
+        },
       );
-      dismissAppUpdate(availableUpdate.tag);
-      setAvailableUpdate(null);
     } catch (downloadFailure) {
-      setUpdateError(downloadFailure instanceof Error ? downloadFailure.message : 'تعذر بدء تنزيل التحديث');
-    } finally {
       setIsDownloadingUpdate(false);
+      setUpdateError(downloadFailure instanceof Error ? downloadFailure.message : 'تعذر بدء تنزيل التحديث');
     }
   };
 
@@ -466,11 +480,22 @@ export default function App() {
 
         <DownloadToast message={downloadMessage} error={downloadError} loading={downloadLoading} />
 
-        {availableUpdate && (
+        {updateCompleted && (
+          <div className="fixed inset-0 z-[111] flex items-center justify-center bg-slate-950/35 p-4" dir="rtl">
+            <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-2xl">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-2xl text-emerald-600">✓</div>
+              <h2 className="mt-3 text-base font-bold text-slate-900">تم التحديث بنجاح</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">اقفل التطبيق وافتحه مرة أخرى لاستخدام أحدث نسخة من Masar.</p>
+              <button type="button" onClick={() => setUpdateCompleted(false)} className="mt-5 w-full rounded-xl bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white">حسنًا</button>
+            </div>
+          </div>
+        )}
+
+        {availableUpdate && !updateDownloaded && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/35 p-4" dir="rtl">
             <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
               <h2 className="text-base font-bold text-slate-900">يتوفر تحديث جديد</h2>
-              <p className="mt-1 text-sm font-medium text-slate-600">الإصدار {availableUpdate.version} من Masar جاهز للتنزيل.</p>
+              <p className="mt-1 text-sm font-medium text-slate-600">{isDownloadingUpdate ? 'جاري تحديث التطبيق، من فضلك انتظر...' : `الإصدار ${availableUpdate.version} من Masar جاهز للتنزيل.`}</p>
               {availableUpdate.notes && <p className="mt-3 max-h-24 overflow-y-auto whitespace-pre-line text-xs leading-5 text-slate-500">{availableUpdate.notes}</p>}
               {updateError && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-600">{updateError}</p>}
               <div className="mt-5 flex gap-2">
@@ -479,6 +504,17 @@ export default function App() {
                 </button>
                 <button type="button" onClick={handleUpdateLater} disabled={isDownloadingUpdate} className="rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-60">لاحقًا</button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {updateDownloaded && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/35 p-4" dir="rtl">
+            <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-2xl">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-2xl text-blue-600">↓</div>
+              <h2 className="mt-3 text-base font-bold text-slate-900">جاري تجهيز التحديث</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">تم تنزيل التحديث. افتح إشعار التنزيل واضغط تثبيت، ثم اقفل التطبيق وافتحه مرة أخرى.</p>
+              <button type="button" onClick={() => setUpdateDownloaded(false)} className="mt-5 w-full rounded-xl bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white">حسنًا</button>
             </div>
           </div>
         )}

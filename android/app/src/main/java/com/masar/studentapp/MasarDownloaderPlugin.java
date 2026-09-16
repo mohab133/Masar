@@ -2,6 +2,7 @@ package com.masar.studentapp;
 
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -109,6 +110,7 @@ public class MasarDownloaderPlugin extends Plugin {
                     if (status == DownloadManager.STATUS_SUCCESSFUL) {
                         String localUri = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI));
                         String title = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TITLE));
+                        launchInstaller(localUri);
                         JSObject result = new JSObject();
                         result.put("success", true);
                         result.put("downloadId", downloadId);
@@ -143,6 +145,18 @@ public class MasarDownloaderPlugin extends Plugin {
                 if (cursor != null) cursor.close();
             }
         }).start();
+    }
+
+    private void launchInstaller(String localUri) {
+        if (localUri == null || localUri.isEmpty()) return;
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(Uri.parse(localUri), "application/vnd.android.package-archive");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(intent);
+        } catch (Exception ignored) {
+            // Android may require the user to open the Download notification manually.
+        }
     }
 
     private String makeUniqueFileName(String original) {
