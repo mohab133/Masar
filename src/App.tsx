@@ -15,6 +15,7 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { DownloadToast } from './components/DownloadToast';
 import { useDownload } from './lib/useDownload';
 import { downloadFile } from './lib/nativeDownloader';
+import { App as CapacitorApp } from '@capacitor/app';
 import { checkForAppUpdate, dismissAppUpdate, hasCompletedPendingUpdate, markUpdateDownloadComplete, type AvailableUpdate } from './lib/appUpdate';
 import { elasticProgress, elasticOffsetFor, elasticScaleFor, ELASTIC_ENGAGE_THRESHOLD, ELASTIC_SNAP_MS } from './lib/elasticEdge';
 
@@ -57,10 +58,33 @@ export default function App() {
 
   useEffect(() => {
     if (isLoading) return;
-    void Promise.all([checkForAppUpdate(), hasCompletedPendingUpdate()]).then(([update, completed]) => {
-      setAvailableUpdate(update);
-      setUpdateCompleted(completed);
+    let cancelled = false;
+    let appStateListener: { remove: () => Promise<void> } | null = null;
+    const runUpdateCheck = () => {
+      void Promise.all([checkForAppUpdate(), hasCompletedPendingUpdate()]).then(([update, completed]) => {
+        if (cancelled) return;
+        setAvailableUpdate(update);
+        setUpdateCompleted(completed);
+      });
+    };
+
+    runUpdateCheck();
+    const retryTimer = window.setTimeout(runUpdateCheck, 4000);
+    void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) runUpdateCheck();
+    }).then((listener) => {
+      if (cancelled) {
+        void listener.remove();
+      } else {
+        appStateListener = listener;
+      }
     });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(retryTimer);
+      if (appStateListener) void appStateListener.remove();
+    };
   }, [isLoading]);
 
   const handleUpdateLater = () => {

@@ -28,13 +28,18 @@ function isNewer(latest: string, current: string) {
 }
 
 export async function checkForAppUpdate(): Promise<AvailableUpdate | null> {
-  if (!Capacitor.isNativePlatform() || !navigator.onLine) return null;
+  if (!Capacitor.isNativePlatform()) return null;
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 8000);
   try {
+    const requestUrl = `${RELEASES_URL}?t=${Date.now()}`;
     const [appInfo, response] = await Promise.all([
       CapacitorApp.getInfo(),
-      fetch(RELEASES_URL, { headers: { Accept: 'application/vnd.github+json' }, signal: controller.signal }),
+      fetch(requestUrl, {
+        cache: 'no-store',
+        headers: { Accept: 'application/vnd.github+json', 'Cache-Control': 'no-cache' },
+        signal: controller.signal,
+      }),
     ]);
     if (!response.ok) return null;
     const release = await response.json() as {
