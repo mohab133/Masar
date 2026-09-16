@@ -48,6 +48,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
   // Upcoming Dates Carousel State
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
   const dateTouchStartX = useRef<number | null>(null);
+  const dateWasSwiped = useRef(false);
 
   const nearestDates = useMemo(() => {
     return [...(upcomingDates || [])].filter((event) => event.daysUntil >= 0).sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 6);
@@ -66,6 +67,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 
   const handleDateTouchStart = useCallback((e: React.TouchEvent) => {
     e.stopPropagation();
+    dateWasSwiped.current = false;
     dateTouchStartX.current = e.touches[0].clientX;
   }, []);
 
@@ -76,12 +78,22 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
     const diff = dateTouchStartX.current - touchEndX;
 
     if (diff > 35) {
+      dateWasSwiped.current = true;
       prevDate();
     } else if (diff < -35) {
+      dateWasSwiped.current = true;
       nextDate();
     }
     dateTouchStartX.current = null;
   }, [prevDate, nextDate]);
+
+  const handleDateCardClick = useCallback(() => {
+    if (dateWasSwiped.current) {
+      dateWasSwiped.current = false;
+      return;
+    }
+    onNavigateToDates(activeDate?.id);
+  }, [activeDate?.id, onNavigateToDates]);
 
   const handleBylawDownload = useCallback(async () => {
     const bylaw = appAssets.find((asset) => asset.assetKey === 'menouf_bylaw' && asset.fileUrl);
@@ -107,14 +119,21 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
             </button>
           </div>
 
-          <button
-            type="button"
+          <article
             aria-label={`فتح تفاصيل ${activeDate.eventName} في صفحة المواعيد`}
-            onClick={() => onNavigateToDates(activeDate.id)}
             id="dates-carousel-card"
             onTouchStart={handleDateTouchStart}
             onTouchEnd={handleDateTouchEnd}
-            className="bg-white border border-slate-200/90 border-r-4 border-r-blue-600 rounded-2xl p-4 sm:p-5 shadow-2xs transition-all relative overflow-hidden"
+            onClick={handleDateCardClick}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleDateCardClick();
+              }
+            }}
+            className="bg-white border border-slate-200/90 border-r-4 border-r-blue-600 rounded-2xl p-4 sm:p-5 shadow-2xs transition-all relative overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             
               <div
@@ -165,7 +184,10 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
 
             {/* Dots indicator for dates */}
             {nearestDates.length > 1 && (
-              <div className="flex items-center justify-center pt-3 mt-3 border-t border-slate-100 gap-1.5">
+              <div
+                className="flex items-center justify-center pt-3 mt-3 border-t border-slate-100 gap-1.5"
+                onClick={(event) => event.stopPropagation()}
+              >
                 {nearestDates.map((_, idx) => (
                   <button
                     key={idx}
@@ -179,7 +201,7 @@ export const HomeView: React.FC<HomeViewProps> = memo(({
                 ))}
               </div>
             )}
-          </button>
+          </article>
         </section>
       ) : (
         <section id="home-upcoming-dates-section" aria-label="أقرب التسليمات والمواعيد">
